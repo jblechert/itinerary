@@ -92,6 +92,7 @@ while read -r name url ref args; do
             -DCMAKE_INSTALL_PREFIX="$PREFIX" \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+            -DQT_MAJOR_VERSION=6 \
             -DCMAKE_OSX_ARCHITECTURES=arm64 \
             -DBUILD_SHARED_LIBS=OFF \
             -DBUILD_TESTING=OFF \
