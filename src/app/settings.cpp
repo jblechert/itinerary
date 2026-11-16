@@ -36,6 +36,7 @@ void Settings::load()
 
     m_preloadMapData = s.value("PreloadMapData"_L1, m_preloadMapData).toBool();
 
+    m_welcomePageShown = s.value("WelcomePageShown"_L1, m_welcomePageShown).toBool();
     m_currencyConversion = s.value("PerformCurrencyConversion"_L1, m_currencyConversion).toBool();
     m_wikimediaOnlineContentEnabled = s.value("WikimediaOnlineContent"_L1, m_wikimediaOnlineContentEnabled).toBool();
 
@@ -60,6 +61,7 @@ void Settings::reloadSettings()
     Q_EMIT forceMetricUnitsChanged(m_forceMetricUnits);
     Q_EMIT queryLiveDataChanged(m_queryLiveData);
     Q_EMIT preloadMapDataChanged(m_preloadMapData);
+    Q_EMIT welcomePageShownChanged(m_welcomePageShown);
     Q_EMIT performCurrencyConversionChanged(m_currencyConversion);
     Q_EMIT wikimediaOnlineContentEnabledChanged(m_wikimediaOnlineContentEnabled);
     Q_EMIT autoAddTransfersChanged(m_autoAddTransfers);
@@ -192,6 +194,25 @@ void Settings::setPreloadMapData(bool preload)
     s.setValue("PreloadMapData"_L1, preload);
 
     Q_EMIT preloadMapDataChanged(preload);
+}
+
+bool Settings::welcomePageShown() const
+{
+    return m_welcomePageShown;
+}
+
+void Settings::setWelcomePageShown(bool shown)
+{
+    if (m_welcomePageShown == shown) {
+        return;
+    }
+
+    m_welcomePageShown = shown;
+    QSettings s;
+    s.beginGroup("Settings"_L1);
+    s.setValue("WelcomePageShown"_L1, shown);
+
+    Q_EMIT welcomePageShownChanged(shown);
 }
 
 bool Settings::performCurrencyConversion() const

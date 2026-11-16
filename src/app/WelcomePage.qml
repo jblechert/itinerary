@@ -89,7 +89,10 @@ FormCard.FormCardPage {
         FormCard.FormButtonDelegate {
             text: i18n("Done!")
             icon.name: "dialog-ok"
-            onClicked: applicationWindow().pageStack.goBack();
+            onClicked: {
+                Settings.welcomePageShown = true;
+                applicationWindow().pageStack.goBack();
+            }
         }
     }
 }

@@ -22,6 +22,9 @@ class Settings : public QObject
     Q_PROPERTY(bool queryLiveData READ queryLiveData WRITE setQueryLiveData NOTIFY queryLiveDataChanged)
     Q_PROPERTY(bool preloadMapData READ preloadMapData WRITE setPreloadMapData NOTIFY preloadMapDataChanged)
 
+    /** The welcome page has been shown and acknowledged by the user. */
+    Q_PROPERTY(bool welcomePageShown READ welcomePageShown WRITE setWelcomePageShown NOTIFY welcomePageShownChanged)
+
     Q_PROPERTY(bool performCurrencyConversion READ performCurrencyConversion WRITE setPerformCurrencyConversion NOTIFY performCurrencyConversionChanged)
     Q_PROPERTY(bool wikimediaOnlineContentEnabled READ wikimediaOnlineContentEnabled WRITE setWikimediaOnlineContentEnabled NOTIFY
                    wikimediaOnlineContentEnabledChanged)
@@ -64,6 +67,9 @@ public:
     [[nodiscard]] bool preloadMapData() const;
     void setPreloadMapData(bool preload);
 
+    [[nodiscard]] bool welcomePageShown() const;
+    void setWelcomePageShown(bool shown);
+
     [[nodiscard]] bool performCurrencyConversion() const;
     void setPerformCurrencyConversion(bool enable);
 
@@ -97,6 +103,7 @@ Q_SIGNALS:
     void forceMetricUnitsChanged(bool force);
     void queryLiveDataChanged(bool enabled);
     void preloadMapDataChanged(bool preload);
+    void welcomePageShownChanged(bool shown);
     void performCurrencyConversionChanged(bool enabled);
     void wikimediaOnlineContentEnabledChanged(bool enabled);
     void autoAddTransfersChanged(bool autoAdd);
@@ -114,6 +121,7 @@ private:
     bool m_weatherEnabled = false;
     bool m_queryLiveData = false;
     bool m_preloadMapData = false;
+    bool m_welcomePageShown = false;
     bool m_currencyConversion = false;
     bool m_wikimediaOnlineContentEnabled = false;
     bool m_autoAddTransfers = true;
