@@ -54,6 +54,7 @@ while read -r name url ref args; do
             -DCMAKE_PREFIX_PATH="$QT_HOST_PATH;$HOST_PREFIX;$PREFIX" \
             -DCMAKE_INSTALL_PREFIX="$HOST_PREFIX" \
             -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
             -DBUILD_TESTING=OFF \
             -DBUILD_QCH=OFF \
             -DUSE_DBUS=OFF \
@@ -89,6 +90,7 @@ while read -r name url ref args; do
             -DCMAKE_PREFIX_PATH="$PREFIX" \
             -DCMAKE_INSTALL_PREFIX="$PREFIX" \
             -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
             -DCMAKE_OSX_ARCHITECTURES=arm64 \
             -DBUILD_SHARED_LIBS=OFF \
             -DBUILD_TESTING=OFF \
