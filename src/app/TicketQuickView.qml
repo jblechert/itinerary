@@ -38,6 +38,31 @@ ColumnLayout {
         return root.pass.name;
     }
 
+    /** Image assets of the Apple Wallet pass that can be shown as moving image, in order of preference. */
+    readonly property list<var> availableImages: {
+        if (!root.pkPass) {
+            return [];
+        }
+        return [
+            { name: "thumbnail", label: i18nc("pkpass image type", "Thumbnail"), available: root.pkPass.hasThumbnail },
+            { name: "logo", label: i18nc("pkpass image type", "Logo"), available: root.pkPass.hasLogo },
+            { name: "icon", label: i18nc("pkpass image type", "Icon"), available: root.pkPass.hasIcon },
+            { name: "strip", label: i18nc("pkpass image type", "Strip"), available: root.pkPass.hasStrip },
+            { name: "footer", label: i18nc("pkpass image type", "Footer"), available: root.pkPass.hasFooter },
+            { name: "background", label: i18nc("pkpass image type", "Background"), available: root.pkPass.hasBackground },
+        ].filter(image => image.available);
+    }
+    /** Index in availableImages of the image to show.
+     *  The choice is remembered per pass type, so it survives e.g. monthly renewals of a subscription.
+     */
+    property int imageIndex: {
+        if (!root.pkPass) {
+            return -1;
+        }
+        const name = Settings.ticketViewImage(root.pkPass.passTypeIdentifier);
+        return Math.max(0, root.availableImages.findIndex(image => image.name === name));
+    }
+
     spacing: 0
 
     CardPageTitle {
@@ -92,13 +117,15 @@ ColumnLayout {
                 // pkpass logos are made for a fixed background, so don't follow the theme here
                 color: hasLogo ? "white" : "transparent"
 
+                onWidthChanged: moveAnimation.restart()
+
                 Image {
                     id: logo
 
                     anchors.centerIn: parent
                     height: parent.height - 2 * Kirigami.Units.smallSpacing
                     width: implicitHeight > 0 ? height * implicitWidth / implicitHeight : 0
-                    source: root.pkPassId !== "" ? "image://org.kde.pkpass/" + root.pkPassId + "/logo" : ""
+                    source: root.imageIndex >= 0 && root.imageIndex < root.availableImages.length ? "image://org.kde.pkpass/" + root.pkPassId + "/" + root.availableImages[root.imageIndex].name : ""
                     fillMode: Image.PreserveAspectFit
                 }
 
@@ -112,14 +139,19 @@ ColumnLayout {
                     source: ReservationHelper.defaultIconName(root.pass)
                 }
 
-                XAnimator on x {
+                NumberAnimation on x {
+                    id: moveAnimation
+
                     from: -mover.width
                     to: liveBand.width
-                    duration: Math.max(1, liveBand.width + mover.width) / Kirigami.Units.gridUnit * 250
+                    duration: (liveBand.width + mover.width) / Kirigami.Units.gridUnit * 250
                     loops: Animation.Infinite
                     running: liveBand.visible && liveBand.width > 0
                 }
             }
+
+            // the animation doesn't pick up geometry changes while running
+            onWidthChanged: moveAnimation.restart()
         }
 
         FormCard.FormDelegateSeparator {}
@@ -160,6 +192,19 @@ ColumnLayout {
             text: i18n("Number")
             description: root.type === PassManager.Ticket ? root.pass.ticketNumber : ""
             visible: description !== ""
+        }
+
+        FormCard.FormComboBoxDelegate {
+            text: i18nc("@label:listbox", "Moving image")
+            visible: root.availableImages.length > 1
+            model: root.availableImages
+            textRole: "label"
+            valueRole: "name"
+            currentIndex: root.imageIndex
+            onActivated: {
+                root.imageIndex = currentIndex;
+                Settings.setTicketViewImage(root.pkPass.passTypeIdentifier, currentValue);
+            }
         }
 
         PassDelegate {

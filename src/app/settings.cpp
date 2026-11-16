@@ -215,6 +215,20 @@ void Settings::setWelcomePageShown(bool shown)
     Q_EMIT welcomePageShownChanged(shown);
 }
 
+QString Settings::ticketViewImage(const QString &passTypeIdentifier) const
+{
+    QSettings s;
+    s.beginGroup("TicketViewImage"_L1);
+    return s.value(passTypeIdentifier).toString();
+}
+
+void Settings::setTicketViewImage(const QString &passTypeIdentifier, const QString &assetName)
+{
+    QSettings s;
+    s.beginGroup("TicketViewImage"_L1);
+    s.setValue(passTypeIdentifier, assetName);
+}
+
 bool Settings::performCurrencyConversion() const
 {
     return m_currencyConversion;

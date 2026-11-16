@@ -70,6 +70,13 @@ public:
     [[nodiscard]] bool welcomePageShown() const;
     void setWelcomePageShown(bool shown);
 
+    /** Name of the image asset the ticket view shows as moving image
+     *  for Apple Wallet passes of type @p passTypeIdentifier.
+     *  Empty if the user hasn't chosen one.
+     */
+    Q_INVOKABLE [[nodiscard]] QString ticketViewImage(const QString &passTypeIdentifier) const;
+    Q_INVOKABLE void setTicketViewImage(const QString &passTypeIdentifier, const QString &assetName);
+
     [[nodiscard]] bool performCurrencyConversion() const;
     void setPerformCurrencyConversion(bool enable);
 
