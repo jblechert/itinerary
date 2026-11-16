@@ -26,6 +26,11 @@ public:
     Q_INVOKABLE void navigateTo(const QVariant &place);
     Q_INVOKABLE void navigateTo(const QVariant &from, const QVariant &to);
 
+    /** Walking directions from the current position to the given location, e.g. a departure stop.
+     *  On Android this prefers Organic Maps, then Google Maps, then any map application.
+     */
+    Q_INVOKABLE void walkTo(double latitude, double longitude, const QString &name);
+
 private:
 #ifndef Q_OS_ANDROID
     void navigateTo(const QGeoPositionInfo &from, const QVariant &to);
