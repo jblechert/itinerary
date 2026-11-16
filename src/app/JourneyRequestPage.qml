@@ -37,6 +37,15 @@ FormCard.FormCardPage {
         Line.Ferry, Line.Boat,
     ]
 
+    /** Line modes not usable with tickets valid for local public transport only.
+     *  Like in JourneyFilterPage, unspecified trains count as long distance trains, as some backends use that for those.
+     */
+    readonly property var nonLocalLineModes: [Line.LongDistanceTrain, Line.Train, Line.Coach, Line.Air]
+    /** The line modes to search for, considering the selected ticket type. */
+    readonly property var effectiveLineModes: Settings.localTransportOnly
+        ? root.lineModes.filter((mode) => root.nonLocalLineModes.indexOf(mode) === -1)
+        : root.lineModes
+
     title: i18n("Select Journey")
 
     /** Search departures from @p from to @p to starting now, regardless of the time selected in the form. */
@@ -64,7 +73,7 @@ FormCard.FormCardPage {
         // TODO rental vehicle support
         req.modes = JourneySection.PublicTransport | JourneySection.Walking;
 
-        req.lineModes = root.lineModes;
+        req.lineModes = root.effectiveLineModes;
 
         if (departureArrivalSelector.selectedIndex === 0) {
             req.dateTimeMode = JourneyRequest.Departure
@@ -253,6 +262,25 @@ FormCard.FormCardPage {
 
         FormCard.FormDelegateSeparator {
             below: dateTimeInput
+            above: ticketTypeSelector
+        }
+
+        FormCard.FormComboBoxDelegate {
+            id: ticketTypeSelector
+
+            text: i18nc("@label:listbox the kind of ticket to find journeys for", "Ticket")
+            model: [
+                { text: i18nc("@item:inlistbox ticket type", "All connections (e.g. BahnCard 100)"), value: false },
+                { text: i18nc("@item:inlistbox ticket type", "Local transport only (e.g. Deutschlandticket)"), value: true },
+            ]
+            textRole: "text"
+            valueRole: "value"
+            currentIndex: Settings.localTransportOnly ? 1 : 0
+            onActivated: Settings.localTransportOnly = currentValue
+        }
+
+        FormCard.FormDelegateSeparator {
+            below: ticketTypeSelector
             above: filterButton
         }
 
@@ -277,7 +305,7 @@ FormCard.FormCardPage {
             id: searchButton
             icon.name: "search"
             text: i18n("Search Journey")
-            enabled: root.departureStop != undefined && root.arrivalStop != undefined && lineModes.length != 0
+            enabled: root.departureStop != undefined && root.arrivalStop != undefined && root.effectiveLineModes.length != 0
             onClicked: root.searchJourney()
         }
     }
