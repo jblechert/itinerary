@@ -24,6 +24,14 @@ HOST_PREFIX="$PREFIX/host"
 mkdir -p "$PREFIX/logs" "$WORK"
 
 # clone the package and apply our patches; usage: fetch <name> <url> <ref> <source dir>
+# a hash of the patches applied to a dependency, so changed patches cause a rebuild
+patches_hash() {
+    local dir="$HERE/patches/$1"
+    if [ -d "$dir" ]; then
+        printf -- "-%s" "$(cat "$dir"/*.patch | shasum | cut -c1-12)"
+    fi
+}
+
 fetch() {
     rm -rf "$4"
     git clone --quiet --depth 1 --branch "$3" "$2" "$4"
@@ -37,7 +45,7 @@ fetch() {
 
 # host tools, built natively for macOS with the desktop Qt
 while read -r name url ref args; do
-    marker="$HOST_PREFIX/.built-$name-$ref"
+    marker="$HOST_PREFIX/.built-$name-$ref$(patches_hash "$name")"
     if [ -f "$marker" ]; then
         echo "== host $name $ref: already built"
         continue
@@ -71,7 +79,7 @@ while read -r name url ref args; do
 done < <(grep -vE '^\s*(#|$)' "$HERE/host-deps.txt")
 
 while read -r name url ref args; do
-    marker="$PREFIX/.built-$name-$ref"
+    marker="$PREFIX/.built-$name-$ref$(patches_hash "$name")"
     if [ -f "$marker" ]; then
         echo "== $name $ref: already built"
         continue
