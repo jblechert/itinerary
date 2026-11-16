@@ -88,8 +88,28 @@ while read -r name url ref args; do
     src="$WORK/src/$name"
     build="$WORK/build/$name"
     log="$PREFIX/logs/$name.log"
+    # deps.txt can refer to the installation prefix
+    args="${args//\$PREFIX/$PREFIX}"
     rm -rf "$build"
     fetch "$name" "$url" "$ref" "$src"
+
+    # OpenSSL has its own build system
+    if [ "$name" = openssl ]; then
+        if ! {
+            cd "$src" \
+            && ./Configure ios64-xcrun no-shared no-tests no-apps no-docs no-module \
+                --prefix="$PREFIX" --openssldir="$PREFIX/ssl" \
+            && make -j"$(sysctl -n hw.ncpu)" build_libs \
+            && make install_dev \
+            && cd - > /dev/null
+        } > "$log" 2>&1; then
+            echo "!! $name failed, last lines of $log:"
+            tail -n 60 "$log"
+            exit 1
+        fi
+        touch "$marker"
+        continue
+    fi
 
     # shellcheck disable=SC2086 # extra arguments are meant to be split
     if ! {
