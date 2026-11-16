@@ -1,0 +1,557 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index a87fc34..6305fc5 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -58,7 +58,7 @@ if(NOT TARGET KF6::Mime)
+ endif()
+ find_package(KPim6PkPass ${PIM_PKPASS} CONFIG REQUIRED)
+ find_package(Poppler COMPONENTS Core)
+-set_package_properties("Poppler" PROPERTIES TYPE REQUIRED PURPOSE "Support for extraction from PDF booking confirmations.")
++set_package_properties("Poppler" PROPERTIES TYPE RECOMMENDED PURPOSE "Support for extraction from PDF booking confirmations. Without it PDF documents cannot be processed.")
+ foreach(ver 3.0 2.0 1.1.1)
+     find_package(ZXing ${ver} CONFIG QUIET)
+     if (TARGET ZXing::ZXing)
+@@ -94,11 +94,12 @@ if(TARGET Poppler::Core)
+     if (NOT HAVE_POPPLER_UNSTABLE_HEADERS)
+         message(FATAL_ERROR "Poppler was not build with ENABLE_UNSTABLE_API_ABI_HEADERS!")
+     endif()
++    set(HAVE_POPPLER ON)
++    string(REGEX MATCH "([0-9]+)\.0*([0-9]+)\.0*([0-9]+)" _match "${Poppler_VERSION}")
++    set(POPPLER_VERSION_MAJOR ${CMAKE_MATCH_1})
++    set(POPPLER_VERSION_MINOR ${CMAKE_MATCH_2})
++    set(POPPLER_VERSION_PATCH ${CMAKE_MATCH_3})
+ endif()
+-string(REGEX MATCH "([0-9]+)\.0*([0-9]+)\.0*([0-9]+)" _match "${Poppler_VERSION}")
+-set(POPPLER_VERSION_MAJOR ${CMAKE_MATCH_1})
+-set(POPPLER_VERSION_MINOR ${CMAKE_MATCH_2})
+-set(POPPLER_VERSION_PATCH ${CMAKE_MATCH_3})
+ 
+ if (LIBXML2_FOUND)
+     set(HAVE_LIBXML2 ON)
+diff --git a/KPimItineraryConfig.cmake.in b/KPimItineraryConfig.cmake.in
+index f617c9b..d02ed76 100644
+--- a/KPimItineraryConfig.cmake.in
++++ b/KPimItineraryConfig.cmake.in
+@@ -20,7 +20,9 @@ find_dependency(KPim6PkPass "@PIM_PKPASS@")
+ 
+ if (NOT @BUILD_SHARED_LIBS@)
+     find_dependency(ZLIB)
+-    find_dependency(Poppler)
++    if (@HAVE_POPPLER@)
++        find_dependency(Poppler)
++    endif()
+     find_dependency(ZXing)
+     if (@HAVE_LIBXML2@)
+         find_dependency(LibXml2)
+diff --git a/autotests/CMakeLists.txt b/autotests/CMakeLists.txt
+index 25b4d40..124afd6 100644
+--- a/autotests/CMakeLists.txt
++++ b/autotests/CMakeLists.txt
+@@ -32,7 +32,9 @@ ecm_add_test(plistreadertest.cpp LINK_LIBRARIES Qt::Test KPim6::Itinerary)
+ ecm_add_test(jsapitest.cpp ../src/lib/jsapi/jsonld.cpp ../src/lib/reservationconverter.cpp TEST_NAME jsapitest LINK_LIBRARIES Qt::Test KPim6::Itinerary Qt::Qml)
+ ecm_add_test(bitarraytest.cpp ../src/lib/jsapi/bitarray.cpp ../src/lib/asn1/bitvectorview.cpp TEST_NAME bitarraytest LINK_LIBRARIES Qt::Test KPim6::Itinerary)
+ ecm_add_test(structureddataextractortest.cpp LINK_LIBRARIES Qt::Test KPim6::Itinerary)
+-ecm_add_test(pdfdocumenttest.cpp LINK_LIBRARIES Qt::Test KPim6::Itinerary Qt::Gui)
++if (HAVE_POPPLER)
++    ecm_add_test(pdfdocumenttest.cpp LINK_LIBRARIES Qt::Test KPim6::Itinerary Qt::Gui)
++endif()
+ ecm_add_test(htmldocumenttest.cpp LINK_LIBRARIES Qt::Test KPim6::Itinerary)
+ ecm_add_test(barcodedecodertest.cpp LINK_LIBRARIES Qt::Test KPim6::Itinerary Qt::Gui)
+ ecm_add_test(pkpassextractortest.cpp LINK_LIBRARIES Qt::Test KPim6::Itinerary KPim6::PkPass)
+diff --git a/autotests/extractordocumentnodetest.cpp b/autotests/extractordocumentnodetest.cpp
+index 89865ef..54a1aa0 100644
+--- a/autotests/extractordocumentnodetest.cpp
++++ b/autotests/extractordocumentnodetest.cpp
+@@ -9,6 +9,7 @@
+ #include <KItinerary/ExtractorDocumentProcessor>
+ #include <KItinerary/ExtractorEngine>
+ #include <KItinerary/PdfDocument>
++#include <config-kitinerary.h>
+ 
+ #include <QFile>
+ #include <QTest>
+@@ -48,6 +49,9 @@ private Q_SLOTS:
+ 
+     void testPdfFromData()
+     {
++#if !HAVE_POPPLER
++        QSKIP("Built without PDF support.");
++#endif
+         ExtractorEngine engine;
+ 
+         QFile f(QStringLiteral(SOURCE_DIR "/misc/test.pdf"));
+@@ -93,6 +97,9 @@ private Q_SLOTS:
+ 
+     void testPdfFromContent()
+     {
++#if !HAVE_POPPLER
++        QSKIP("Built without PDF support.");
++#endif
+         ExtractorEngine engine;
+ 
+         QFile f(QStringLiteral(SOURCE_DIR "/misc/test.pdf"));
+diff --git a/autotests/extractorfiltertest.cpp b/autotests/extractorfiltertest.cpp
+index 769c657..a6e655a 100644
+--- a/autotests/extractorfiltertest.cpp
++++ b/autotests/extractorfiltertest.cpp
+@@ -10,6 +10,7 @@
+ #include <KItinerary/ExtractorEngine>
+ #include <KItinerary/ExtractorFilter>
+ #include <KItinerary/ExtractorResult>
++#include <config-kitinerary.h>
+ 
+ #include <QFile>
+ #include <QTest>
+@@ -125,6 +126,9 @@ private Q_SLOTS:
+ 
+     void testIataBcbpFilter()
+     {
++#if !HAVE_POPPLER
++        QSKIP("Built without PDF support.");
++#endif
+         QFile f(s(SOURCE_DIR "/extractordata/synthetic/iata-bcbp-demo.pdf"));
+         QVERIFY(f.open(QFile::ReadOnly));
+ 
+diff --git a/autotests/extractorscriptenginetest.cpp b/autotests/extractorscriptenginetest.cpp
+index 3558f7f..6e9cdac 100644
+--- a/autotests/extractorscriptenginetest.cpp
++++ b/autotests/extractorscriptenginetest.cpp
+@@ -12,6 +12,7 @@
+ #include <KItinerary/ExtractorEngine>
+ #include <KItinerary/ExtractorResult>
+ #include <KItinerary/ScriptExtractor>
++#include <config-kitinerary.h>
+ 
+ #include <kcalendarcore_version.h>
+ 
+@@ -56,8 +57,10 @@ private Q_SLOTS:
+ 
+         QTest::newRow("text/plain") << s(SOURCE_DIR "/scriptenginedata/plain-text.txt") << s(SOURCE_DIR "/scriptenginedata/plain-text.txt.json");
+         QTest::newRow("pkpass") << s(SOURCE_DIR "/pkpassdata/swiss.pkpass") << s(SOURCE_DIR "/scriptenginedata/swiss.pkpass.json");
++#if HAVE_POPPLER
+         QTest::newRow("IATA BCBP PDF") << s(SOURCE_DIR "/extractordata/synthetic/iata-bcbp-demo.pdf")
+             << s(SOURCE_DIR "/scriptenginedata/iata-bcbp-demo.pdf.json");
++#endif
+         QTest::newRow("ical") << s(SOURCE_DIR "/extractordata/ical/eventreservation.ics") << s(SOURCE_DIR "/scriptenginedata/eventreservation.ics.json");
+         QTest::newRow("uic9183") << s(SOURCE_DIR "/uic918-3/valid/Testw_VOW8XG6_A9E8DXL_0.bin") << s(SOURCE_DIR "/scriptenginedata/Testw_VOW8XG6_A9E8DXL_0.bin.json");
+         QTest::newRow("html") << s(SOURCE_DIR "/structureddata/google-flight-reservation-json-ld.html") << s(SOURCE_DIR "/scriptenginedata/google-flight-reservation-json-ld.html.json");
+diff --git a/autotests/extractortest.cpp b/autotests/extractortest.cpp
+index d531f6b..e9bdda5 100644
+--- a/autotests/extractortest.cpp
++++ b/autotests/extractortest.cpp
+@@ -12,6 +12,7 @@
+ #include <KItinerary/JsonLdDocument>
+ #include <KItinerary/Reservation>
+ #include <KItinerary/Ticket>
++#include <config-kitinerary.h>
+ 
+ #include <KMime/Message>
+ 
+@@ -84,6 +85,12 @@ private Q_SLOTS:
+         QFETCH(QString, contextFile);
+         QFETCH(QString, inputFile);
+ 
++#if !HAVE_POPPLER
++        if (inputFile.endsWith(QLatin1StringView(".pdf"))) {
++            QSKIP("Built without PDF support.");
++        }
++#endif
++
+         m_engine.clear();
+         if (inputFile.endsWith(QLatin1StringView(".png")) ||
+             inputFile.endsWith(QLatin1StringView(".pdf")) ||
+diff --git a/src/lib/CMakeLists.txt b/src/lib/CMakeLists.txt
+index b53a072..7dc34b6 100644
+--- a/src/lib/CMakeLists.txt
++++ b/src/lib/CMakeLists.txt
+@@ -92,12 +92,9 @@ target_sources(KPim6Itinerary PRIVATE
+ 
+     pdf/pdfbarcodeutil.cpp pdf/pdfbarcodeutil_p.h
+     pdf/pdfdocument.cpp pdf/pdfdocument.h
+-    pdf/pdfextractoroutputdevice.cpp pdf/pdfextractoroutputdevice_p.h
+     pdf/pdfimage.cpp pdf/pdfimage.h
+     pdf/pdflink.cpp  pdf/pdflink.h
+     pdf/pdfvectorpicture.cpp pdf/pdfvectorpicture_p.h
+-    pdf/popplerglobalparams.cpp pdf/popplerglobalparams_p.h
+-    pdf/popplerutils.cpp pdf/popplerutils_p.h
+ 
+     plist/plistreader.cpp plist/plistreader_p.h
+ 
+@@ -223,10 +220,17 @@ target_link_libraries(KPim6Itinerary
+         KF6::Codecs
+         KF6::Contacts
+         KPim6::PkPass
+-        Poppler::Core
+         OpenSSL::Crypto
+         ZLIB::ZLIB
+ )
++if (HAVE_POPPLER)
++    target_sources(KPim6Itinerary PRIVATE
++        pdf/pdfextractoroutputdevice.cpp pdf/pdfextractoroutputdevice_p.h
++        pdf/popplerglobalparams.cpp pdf/popplerglobalparams_p.h
++        pdf/popplerutils.cpp pdf/popplerutils_p.h
++    )
++    target_link_libraries(KPim6Itinerary PRIVATE Poppler::Core)
++endif()
+ if (TARGET ZXing::ZXing)
+     target_link_libraries(KPim6Itinerary PRIVATE ZXing::ZXing)
+ elseif (TARGET ZXing::Core)
+diff --git a/src/lib/config-kitinerary.h.in b/src/lib/config-kitinerary.h.in
+index 3144003..64679d8 100644
+--- a/src/lib/config-kitinerary.h.in
++++ b/src/lib/config-kitinerary.h.in
+@@ -23,6 +23,7 @@
+ 
+ #cmakedefine01 HAVE_LIBXML2
+ #cmakedefine01 HAVE_PHONENUMBER
++#cmakedefine01 HAVE_POPPLER
+ 
+ #define CMAKE_INSTALL_FULL_LIBEXECDIR_KF6 "${KDE_INSTALL_FULL_LIBEXECDIR_KF}"
+ 
+diff --git a/src/lib/extractorcapabilities.cpp b/src/lib/extractorcapabilities.cpp
+index 867cd84..296816b 100644
+--- a/src/lib/extractorcapabilities.cpp
++++ b/src/lib/extractorcapabilities.cpp
+@@ -31,7 +31,13 @@ QString ExtractorCapabilities::capabilitiesString()
+ #endif
+         "\n"
+ 
+-        "PDF support         : poppler (" KPOPPLER_VERSION_STRING ")\n"
++        "PDF support         : "
++#if HAVE_POPPLER
++            "poppler (" KPOPPLER_VERSION_STRING ")"
++#else
++            "not available"
++#endif
++        "\n"
+ 
+         "iCal support        : kcal (" KCALENDARCORE_VERSION_STRING ")\n"
+ 
+diff --git a/src/lib/pdf/pdfdocument.cpp b/src/lib/pdf/pdfdocument.cpp
+index 59fa46f..ee45217 100644
+--- a/src/lib/pdf/pdfdocument.cpp
++++ b/src/lib/pdf/pdfdocument.cpp
+@@ -7,10 +7,8 @@
+ #include "config-kitinerary.h"
+ #include "pdfdocument.h"
+ #include "pdfdocument_p.h"
+-#include "pdfextractoroutputdevice_p.h"
+ #include "pdfimage_p.h"
+-#include "popplerglobalparams_p.h"
+-#include "popplerutils_p.h"
++#include "pdflink.h"
+ #include "logging.h"
+ 
+ #include <QDebug>
+@@ -18,11 +16,17 @@
+ #include <QScopedValueRollback>
+ #include <QTimeZone>
+ 
++#if HAVE_POPPLER
++#include "pdfextractoroutputdevice_p.h"
++#include "popplerglobalparams_p.h"
++#include "popplerutils_p.h"
++
+ #include <DateInfo.h>
+ #include <PDFDoc.h>
+ #include <PDFDocEncoding.h>
+ #include <Stream.h>
+ #include <UTF.h>
++#endif
+ 
+ #include <cmath>
+ 
+@@ -35,6 +39,7 @@ void PdfPagePrivate::load()
+         return;
+     }
+ 
++#if HAVE_POPPLER
+     PopplerGlobalParams gp;
+     PdfExtractorOutputDevice device;
+     m_doc->m_popplerDoc->displayPageSlice(&device, m_pageNum + 1, 72, 72, 0, false, true, false, -1, -1, -1, -1);
+@@ -68,6 +73,7 @@ void PdfPagePrivate::load()
+         link.convertToPageRect(&pageRect);
+ #endif
+     }
++#endif
+ 
+     m_loaded = true;
+ }
+@@ -87,6 +93,7 @@ QString PdfPage::text() const
+     return d->m_text;
+ }
+ 
++#if HAVE_POPPLER
+ static double ratio(double begin, double end, double ratio)
+ {
+     return begin + (end - begin) * ratio;
+@@ -149,6 +156,12 @@ QString PdfPage::textInRect(double left, double top, double right, double bottom
+     return QString::fromUtf8(s.c_str());
+ #endif
+ }
++#else
++QString PdfPage::textInRect(double, double, double, double, int) const
++{
++    return {};
++}
++#endif
+ 
+ int PdfPage::imageCount() const
+ {
+@@ -171,6 +184,7 @@ QVariantList PdfPage::imagesVariant() const
+     return l;
+ }
+ 
++#if HAVE_POPPLER
+ QVariantList PdfPage::imagesInRect(double left, double top, double right, double bottom) const
+ {
+     d->load();
+@@ -192,6 +206,12 @@ QVariantList PdfPage::imagesInRect(double left, double top, double right, double
+     }
+     return l;
+ }
++#else
++QVariantList PdfPage::imagesInRect(double, double, double, double) const
++{
++    return {};
++}
++#endif
+ 
+ int PdfPage::linkCount() const
+ {
+@@ -239,6 +259,7 @@ QVariantList PdfPage::linksInRect(double left, double top, double right, double
+     return l;
+ }
+ 
++#if HAVE_POPPLER
+ static constexpr inline double pdfToMM(double points)
+ {
+     return points * 25.4 / 72.0;
+@@ -263,6 +284,17 @@ int PdfPage::height() const
+     }
+     return pdfToMM(page->getCropHeight());
+ }
++#else
++int PdfPage::width() const
++{
++    return 0;
++}
++
++int PdfPage::height() const
++{
++    return 0;
++}
++#endif
+ 
+ 
+ PdfDocument::PdfDocument(QObject *parent)
+@@ -287,7 +319,7 @@ QString PdfDocument::text() const
+ 
+ int PdfDocument::pageCount() const
+ {
+-    return d->m_popplerDoc->getNumPages();
++    return (int)d->m_pages.size();
+ }
+ 
+ PdfPage PdfDocument::page(int index) const
+@@ -300,6 +332,7 @@ int PdfDocument::fileSize() const
+     return d->m_pdfData.size();
+ }
+ 
++#if HAVE_POPPLER
+ template <typename StrT>
+ [[nodiscard]] static QDateTime parsePdfDateTime(const StrT &str)
+ {
+@@ -419,6 +452,37 @@ QString PdfDocument::author() const
+ {
+     return fromPdfString(d->m_popplerDoc->getDocInfoAuthor());
+ }
++#else
++QDateTime PdfDocument::creationTime() const
++{
++    return {};
++}
++
++QDateTime PdfDocument::modificationTime() const
++{
++    return {};
++}
++
++QString PdfDocument::title() const
++{
++    return {};
++}
++
++QString PdfDocument::producer() const
++{
++    return {};
++}
++
++QString PdfDocument::creator() const
++{
++    return {};
++}
++
++QString PdfDocument::author() const
++{
++    return {};
++}
++#endif
+ 
+ QVariantList PdfDocument::pagesVariant() const
+ {
+@@ -430,6 +494,7 @@ QVariantList PdfDocument::pagesVariant() const
+ 
+ PdfDocument* PdfDocument::fromData(const QByteArray &data, QObject *parent)
+ {
++#if HAVE_POPPLER
+     PopplerGlobalParams gp;
+ 
+     std::unique_ptr<PdfDocument> doc(new PdfDocument(parent));
+@@ -456,6 +521,11 @@ PdfDocument* PdfDocument::fromData(const QByteArray &data, QObject *parent)
+ 
+     doc->d->m_popplerDoc = std::move(popplerDoc);
+     return doc.release();
++#else
++    Q_UNUSED(data)
++    Q_UNUSED(parent)
++    return nullptr;
++#endif
+ }
+ 
+ bool PdfDocument::maybePdf(const QByteArray &data)
+diff --git a/src/lib/pdf/pdfdocument_p.h b/src/lib/pdf/pdfdocument_p.h
+index 12ad454..7fee05c 100644
+--- a/src/lib/pdf/pdfdocument_p.h
++++ b/src/lib/pdf/pdfdocument_p.h
+@@ -48,7 +48,9 @@ public:
+     // image data in here is stored in its source form, without applied transformations
+     std::unordered_map<PdfImageRef, QImage> m_imageData;
+     std::vector<PdfPage> m_pages;
++#if HAVE_POPPLER
+     std::unique_ptr<PDFDoc> m_popplerDoc;
++#endif
+ };
+ 
+ }
+diff --git a/src/lib/pdf/pdfimage.cpp b/src/lib/pdf/pdfimage.cpp
+index 2723f48..9c0627c 100644
+--- a/src/lib/pdf/pdfimage.cpp
++++ b/src/lib/pdf/pdfimage.cpp
+@@ -7,20 +7,24 @@
+ #include "pdfimage.h"
+ #include "pdfimage_p.h"
+ #include "pdfdocument_p.h"
+-#include "popplerglobalparams_p.h"
+-#include "popplerutils_p.h"
+ 
+ #include <QDebug>
+ #include <QScopedValueRollback>
+ 
++#if HAVE_POPPLER
++#include "popplerglobalparams_p.h"
++#include "popplerutils_p.h"
++
+ #include <Gfx.h>
+ #include <GlobalParams.h>
+ #include <PDFDoc.h>
+ #include <Stream.h>
+ #include <OutputDev.h>
++#endif
+ 
+ using namespace KItinerary;
+ 
++#if HAVE_POPPLER
+ static inline bool isColor(GfxRGB rgb)
+ {
+     enum { Threshold = 72 * 256 }; // GfxComp is stored as color value * 255
+@@ -109,6 +113,7 @@ QImage PdfImagePrivate::load(Stream* str, GfxImageColorMap* colorMap)
+     }
+     return img;
+ }
++#endif
+ 
+ QImage PdfImagePrivate::load()
+ {
+@@ -117,6 +122,7 @@ QImage PdfImagePrivate::load()
+         return (*it).second;
+     }
+ 
++#if HAVE_POPPLER
+     PopplerGlobalParams gp;
+ 
+     const auto xref = m_page->m_doc->m_popplerDoc->getXRef();
+@@ -138,6 +144,7 @@ QImage PdfImagePrivate::load()
+             return maskObj.isStream() ? load(maskObj.getStream(), m_colorMap.get()) : QImage();
+         }
+     }
++#endif
+ 
+     return {};
+ }
+diff --git a/src/lib/pdf/pdfimage_p.h b/src/lib/pdf/pdfimage_p.h
+index 814a8c8..353b98e 100644
+--- a/src/lib/pdf/pdfimage_p.h
++++ b/src/lib/pdf/pdfimage_p.h
+@@ -9,6 +9,8 @@
+ #include "pdfimage.h"
+ #include "pdfvectorpicture_p.h"
+ 
++#include <config-kitinerary.h>
++
+ #include <QImage>
+ #include <QSharedData>
+ #include <QTransform>
+@@ -25,13 +27,17 @@ class PdfPagePrivate;
+ class PdfImagePrivate : public QSharedData {
+ public:
+     QImage load();
++#if HAVE_POPPLER
+     QImage load(Stream *str, GfxImageColorMap *colorMap);
++#endif
+ 
+     // pixel data
+     PdfImageRef m_ref;
+     QImage::Format m_format = QImage::Format_Invalid;
+     PdfPagePrivate *m_page = nullptr;
++#if HAVE_POPPLER
+     std::unique_ptr<GfxImageColorMap> m_colorMap;
++#endif
+ 
+     constexpr inline int refNum() const { return m_ref.m_refNum; }
+     constexpr inline int refGen() const { return m_ref.m_refGen; }
+diff --git a/src/lib/pdf/pdflink.cpp b/src/lib/pdf/pdflink.cpp
+index 237224a..4c6d2b8 100644
+--- a/src/lib/pdf/pdflink.cpp
++++ b/src/lib/pdf/pdflink.cpp
+@@ -3,11 +3,15 @@
+     SPDX-License-Identifier: LGPL-2.0-or-later
+ */
+ 
++#include <config-kitinerary.h>
++
+ #include "pdflink.h"
+ 
+ #include <QDebug>
+ 
++#if HAVE_POPPLER
+ #include <Page.h>
++#endif
+ 
+ using namespace KItinerary;
+ 
+@@ -47,6 +51,7 @@ QRectF PdfLink::area() const
+     return d->area;
+ }
+ 
++#if HAVE_POPPLER
+ static double toRatio(double low, double high, double value)
+ {
+     return (value - low) / (high - low);
+@@ -59,5 +64,6 @@ void PdfLink::convertToPageRect(const PDFRectangle *pageRect)
+     d->area.setTop(toRatio(pageRect->y1, pageRect->y2, d->area.top()));
+     d->area.setBottom(toRatio(pageRect->y1, pageRect->y2, d->area.bottom()));
+ }
++#endif
+ 
+ #include "moc_pdflink.cpp"
