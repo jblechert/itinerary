@@ -10,6 +10,7 @@
 #
 # Packages that were already built with the same ref are skipped, so this can resume after
 # a failure when the prefix is kept, e.g. by the CI cache.
+# Patches in tools/ios/patches/<package>/*.patch are applied before building that package.
 set -euo pipefail
 
 QT_IOS="$1"
@@ -32,6 +33,12 @@ while read -r name url ref args; do
     log="$PREFIX/logs/$name.log"
     rm -rf "$src" "$build"
     git clone --quiet --depth 1 --branch "$ref" "$url" "$src"
+    # fixes needed for iOS that aren't in the used release yet
+    for patch in "$HERE/patches/$name"/*.patch; do
+        [ -f "$patch" ] || continue
+        echo "   applying $(basename "$patch")"
+        git -C "$src" apply "$patch"
+    done
 
     # shellcheck disable=SC2086 # extra arguments are meant to be split
     if ! {
