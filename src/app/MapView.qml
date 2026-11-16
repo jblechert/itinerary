@@ -20,6 +20,8 @@ QtLocation.Map {
     copyrightsVisible: false
 
     property alias attribution: attributionLabel
+    /** The user is currently moving or zooming the map. */
+    readonly property bool userInteracting: drag.active || pinch.active
 
     Rectangle {
         color: "#B0ffffff"

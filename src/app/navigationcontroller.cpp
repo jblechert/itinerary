@@ -10,24 +10,19 @@
 #include <KItinerary/LocationUtil>
 #include <KItinerary/Place>
 
-#include <KLocalizedString>
-
 #include <QCoreApplication>
-#include <QDateTime>
 #include <QDebug>
 #include <QDesktopServices>
-#include <QGeoPositionInfo>
-#include <QGeoPositionInfoSource>
-#include <QPermissions>
 #include <QUrl>
 #include <QUrlQuery>
 
 #ifdef Q_OS_ANDROID
 #include "kandroidextras/activity.h"
 #include "kandroidextras/intent.h"
+#else
+#include <QGeoPositionInfo>
+#include <QGeoPositionInfoSource>
 #endif
-
-#include <memory>
 
 using namespace KItinerary;
 
@@ -38,6 +33,19 @@ static bool startActivity(const QUrl &url)
 
     Intent intent;
     intent.setAction(Intent::ACTION_VIEW);
+    intent.setData(url);
+    return Activity::startActivity(intent, 0);
+}
+
+/** Android's generic navigation intent, as also used by voice assistants and Android Auto.
+ *  Navigation applications such as Organic Maps start directions from the current position for this.
+ */
+static bool startNavigationActivity(const QUrl &url)
+{
+    using namespace KAndroidExtras;
+
+    Intent intent;
+    intent.setAction(QStringLiteral("android.intent.action.NAVIGATE"));
     intent.setData(url);
     return Activity::startActivity(intent, 0);
 }
@@ -68,33 +76,19 @@ static QUrl googleMapsWalkingUrl(double latitude, double longitude)
     return url;
 }
 
-/** Walking directions in Organic Maps.
- *  Organic Maps requires exactly these parameters in this order, including the start position.
+/** Walking directions to a location via the generic navigation intent, e.g. in Organic Maps.
+ *  This uses the conventions of Google Maps navigation URIs for the mode (w for walking). The destination is given
+ *  as a labeled point, q=LAT,LON(NAME): Organic Maps (as of 2026.09) can't read the parameters of non-hierarchical
+ *  geo: URIs in its navigation intent handling and falls back to its regular geo: handling then, where a plain name
+ *  in q would trigger a search, while a labeled point shows the destination, from where directions are one tap away.
  */
-static QUrl organicMapsWalkingUrl(const QGeoCoordinate &from, double latitude, double longitude, const QString &name)
+static QUrl walkingNavigationUrl(double latitude, double longitude, const QString &name)
 {
-    QUrlQuery query;
-    query.addQueryItem(QStringLiteral("sll"), coordinateString(from.latitude(), from.longitude()));
-    query.addQueryItem(QStringLiteral("saddr"), i18nc("start of walking directions", "Current location"));
-    query.addQueryItem(QStringLiteral("dll"), coordinateString(latitude, longitude));
-    query.addQueryItem(QStringLiteral("daddr"), name);
-    query.addQueryItem(QStringLiteral("type"), QStringLiteral("pedestrian"));
-    QUrl url;
-    url.setScheme(QStringLiteral("om"));
-    url.setHost(QStringLiteral("route"));
+    auto url = geoUrl(latitude, longitude, name);
+    QUrlQuery query(url);
+    query.addQueryItem(QStringLiteral("mode"), QStringLiteral("w"));
     url.setQuery(query);
     return url;
-}
-
-static void walkFrom(const QGeoPositionInfo &from, double latitude, double longitude, const QString &name)
-{
-    if (from.isValid() && startActivity(organicMapsWalkingUrl(from.coordinate(), latitude, longitude, name))) {
-        return;
-    }
-    if (startActivity(googleMapsWalkingUrl(latitude, longitude))) {
-        return;
-    }
-    startActivity(geoUrl(latitude, longitude, name));
 }
 #endif
 
@@ -274,64 +268,17 @@ void NavigationController::navigateTo(const QVariant &from, const QVariant &to)
 
 #include "moc_navigationcontroller.cpp"
 
-#ifdef Q_OS_ANDROID
-static void requestWalkingDirections(double latitude, double longitude, const QString &name)
-{
-    QLocationPermission permission;
-    permission.setAccuracy(QLocationPermission::Precise);
-    switch (qApp->checkPermission(permission)) {
-    case Qt::PermissionStatus::Undetermined:
-        qApp->requestPermission(permission, qApp, [latitude, longitude, name](const QPermission &permission) {
-            if (permission.status() == Qt::PermissionStatus::Granted) {
-                requestWalkingDirections(latitude, longitude, name);
-            } else {
-                walkFrom({}, latitude, longitude, name);
-            }
-        });
-        return;
-    case Qt::PermissionStatus::Denied:
-        walkFrom({}, latitude, longitude, name);
-        return;
-    case Qt::PermissionStatus::Granted:
-        break;
-    }
-
-    static QGeoPositionInfoSource *positionSource = QGeoPositionInfoSource::createDefaultSource(qApp);
-    if (!positionSource) {
-        walkFrom({}, latitude, longitude, name);
-        return;
-    }
-
-    // a recent known position is good enough, walking directions get updated while walking anyway
-    const auto lastPosition = positionSource->lastKnownPosition();
-    if (lastPosition.isValid() && lastPosition.timestamp().secsTo(QDateTime::currentDateTime()) < 120) {
-        walkFrom(lastPosition, latitude, longitude, name);
-        return;
-    }
-
-    auto updateConnection = std::make_shared<QMetaObject::Connection>();
-    auto errorConnection = std::make_shared<QMetaObject::Connection>();
-    *updateConnection = QObject::connect(positionSource, &QGeoPositionInfoSource::positionUpdated, qApp,
-        [updateConnection, errorConnection, latitude, longitude, name](const QGeoPositionInfo &position) {
-            QObject::disconnect(*updateConnection);
-            QObject::disconnect(*errorConnection);
-            walkFrom(position, latitude, longitude, name);
-        });
-    *errorConnection = QObject::connect(positionSource, &QGeoPositionInfoSource::errorOccurred, qApp,
-        [updateConnection, errorConnection, latitude, longitude, name](QGeoPositionInfoSource::Error error) {
-            qCDebug(Log) << "no position for walking directions:" << error;
-            QObject::disconnect(*updateConnection);
-            QObject::disconnect(*errorConnection);
-            walkFrom({}, latitude, longitude, name);
-        });
-    positionSource->requestUpdate(10000);
-}
-#endif
-
 void NavigationController::walkTo(double latitude, double longitude, const QString &name)
 {
 #ifdef Q_OS_ANDROID
-    requestWalkingDirections(latitude, longitude, name);
+    // starting from the current position is left to the navigation application, so navigation can begin right away
+    if (startNavigationActivity(walkingNavigationUrl(latitude, longitude, name))) {
+        return;
+    }
+    if (startActivity(googleMapsWalkingUrl(latitude, longitude))) {
+        return;
+    }
+    startActivity(geoUrl(latitude, longitude, name));
 #else
     Q_UNUSED(name);
     QUrl url;

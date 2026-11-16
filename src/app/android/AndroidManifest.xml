@@ -20,6 +20,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/> <!-- for onboard API -->
     <uses-permission android:name="android.permission.CAMERA"/> <!-- barcode scanner -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/> <!-- onboard API, navigation -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/> <!-- required alongside FINE since Android 12, used for ticket validity -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/> <!-- for Android >= 33 -->
     <!-- %%INSERT_FEATURES -->
 

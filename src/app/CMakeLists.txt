@@ -24,7 +24,9 @@ target_sources(itinerary PRIVATE
     importexport.cpp
     intenthandler.cpp
     journeyrequesthistorymodel.cpp
+    speechoutput.cpp
     ticketvaliditymanager.cpp
+    walkingnavigationcontroller.cpp
     journeysectionmodel.cpp
     json.cpp
     jsonio.cpp
@@ -198,6 +200,7 @@ ecm_add_qml_module(itinerary GENERATE_PLUGIN_SOURCE
         TicketPage.qml
         TicketQuickView.qml
         TicketsPage.qml
+        WalkingNavigationPage.qml
         TicketTokenDelegate.qml
         TicketTokenEditorCard.qml
         TimelineDelegateArrivalLayout.qml
@@ -356,6 +359,8 @@ if (ANDROID)
         arrow-left
         arrow-right
         arrow-up
+        audio-volume-high
+        audio-volume-muted
         backup
         bookmarks
         call-start
@@ -408,6 +413,7 @@ if (ANDROID)
         map-globe
         map-gnomonic
         map-symbolic
+        mark-location-symbolic
         media-playback-playing
         media-playback-start
         media-playback-stop

@@ -160,10 +160,13 @@ Kirigami.ScrollablePage {
             readonly property var stop: detailsLayout.firstTransportSection ? detailsLayout.firstTransportSection.from : null
 
             text: walkButton.stop ? i18nc("@action:button walking directions to a departure stop", "Walk to %1", walkButton.stop.name) : ""
-            description: i18nc("@info", "Directions from your current location, in a map application")
+            description: i18nc("@info", "Directions from your current location, with voice guidance")
             icon.name: "map-symbolic"
             visible: walkButton.stop !== null && walkButton.stop.hasCoordinate
-            onClicked: NavigationController.walkTo(walkButton.stop.latitude, walkButton.stop.longitude, walkButton.stop.name)
+            onClicked: detailsLayout.QQC2.ApplicationWindow.window.pageStack.layers.push(Qt.createComponent("org.kde.itinerary", "WalkingNavigationPage"), {
+                journey: detailsLayout.journey,
+                destination: walkButton.stop,
+            })
             Layout.fillWidth: true
         }
 

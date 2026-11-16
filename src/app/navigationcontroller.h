@@ -27,7 +27,7 @@ public:
     Q_INVOKABLE void navigateTo(const QVariant &from, const QVariant &to);
 
     /** Walking directions from the current position to the given location, e.g. a departure stop.
-     *  On Android this prefers Organic Maps, then Google Maps, then any map application.
+     *  On Android this uses the generic navigation intent (e.g. Organic Maps), then Google Maps, then any map application.
      */
     Q_INVOKABLE void walkTo(double latitude, double longitude, const QString &name);
 
