@@ -38,6 +38,12 @@ Kirigami.NavigationTabBar {
             }
         },
         Kirigami.PagePoolAction {
+            icon.name: "map-symbolic"
+            text: i18nc("@title:tab", "Map")
+            pagePool: pagepool
+            page: Qt.resolvedUrl("MapPage.qml")
+        },
+        Kirigami.PagePoolAction {
             id: currentTicketAction
 
             readonly property bool hasCurrentReservation: TripGroupModel.currentBatchId !== ""
