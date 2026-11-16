@@ -27,6 +27,12 @@ platforms and its documentation, see the [upstream repository](https://invent.kd
 - The journey search remembers the kind of ticket you travel with, e.g. local transport only for the
   Deutschlandticket, so long distance trains don't show up when you can't use them.
 
+## Sponsors
+
+Development of this fork is sponsored by [horst-gummi.de](https://horst-gummi.de) and
+[siegel-dichtungen.de](https://siegel-dichtungen.de), who paid for the Claude account it is being built with.
+Rubber, made in Germany. Thank you!
+
 ## Download
 
 **[Download the latest APK](https://github.com/jblechert/itinerary/releases/latest/download/itinerary-arm64-v8a.apk)**
