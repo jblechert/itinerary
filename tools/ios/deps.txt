@@ -35,7 +35,7 @@ prison               https://invent.kde.org/frameworks/prison.git               
 kirigami-addons      https://invent.kde.org/libraries/kirigami-addons.git       v1.16.1
 kmime                https://invent.kde.org/frameworks/kmime.git                v6.31.0
 recastnavigation     https://github.com/recastnavigation/recastnavigation.git   v1.6.0   -DRECASTNAVIGATION_DEMO=OFF -DRECASTNAVIGATION_TESTS=OFF -DRECASTNAVIGATION_EXAMPLES=OFF
-kopeninghours        https://invent.kde.org/libraries/kopeninghours.git         v26.08.3 -DCMAKE_DISABLE_FIND_PACKAGE_Python3=ON -DCMAKE_DISABLE_FIND_PACKAGE_Boost=ON
+kopeninghours        https://invent.kde.org/libraries/kopeninghours.git         v26.08.3 -DCMAKE_DISABLE_FIND_PACKAGE_Python=ON -DCMAKE_DISABLE_FIND_PACKAGE_Python3=ON -DCMAKE_DISABLE_FIND_PACKAGE_Boost=ON
 kpublictransport     https://invent.kde.org/libraries/kpublictransport.git      v26.08.3
 kosmindoormap        https://invent.kde.org/libraries/kosmindoormap.git         v26.08.3
 kpkpass              https://invent.kde.org/pim/kpkpass.git                     v26.08.3

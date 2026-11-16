@@ -55,6 +55,7 @@ while read -r name url ref args; do
             -DCMAKE_INSTALL_PREFIX="$HOST_PREFIX" \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+            -DQT_MAJOR_VERSION=6 \
             -DBUILD_TESTING=OFF \
             -DBUILD_QCH=OFF \
             -DUSE_DBUS=OFF \
