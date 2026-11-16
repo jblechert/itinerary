@@ -153,6 +153,8 @@ private:
     qsizetype m_rejoinSegment = 0;
     QPointF m_rejoinPoint;
     bool m_notificationShown = false;
+    /** The position has been on the current route, so leaving it is worth an announcement. */
+    bool m_beenOnRoute = false;
     QString m_notificationText;
 };
 

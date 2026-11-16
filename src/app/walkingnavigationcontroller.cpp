@@ -62,6 +62,7 @@ void WalkingNavigationController::setPath(const KPublicTransport::Path &path)
     m_announcedSection = -1;
     m_announcedNowSection = -1;
     m_currentSection = -1;
+    m_beenOnRoute = false;
     rebuildGeometry();
     Q_EMIT pathChanged();
     Q_EMIT progressChanged();
@@ -313,9 +314,10 @@ void WalkingNavigationController::processPosition(double latitude, double longit
     } else if (bestDistance < limits.backOnRoute) {
         m_offRouteCount = 0;
         m_offRoute = false;
+        m_beenOnRoute = true;
     }
     if (m_offRouteCount >= OffRouteUpdates || (firstPosition && bestDistance > offRouteThreshold)) {
-        if (!m_offRoute && !firstPosition) {
+        if (!m_offRoute && !firstPosition && m_beenOnRoute) {
             speak(i18nc("@info:tts walking navigation", "You left the route, looking for a new one."));
         }
         m_offRoute = true;
