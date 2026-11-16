@@ -5983,16 +5983,6 @@ msgstr "Zu Fuß zu %1"
 
 #: fork
 msgctxt "@info"
-msgid "Directions from your current location, in a map application"
-msgstr "Route vom aktuellen Standort, in einer Karten-App"
-
-#: fork
-msgctxt "start of walking directions"
-msgid "Current location"
-msgstr "Aktueller Standort"
-
-#: fork
-msgctxt "@info"
 msgid "You have a ticket valid in the entire country."
 msgstr "Du hast ein Ticket, das im ganzen Land gilt."
 
@@ -6080,3 +6070,103 @@ msgstr "Im Umkreis von %1 km von hier"
 msgctxt "@item:inlistbox %1 is a country"
 msgid "All of %1"
 msgstr "Ganz %1"
+
+#: fork
+msgctxt "@info walking navigation"
+msgid "You have arrived at %1"
+msgstr "Du bist an %1 angekommen"
+
+#: fork
+msgctxt "@info walking navigation"
+msgid "Continue"
+msgstr "Weitergehen"
+
+#: fork
+msgctxt "@info walking navigation"
+msgid "Walk to %1"
+msgstr "Gehe zu %1"
+
+#: fork
+msgctxt "@info:tts walking navigation"
+msgid "You left the route, looking for a new one."
+msgstr "Du hast die Route verlassen, ich suche eine neue."
+
+#: fork
+msgctxt "@info:tts walking navigation, %1 is the destination, %2 the first instruction"
+msgid "Walking to %1. %2"
+msgstr "Fußweg zu %1. %2"
+
+#: fork
+msgctxt "@info:tts walking navigation"
+msgid "You have arrived at %1."
+msgstr "Du bist an %1 angekommen."
+
+#: fork
+msgctxt "@info:tts walking navigation, %1 is a distance, %2 an instruction"
+msgid "In %1 meters: %2"
+msgstr "In %1 Metern: %2"
+
+#: fork
+msgctxt "@info start of walking navigation"
+msgid "Current location"
+msgstr "Aktueller Standort"
+
+#: fork
+msgctxt "@title walking navigation, %1 is a stop"
+msgid "Walk to %1"
+msgstr "Zu Fuß zu %1"
+
+#: fork
+msgctxt "@info walking navigation"
+msgid "Waiting for your location…"
+msgstr "Warte auf deinen Standort …"
+
+#: fork
+msgctxt "@info walking navigation"
+msgid "Looking for a route…"
+msgstr "Suche eine Route …"
+
+#: fork
+msgctxt "@info walking navigation"
+msgid "No walking route found"
+msgstr "Keine Fußroute gefunden"
+
+#: fork
+msgctxt "@info reason for keeping the screen on"
+msgid "Walking navigation"
+msgstr "Fußgängernavigation"
+
+#: fork
+msgctxt "@action:button"
+msgid "Follow my location"
+msgstr "Meinem Standort folgen"
+
+#: fork
+msgctxt "@info remaining walking distance"
+msgid "%1 to go"
+msgstr "Noch %1"
+
+#: fork
+msgctxt "@action:button"
+msgid "Voice guidance"
+msgstr "Sprachansagen"
+
+#: fork
+msgctxt "@action:button"
+msgid "Open in Map Application"
+msgstr "In Karten-App öffnen"
+
+#: fork
+msgctxt "@action:button end walking navigation"
+msgid "End"
+msgstr "Beenden"
+
+#: fork
+msgctxt "@info"
+msgid "Directions from your current location, with voice guidance"
+msgstr "Route vom aktuellen Standort, mit Sprachansagen"
+
+#: fork
+msgctxt "@info:tts walking navigation, %1 is the destination"
+msgid "Walking to %1."
+msgstr "Fußweg zu %1."
