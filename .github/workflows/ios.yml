@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install host tools
-        run: brew install ninja gettext gperf bison flex
+        run: brew install ninja gettext gperf bison flex shared-mime-info
 
       - name: Install Qt for iOS
         uses: jurplel/install-qt-action@v4
