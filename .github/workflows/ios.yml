@@ -15,7 +15,9 @@ on:
 
 jobs:
   dependencies:
-    runs-on: macos-15
+    # Intel runner: the Apple Silicon ones are frequently not available due to capacity constraints,
+    # and Xcode cross-compiles for iOS devices from either
+    runs-on: macos-15-intel
     timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
