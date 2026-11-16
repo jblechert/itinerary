@@ -47,6 +47,8 @@ jobs:
       - name: Build dependencies
         run: |
           export PATH="$(brew --prefix bison)/bin:$(brew --prefix flex)/bin:$(brew --prefix gettext)/bin:$PATH"
+          # flex rejects the UTF-8 characters in KOpeningHours' scanner unless it reads its input byte-wise
+          export LC_ALL=C
           tools/ios/build-deps.sh "$QT_ROOT_DIR" "$PWD/ios-prefix"
 
       - name: Save dependency build
