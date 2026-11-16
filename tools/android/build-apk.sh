@@ -15,7 +15,9 @@
 #            (needed for working plural form translations until that fix is in Craft;
 #            run it again after 'deps', which restores the cached versions)
 #   kpt      rebuild KPublicTransport from KPT_SRC, our branch with elevation, turn instructions and
-#            booking links (run 'app' afterwards, and again after 'deps')
+#            booking links (run 'app' afterwards, and again after 'deps'). To create KPT_SRC:
+#              git clone --branch v26.08.3 https://invent.kde.org/libraries/kpublictransport.git
+#              git -C kpublictransport apply ../itinary/tools/android/patches/kpublictransport/*.patch
 #
 # Workspace (craft root, downloads, build dirs) lives next to the checkout in ../itinary-craft (override with ITINERARY_CRAFT_DIR); it must stay outside the source tree, as packaging scans the tree for AndroidManifest files.
 set -euo pipefail
