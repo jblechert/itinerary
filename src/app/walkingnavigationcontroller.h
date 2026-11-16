@@ -19,7 +19,7 @@
 
 #include <vector>
 
-/** Turn-by-turn walking navigation along a KPublicTransport path, e.g. to a departure stop.
+/** Turn-by-turn navigation on foot, by bike or by car along a KPublicTransport path, e.g. to a departure stop.
  *
  *  Feed it the current position, and it tracks progress along the path, provides the upcoming instruction,
  *  announces instructions by voice, detects arrival, and asks for a new route when the user left the path.
@@ -33,6 +33,8 @@ class WalkingNavigationController : public QObject
     Q_PROPERTY(KPublicTransport::Path path READ path WRITE setPath NOTIFY pathChanged)
     /** The destination, e.g. the departure stop. */
     Q_PROPERTY(KPublicTransport::Location destination READ destination WRITE setDestination NOTIFY destinationChanged)
+    /** How we travel, a KPublicTransport::IndividualTransport::Mode. Determines routing and when instructions are announced. */
+    Q_PROPERTY(int travelMode READ travelMode WRITE setTravelMode NOTIFY travelModeChanged)
     /** Announce instructions by voice. */
     Q_PROPERTY(bool speechEnabled MEMBER m_speechEnabled NOTIFY speechEnabledChanged)
 
@@ -57,6 +59,8 @@ public:
     void setPath(const KPublicTransport::Path &path);
     [[nodiscard]] KPublicTransport::Location destination() const;
     void setDestination(const KPublicTransport::Location &destination);
+    [[nodiscard]] int travelMode() const;
+    void setTravelMode(int mode);
 
     [[nodiscard]] bool hasRoute() const;
     [[nodiscard]] bool hasPosition() const;
@@ -70,14 +74,17 @@ public:
     /** Update the current position. @p accuracy in meters, 0 if unknown. */
     Q_INVOKABLE void updatePosition(double latitude, double longitude, double accuracy);
 
-    /** A request for a walking journey from the given position to @p destination. */
-    Q_INVOKABLE [[nodiscard]] static KPublicTransport::JourneyRequest walkingRequest(double latitude, double longitude, const KPublicTransport::Location &destination);
-    /** The walking path of a journey, i.e. the paths of its leading walking sections combined. */
-    Q_INVOKABLE [[nodiscard]] static KPublicTransport::Path walkingPath(const KPublicTransport::Journey &journey);
+    /** A request for a direct journey with the current travel mode from the given position to @p destination. */
+    Q_INVOKABLE [[nodiscard]] KPublicTransport::JourneyRequest routeRequest(double latitude, double longitude, const KPublicTransport::Location &destination) const;
+    /** The path to follow for a journey, i.e. the paths of its leading sections not using public transport combined. */
+    Q_INVOKABLE [[nodiscard]] static KPublicTransport::Path routePath(const KPublicTransport::Journey &journey);
+    /** A location at the given coordinate, e.g. for a destination picked on a map. */
+    Q_INVOKABLE [[nodiscard]] static KPublicTransport::Location locationAt(double latitude, double longitude, const QString &name);
 
 Q_SIGNALS:
     void pathChanged();
     void destinationChanged();
+    void travelModeChanged();
     void speechEnabledChanged();
     void progressChanged();
     /** A new route from the given position is needed, as there is none or the user left it. */
@@ -93,9 +100,20 @@ private:
     void rebuildGeometry();
     void speak(const QString &text);
 
+    /** Distances (in meters) for announcements and route tracking, depending on the travel mode. */
+    struct Thresholds {
+        double announceAhead;
+        double announceNow;
+        double arrival;
+        double offRoute;
+        double backOnRoute;
+    };
+    [[nodiscard]] Thresholds thresholds() const;
+
     KPublicTransport::Path m_path;
     KPublicTransport::Location m_destination;
     bool m_speechEnabled = true;
+    int m_travelMode = 0; // KPublicTransport::IndividualTransport::Walk
 
     std::vector<Point> m_points;
     std::vector<double> m_sectionStartDistance; ///< for each path section

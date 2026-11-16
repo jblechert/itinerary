@@ -17,16 +17,24 @@ import org.kde.kpublictransport as KPublicTransport
 import org.kde.kpublictransport.ui as KPublicTransport
 import org.kde.itinerary
 
-/** Turn-by-turn walking navigation to a stop, with the map following the current position and spoken instructions. */
+/** Turn-by-turn navigation on foot, by bike or by car, e.g. to a departure stop,
+ *  with the map following the current position and spoken instructions.
+ */
 Kirigami.Page {
     id: root
 
     /** The journey whose leading walk to the departure stop to navigate, if any. */
     property var journey
-    /** Where to walk to. */
+    /** Where to go. */
     property var destination
+    /** How to get there, a KPublicTransport.IndividualTransport mode. */
+    property int travelMode: KPublicTransport.IndividualTransport.Walk
 
-    title: i18nc("@title walking navigation, %1 is a stop", "Walk to %1", root.destination.name)
+    title: switch (root.travelMode) {
+        case KPublicTransport.IndividualTransport.Bike: return i18nc("@title navigation by bike, %1 is a place", "Cycle to %1", root.destination.name);
+        case KPublicTransport.IndividualTransport.Car: return i18nc("@title navigation by car, %1 is a place", "Drive to %1", root.destination.name);
+        default: return i18nc("@title walking navigation, %1 is a stop", "Walk to %1", root.destination.name);
+    }
     padding: 0
 
     /** No walking route could be found. */
@@ -36,16 +44,17 @@ Kirigami.Page {
 
     function requestRoute(latitude: real, longitude: real): void {
         root.noRoute = false;
-        routeModel.request = controller.walkingRequest(latitude, longitude, root.destination);
+        routeModel.request = controller.routeRequest(latitude, longitude, root.destination);
     }
 
     WalkingNavigationController {
         id: controller
         destination: root.destination
+        travelMode: root.travelMode
         onRerouteRequested: (latitude, longitude) => root.requestRoute(latitude, longitude)
         Component.onCompleted: {
             if (root.journey) {
-                controller.path = controller.walkingPath(root.journey);
+                controller.path = controller.routePath(root.journey);
             }
         }
     }
@@ -58,7 +67,7 @@ Kirigami.Page {
                 return;
             }
             if (routeModel.rowCount() > 0) {
-                controller.path = controller.walkingPath(routeModel.data(routeModel.index(0, 0), KPublicTransport.JourneyQueryModel.JourneyRole));
+                controller.path = controller.routePath(routeModel.data(routeModel.index(0, 0), KPublicTransport.JourneyQueryModel.JourneyRole));
             } else if (!controller.hasRoute) {
                 root.noRoute = true;
             }
@@ -93,7 +102,7 @@ Kirigami.Page {
         window: root.QQC2.ApplicationWindow.window
         types: GuiAddons.SystemInhibitor.Idle
         enabled: root.visible
-        reason: i18nc("@info reason for keeping the screen on", "Walking navigation")
+        reason: i18nc("@info reason for keeping the screen on", "Navigation")
     }
 
     Component.onCompleted: {
@@ -136,7 +145,7 @@ Kirigami.Page {
                             return i18nc("@info walking navigation", "Looking for a route…");
                         }
                         if (root.noRoute) {
-                            return i18nc("@info walking navigation", "No walking route found");
+                            return i18nc("@info navigation", "No route found");
                         }
                         return controller.instruction;
                     }
@@ -223,7 +232,7 @@ Kirigami.Page {
         contentItem: RowLayout {
             QQC2.Label {
                 text: controller.hasRoute && controller.hasPosition
-                    ? i18nc("@info remaining walking distance", "%1 to go", CoreAddons.Format.formatDistance(controller.distanceRemaining, Settings.distanceFormat))
+                    ? i18nc("@info remaining distance", "%1 to go", CoreAddons.Format.formatDistance(controller.distanceRemaining, Settings.distanceFormat))
                     : ""
                 Layout.fillWidth: true
             }
@@ -244,7 +253,7 @@ Kirigami.Page {
             }
             QQC2.ToolButton {
                 icon.name: "dialog-close"
-                text: i18nc("@action:button end walking navigation", "End")
+                text: i18nc("@action:button end navigation", "End")
                 onClicked: root.QQC2.ApplicationWindow.window.pageStack.layers.pop()
             }
         }

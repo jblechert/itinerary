@@ -9,16 +9,12 @@
 
 #include <KLocalizedString>
 
+#include <KPublicTransport/IndividualTransport>
+
 #include <cmath>
 
 using namespace Qt::Literals;
 
-// distances in meters
-constexpr inline double AnnounceAheadDistance = 40.0;
-constexpr inline double AnnounceNowDistance = 10.0;
-constexpr inline double ArrivalDistance = 15.0;
-constexpr inline double OffRouteDistance = 35.0;
-constexpr inline double BackOnRouteDistance = 20.0;
 constexpr inline int OffRouteUpdates = 3; // consecutive position updates
 constexpr inline int RerouteIntervalSecs = 20;
 constexpr inline double EarthRadius = 6371000.0;
@@ -59,6 +55,33 @@ void WalkingNavigationController::setPath(const KPublicTransport::Path &path)
     rebuildGeometry();
     Q_EMIT pathChanged();
     Q_EMIT progressChanged();
+}
+
+int WalkingNavigationController::travelMode() const
+{
+    return m_travelMode;
+}
+
+void WalkingNavigationController::setTravelMode(int mode)
+{
+    if (m_travelMode == mode) {
+        return;
+    }
+    m_travelMode = mode;
+    Q_EMIT travelModeChanged();
+}
+
+WalkingNavigationController::Thresholds WalkingNavigationController::thresholds() const
+{
+    // similar to what Organic Maps and OsmAnd use; faster travel needs earlier announcements and more tolerance
+    switch (m_travelMode) {
+    case KPublicTransport::IndividualTransport::Bike:
+        return {.announceAhead = 80.0, .announceNow = 15.0, .arrival = 20.0, .offRoute = 35.0, .backOnRoute = 20.0};
+    case KPublicTransport::IndividualTransport::Car:
+        return {.announceAhead = 300.0, .announceNow = 40.0, .arrival = 40.0, .offRoute = 50.0, .backOnRoute = 30.0};
+    default:
+        return {.announceAhead = 40.0, .announceNow = 10.0, .arrival = 15.0, .offRoute = 35.0, .backOnRoute = 20.0};
+    }
 }
 
 KPublicTransport::Location WalkingNavigationController::destination() const
@@ -205,10 +228,11 @@ void WalkingNavigationController::updatePosition(double latitude, double longitu
     }
 
     // off the route? GPS jitter is common, so require a few updates in a row, and consider the accuracy
-    const auto offRouteThreshold = std::max(OffRouteDistance, 1.5 * accuracy);
+    const auto limits = thresholds();
+    const auto offRouteThreshold = std::max(limits.offRoute, 1.5 * accuracy);
     if (bestDistance > offRouteThreshold) {
         ++m_offRouteCount;
-    } else if (bestDistance < BackOnRouteDistance) {
+    } else if (bestDistance < limits.backOnRoute) {
         m_offRouteCount = 0;
         m_offRoute = false;
     }
@@ -237,27 +261,35 @@ void WalkingNavigationController::updatePosition(double latitude, double longitu
 
     if (!m_announcedStart) {
         m_announcedStart = true;
-        const auto firstInstruction = m_path.sections().front().description();
-        if (firstInstruction.isEmpty()) {
-            speak(i18nc("@info:tts walking navigation, %1 is the destination", "Walking to %1.", m_destination.name()));
-        } else {
-            speak(i18nc("@info:tts walking navigation, %1 is the destination, %2 the first instruction", "Walking to %1. %2", m_destination.name(), firstInstruction));
+        QString start;
+        switch (m_travelMode) {
+        case KPublicTransport::IndividualTransport::Bike:
+            start = i18nc("@info:tts navigation by bike, %1 is the destination", "Cycling to %1.", m_destination.name());
+            break;
+        case KPublicTransport::IndividualTransport::Car:
+            start = i18nc("@info:tts navigation by car, %1 is the destination", "Driving to %1.", m_destination.name());
+            break;
+        default:
+            start = i18nc("@info:tts walking navigation, %1 is the destination", "Walking to %1.", m_destination.name());
+            break;
         }
+        const auto firstInstruction = m_path.sections().front().description();
+        speak(firstInstruction.isEmpty() ? start : (start + QLatin1Char(' ') + firstInstruction));
     }
 
     // announcements for the next maneuver
-    if (!m_arrived && distanceRemaining() <= ArrivalDistance) {
+    if (!m_arrived && distanceRemaining() <= limits.arrival) {
         m_arrived = true;
         speak(i18nc("@info:tts walking navigation", "You have arrived at %1.", m_destination.name()));
     } else if (!m_arrived) {
         const auto next = m_currentSection + 1;
         const auto distance = distanceToInstruction();
         if (next < (int)m_path.sections().size()) {
-            if (distance <= AnnounceNowDistance && m_announcedNowSection != next) {
+            if (distance <= limits.announceNow && m_announcedNowSection != next) {
                 m_announcedNowSection = next;
                 m_announcedSection = next;
                 speak(instruction());
-            } else if (distance <= AnnounceAheadDistance && distance > AnnounceNowDistance && m_announcedSection != next) {
+            } else if (distance <= limits.announceAhead && distance > limits.announceNow && m_announcedSection != next) {
                 m_announcedSection = next;
                 speak(i18nc("@info:tts walking navigation, %1 is a distance, %2 an instruction", "In %1 meters: %2", (int)(std::round(distance / 5.0) * 5.0), instruction()));
             }
@@ -267,25 +299,27 @@ void WalkingNavigationController::updatePosition(double latitude, double longitu
     Q_EMIT progressChanged();
 }
 
-KPublicTransport::JourneyRequest WalkingNavigationController::walkingRequest(double latitude, double longitude, const KPublicTransport::Location &destination)
+KPublicTransport::JourneyRequest WalkingNavigationController::routeRequest(double latitude, double longitude, const KPublicTransport::Location &destination) const
 {
-    KPublicTransport::Location from;
-    from.setCoordinate(latitude, longitude);
-    from.setName(i18nc("@info start of walking navigation", "Current location"));
-
+    auto from = locationAt(latitude, longitude, i18nc("@info start of navigation", "Current location"));
     KPublicTransport::JourneyRequest req(from, destination);
-    req.setModes(KPublicTransport::JourneySection::Walking);
+    if (m_travelMode == KPublicTransport::IndividualTransport::Walk) {
+        req.setModes(KPublicTransport::JourneySection::Walking);
+    } else {
+        req.setModes(KPublicTransport::JourneySection::IndividualTransport);
+        req.setIndividualTransportModes({KPublicTransport::IndividualTransport(static_cast<KPublicTransport::IndividualTransport::Mode>(m_travelMode))});
+    }
     req.setIncludePaths(true);
     req.setMaximumResults(1);
     req.setDownloadAssets(false);
     return req;
 }
 
-KPublicTransport::Path WalkingNavigationController::walkingPath(const KPublicTransport::Journey &journey)
+KPublicTransport::Path WalkingNavigationController::routePath(const KPublicTransport::Journey &journey)
 {
     std::vector<KPublicTransport::PathSection> sections;
     for (const auto &section : journey.sections()) {
-        if (section.mode() != KPublicTransport::JourneySection::Walking) {
+        if (section.mode() == KPublicTransport::JourneySection::PublicTransport) {
             break;
         }
         const auto pathSections = section.path().sections();
@@ -294,6 +328,14 @@ KPublicTransport::Path WalkingNavigationController::walkingPath(const KPublicTra
     KPublicTransport::Path path;
     path.setSections(std::move(sections));
     return path;
+}
+
+KPublicTransport::Location WalkingNavigationController::locationAt(double latitude, double longitude, const QString &name)
+{
+    KPublicTransport::Location loc;
+    loc.setCoordinate(latitude, longitude);
+    loc.setName(name);
+    return loc;
 }
 
 #include "moc_walkingnavigationcontroller.cpp"
