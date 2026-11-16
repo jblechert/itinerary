@@ -37,108 +37,83 @@ Kirigami.ScrollablePage {
     onShowEarlierJourneysChanged: sortedJourneyModel.invalidateFilter()
 
     /** Show the results on a time axis rather than as a list.
-     *  The timeline shows the entire day, including journeys that already departed.
+     *  The timeline also shows journeys that already departed.
      */
     readonly property bool showTimeline: Settings.journeyResultsAsTimeline
     onShowTimelineChanged: {
+        root.applyViewMode();
         sortedJourneyModel.invalidateFilter();
-        Qt.callLater(root.loadRestOfDay);
     }
+    Component.onCompleted: root.applyViewMode()
 
-    // state for loadRestOfDay()
-    readonly property double dayMs: 24 * 60 * 60 * 1000
-    /** The time range to load journeys for in timeline mode.
-     *  Initially the service day of the requested time, which like for the railways runs from 03:00 to 03:00.
+    /** Switch the view between list and timeline.
+     *  Done imperatively and in this order, as changing model and delegate of a view
+     *  that is reusing items at the same time crashes.
      */
-    property double loadRangeStart: 0
-    property double loadRangeEnd: 0
-    property int dayLoadQueries: 0
-    property double lastEarliestDeparture: 0
-    property double lastLatestDeparture: 0
-
-    function initLoadRange(): void {
-        const start = new Date(root.journeyRequest.dateTime);
-        if (start.getHours() < 3) {
-            start.setDate(start.getDate() - 1);
-        }
-        start.setHours(3, 0, 0, 0);
-        root.loadRangeStart = start.getTime();
-        root.loadRangeEnd = start.getTime() + root.dayMs;
+    function applyViewMode(): void {
+        journeyView.model = null;
+        journeyView.reuseItems = !root.showTimeline;
+        journeyView.header = root.showTimeline ? null : earlierButtonComponent;
+        journeyView.delegate = root.showTimeline ? timelineComponent : listDelegate;
+        // the timeline is a single item showing all journeys
+        journeyView.model = root.showTimeline ? 1 : sortedJourneyModel;
     }
 
-    /** Extend the time range to load by one day, earlier or later. */
-    function extendLoadRange(earlier: bool): void {
-        if (journeyModel.loading || (earlier ? !journeyModel.canQueryPrevious : !journeyModel.canQueryNext)) {
-            return;
-        }
-        if (earlier) {
-            root.loadRangeStart -= root.dayMs;
-            root.lastEarliestDeparture = 0;
-        } else {
-            root.loadRangeEnd += root.dayMs;
-            root.lastLatestDeparture = 0;
-        }
-        root.dayLoadQueries = 0;
-        root.loadRestOfDay();
-    }
-
-    /** In timeline mode, load further journeys until the time range to load is covered.
-     *  One query at a time, and only as long as queries actually extend the covered time range.
+    /** All line modes to search for, and those usable with local transport tickets.
+     *  If set, the results can be switched between both.
      */
-    function loadRestOfDay(): void {
-        if (!root.showTimeline || journeyModel.loading || root.dayLoadQueries >= 20) {
+    property var allLineModes: []
+    property var localLineModes: []
+
+    /** Repeat the query with the line modes for the currently selected ticket type. */
+    function requery(): void {
+        const req = root.journeyRequest;
+        req.lineModes = Settings.localTransportOnly ? root.localLineModes : root.allLineModes;
+        root.showEarlierJourneys = false;
+        root.journeyRequest = req;
+    }
+
+    /** Load one more batch of earlier or later journeys, unless a query is still running. */
+    function loadMore(earlier: bool): void {
+        if (journeyModel.loading) {
             return;
         }
-        if (root.loadRangeEnd === 0) {
-            root.initLoadRange();
-        }
-        let earliest = Number.MAX_VALUE;
-        let latest = 0;
-        for (let row = 0; row < journeyModel.rowCount(); ++row) {
-            const departure = journeyModel.data(journeyModel.index(row, 0), JourneyQueryModel.JourneyRole).scheduledDepartureTime.getTime();
-            earliest = Math.min(earliest, departure);
-            latest = Math.max(latest, departure);
-        }
-        if (latest === 0) {
-            return;
-        }
-        if (journeyModel.canQueryPrevious && earliest > root.loadRangeStart && earliest !== root.lastEarliestDeparture) {
-            root.lastEarliestDeparture = earliest;
-            ++root.dayLoadQueries;
+        if (earlier && journeyModel.canQueryPrevious) {
+            root.showEarlierJourneys = true;
             journeyModel.queryPrevious();
-        } else if (journeyModel.canQueryNext && latest < root.loadRangeEnd && latest !== root.lastLatestDeparture) {
-            root.lastLatestDeparture = latest;
-            ++root.dayLoadQueries;
+        } else if (!earlier && journeyModel.canQueryNext) {
             journeyModel.queryNext();
         }
     }
 
-    // load the next or previous day when scrolling to the end of the timeline
+    // load more when scrolling to the end of the timeline, one query each time the edge is reached
     Connections {
         target: journeyView
         enabled: root.showTimeline
         function onAtYEndChanged(): void {
             if (journeyView.atYEnd && journeyView.moving) {
-                root.extendLoadRange(false);
+                root.loadMore(false);
             }
         }
         function onAtYBeginningChanged(): void {
             if (journeyView.atYBeginning && journeyView.moving) {
-                root.extendLoadRange(true);
-            }
-        }
-    }
-
-    Connections {
-        target: journeyModel
-        function onLoadingChanged(): void {
-            if (!journeyModel.loading) {
-                Qt.callLater(root.loadRestOfDay);
+                root.loadMore(true);
             }
         }
     }
 
     actions: [
+        Kirigami.Action {
+            text: i18nc("@option:check only show journeys usable with local transport tickets", "Local Transport Only")
+            icon.name: "filter-symbolic"
+            checkable: true
+            checked: Settings.localTransportOnly
+            visible: root.allLineModes.length > 0
+            onTriggered: {
+                Settings.localTransportOnly = checked;
+                root.requery();
+            }
+        },
         Kirigami.Action {
             icon.name: root.showTimeline ? "view-list-details" : "view-calendar-day"
             text: root.showTimeline ? i18nc("@action:button", "Show as List") : i18nc("@action:button", "Show as Timeline")
@@ -166,16 +141,88 @@ Kirigami.ScrollablePage {
             model: detailsLayout.journey.sections
         }
 
+        /** The first section using public transport, e.g. to walk to its departure stop. */
+        readonly property var firstTransportSection: {
+            for (const section of detailsLayout.journey.sections) {
+                if (section.mode === JourneySection.PublicTransport) {
+                    return section;
+                }
+            }
+            return null;
+        }
+
         FormCard.FormDelegateSeparator {
-            above: bookButton
-            visible: bookButton.visible
+            visible: walkButton.visible
         }
         FormCard.FormButtonDelegate {
-            id: bookButton
-            text: i18nc("purchase a ticket", "Book")
-            icon.name: "view-financial-account-cash-symbolic"
-            visible: detailsLayout.journey.bookingUrl != "" && detailsLayout.journey.disruptionEffect !== Disruption.NoService
-            onClicked: Qt.openUrlExternally(detailsLayout.journey.bookingUrl)
+            id: walkButton
+
+            readonly property var stop: detailsLayout.firstTransportSection ? detailsLayout.firstTransportSection.from : null
+
+            text: walkButton.stop ? i18nc("@action:button walking directions to a departure stop", "Walk to %1", walkButton.stop.name) : ""
+            description: i18nc("@info", "Directions from your current location, in a map application")
+            icon.name: "map-symbolic"
+            visible: walkButton.stop !== null && walkButton.stop.hasCoordinate
+            onClicked: NavigationController.walkTo(walkButton.stop.latitude, walkButton.stop.longitude, walkButton.stop.name)
+            Layout.fillWidth: true
+        }
+
+        /** Where to buy a ticket for this journey.
+         *  Preferably a direct booking link for the entire journey, otherwise for its individual sections,
+         *  otherwise the websites of the operators running them.
+         */
+        readonly property var ticketLinks: {
+            if (detailsLayout.journey.disruptionEffect === Disruption.NoService) {
+                return [];
+            }
+            const journeyUrl = String(detailsLayout.journey.bookingUrl);
+            if (journeyUrl !== "") {
+                return [{ text: i18nc("@action:button purchase a ticket", "Buy Ticket"), url: journeyUrl, isDirect: true }];
+            }
+            let links = [];
+            let seen = new Set();
+            for (const section of detailsLayout.journey.sections) {
+                if (section.mode !== JourneySection.PublicTransport) {
+                    continue;
+                }
+                const line = section.route.line;
+                const sectionUrl = String(section.bookingUrl);
+                const operatorUrl = String(line.operatorUrl);
+                if (sectionUrl !== "" && !seen.has(sectionUrl)) {
+                    seen.add(sectionUrl);
+                    links.push({ text: i18nc("@action:button purchase a ticket for a train, bus, etc.", "Buy Ticket for %1", line.name), url: sectionUrl, isDirect: true });
+                } else if (sectionUrl === "" && operatorUrl !== "" && !seen.has(operatorUrl)) {
+                    seen.add(operatorUrl);
+                    const name = line.operatorName !== "" ? line.operatorName : new URL(operatorUrl).hostname;
+                    links.push({ text: i18nc("@action:button website of a transport company to buy tickets at", "Tickets from %1", name), url: operatorUrl, isDirect: false });
+                }
+            }
+            return links;
+        }
+
+        Repeater {
+            model: detailsLayout.ticketLinks
+
+            delegate: ColumnLayout {
+                id: ticketLink
+
+                required property var modelData
+                required property int index
+
+                spacing: 0
+                Layout.fillWidth: true
+
+                FormCard.FormDelegateSeparator {}
+                FormCard.FormButtonDelegate {
+                    text: ticketLink.modelData.text
+                    description: ticketLink.modelData.isDirect
+                        ? new URL(ticketLink.modelData.url).hostname
+                        : i18nc("@info %1 is a host name", "Website of the transport company, %1", new URL(ticketLink.modelData.url).hostname)
+                    icon.name: "view-financial-account-cash-symbolic"
+                    onClicked: Qt.openUrlExternally(ticketLink.modelData.url)
+                    Layout.fillWidth: true
+                }
+            }
         }
 
         FormCard.FormDelegateSeparator {
@@ -266,14 +313,13 @@ Kirigami.ScrollablePage {
             width: journeyView.width
             journeys: sortedJourneyModel
             verticalFlickable: journeyView
-            focusTime: root.journeyRequest.dateTime
+            // open at the current time, or at the requested time if that is on another day
+            focusTime: new Date()
+            fallbackFocusTime: root.journeyRequest.dateTime
             canQueryPrevious: journeyModel.canQueryPrevious
             canQueryNext: journeyModel.canQueryNext
-            onQueryPrevious: {
-                root.showEarlierJourneys = true;
-                journeyModel.queryPrevious();
-            }
-            onQueryNext: journeyModel.queryNext()
+            onQueryPrevious: root.loadMore(true)
+            onQueryNext: root.loadMore(false)
             onJourneyClicked: (journey) => root.QQC2.ApplicationWindow.window.pageStack.push(journeyDetailsPage, { journey: journey })
         }
     }
@@ -326,10 +372,7 @@ Kirigami.ScrollablePage {
         id: journeyView
 
         clip: true
-        reuseItems: true
         cacheBuffer: height
-
-        delegate: root.showTimeline ? timelineComponent : listDelegate
 
         Component {
             id: listDelegate
@@ -405,12 +448,7 @@ Kirigami.ScrollablePage {
             }
         }
 
-        // the timeline is a single item showing all journeys
-        model: root.showTimeline ? 1 : sortedJourneyModel
-
         spacing: Kirigami.Units.largeSpacing
-
-        header: root.showTimeline ? null : earlierButtonComponent
 
         footer: ColumnLayout {
             width: journeyView.width

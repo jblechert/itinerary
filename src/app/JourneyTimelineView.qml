@@ -34,8 +34,10 @@ ColumnLayout {
      *  scrolling in one direction also scrolls in the other one.
      */
     property Flickable verticalFlickable
-    /** Time to initially scroll to, typically the requested departure time. */
+    /** Time to initially scroll to, typically the current time. */
     property date focusTime
+    /** Time to initially scroll to if focusTime isn't within the shown time range, e.g. the requested time. */
+    property date fallbackFocusTime
     property bool initiallyPositioned: false
     /** Whether earlier or later journeys can be loaded. */
     property bool canQueryPrevious: false
@@ -193,7 +195,9 @@ ColumnLayout {
 
     function scrollToFocusTime(): void {
         const flickable = root.verticalFlickable;
-        const y = timeAxis.mapToItem(flickable.contentItem, 0, 0).y + root.yFor(root.focusTime) - root.referenceOffset;
+        const focusInRange = root.focusTime.getTime() >= root.startTime && root.focusTime.getTime() <= root.endTime;
+        const focus = focusInRange ? root.focusTime : root.fallbackFocusTime;
+        const y = timeAxis.mapToItem(flickable.contentItem, 0, 0).y + root.yFor(focus) - root.referenceOffset;
         const maxY = flickable.originY + Math.max(0, flickable.contentHeight - flickable.height);
         flickable.contentY = Math.max(flickable.originY, Math.min(y, maxY));
     }
@@ -207,7 +211,11 @@ ColumnLayout {
         target: root.journeys
         function onRowsInserted(): void { Qt.callLater(root.updateTimeRange); }
         function onRowsRemoved(): void { Qt.callLater(root.updateTimeRange); }
-        function onModelReset(): void { Qt.callLater(root.updateTimeRange); }
+        function onModelReset(): void {
+            // a new query, scroll to its requested time again once there are results
+            root.initiallyPositioned = false;
+            Qt.callLater(root.updateTimeRange);
+        }
         function onLayoutChanged(): void { Qt.callLater(root.updateTimeRange); }
         function onDataChanged(): void { Qt.callLater(root.updateTimeRange); }
     }

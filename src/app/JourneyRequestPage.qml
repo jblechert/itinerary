@@ -61,7 +61,10 @@ FormCard.FormCardPage {
         JourneyRequestHistoryModel.addJourneyRequest(root.departureStop, root.arrivalStop);
 
         applicationWindow().pageStack.push(journeyQueryPage);
-        const req = applicationWindow().pageStack.currentItem.journeyRequest;
+        const queryPage = applicationWindow().pageStack.currentItem;
+        queryPage.allLineModes = root.lineModes;
+        queryPage.localLineModes = root.lineModes.filter((mode) => root.nonLocalLineModes.indexOf(mode) === -1);
+        const req = queryPage.journeyRequest;
         req.from = root.departureStop;
         req.to = root.arrivalStop;
 
@@ -82,7 +85,7 @@ FormCard.FormCardPage {
         }
 
         console.log(req);
-        applicationWindow().pageStack.currentItem.journeyRequest = req;
+        queryPage.journeyRequest = req;
     }
 
     // This is used if we are creating the first trip group
