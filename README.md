@@ -1,44 +1,48 @@
-# KDE Itinerary
+# Itinerary (Android fork)
 
-A digital travel assistant that supports you while traveling without compromising your privacy.
+This is a personal fork of [KDE Itinerary](https://apps.kde.org/itinerary), a digital travel assistant
+that supports you while traveling without compromising your privacy. The fork focuses on Android and on
+getting to your ticket quickly.
 
-![KDE Itinerary timeline view](https://cdn.kde.org/screenshots/itinerary/kde-itinerary-timeline.png)
+It is not affiliated with or endorsed by KDE. For the original application, its official releases for all
+platforms and its documentation, see the [upstream repository](https://invent.kde.org/pim/itinerary).
 
-See [the website](https://apps.kde.org/itinerary) and [the wiki](https://community.kde.org/KDE_PIM/KDE_Itinerary) for more information.
+## Differences to upstream
 
-## Getting KDE Itinerary
+- The Android Back gesture navigates back inside the application instead of closing it.
+- A *Tickets* tab gives direct access to your currently valid tickets and passes, ready to be shown
+  for inspection.
 
-### Flatpak
+## Download
 
-Stable flatpaks are available from [Flathub](https://flathub.org/apps/details/org.kde.itinerary).
+**[Download the latest APK](https://github.com/jblechert/itinerary/releases/latest/download/itinerary-arm64-v8a.apk)**
+(Android 9 or later, 64-bit ARM), or pick a specific build from the
+[releases page](https://github.com/jblechert/itinerary/releases).
 
-Nightly flatpaks are available from KDE's Flatpak nightly repository:
+Things to know before installing:
+
+- These are development builds, provided as-is and without any warranty. Whether you run them is up to you.
+- They use the same application ID as the official KDE Itinerary but a different signing key, so they
+  cannot be installed alongside or on top of it. Uninstalling the official version deletes its data,
+  export it first.
+- There is no automatic update, you get a new version by downloading and installing it again.
+
+## Building
+
+`tools/android/build-apk.sh` builds the APK the same way KDE's CI does, using KDE Craft in a container.
+It needs Docker and a few gigabytes of disk space.
 
 ```
-flatpak install https://cdn.kde.org/flatpak/itinerary-nightly/org.kde.itinerary.flatpakref
+tools/android/build-apk.sh arm64 all      # dependencies, application, APK
+tools/android/build-apk.sh arm64 install  # sign with the Android debug key and install via adb
 ```
-
-### Android
-
-Release builds are available in KDE's [release F-Droid repository](https://cdn.kde.org/android/stable-releases/fdroid/repo/?fingerprint=13784BA6C80FF4E2181E55C56F961EED5844CEA16870D3B38D58780B85E1158F).
-
-![Link to KDE's release F-Droid repository](doc/kde-fdroid-release-repository-link.png)
-
-Nightly builds are available from KDE's [nightly F-Droid Repository](https://cdn.kde.org/android/fdroid/repo/?fingerprint=B3EBE10AFA6C5C400379B34473E843D686C61AE6AD33F423C98AF903F056523F).
-
-![Link to KDE's nightly F-Droid repository](doc/kde-fdroid-release-repository-link.png)
 
 ## Contributing
 
-General introduction: https://community.kde.org/Get_Involved
-
-Building:
-- Android: https://develop.kde.org/docs/packaging/android/building_applications/
-- Other platforms: https://community.kde.org/Get_Involved/development
+Changes that are useful beyond this fork should go to KDE Itinerary itself, see
+https://community.kde.org/Get_Involved for how to get started there.
 
 Important external components:
 - Travel document extractor engine: https://invent.kde.org/pim/kitinerary
 - Public transport data access: https://invent.kde.org/libraries/kpublictransport
 - Indoor map renderer: https://invent.kde.org/libraries/kosmindoormap
-
-Matrix channel: [#itinerary:kde.org](https://matrix.to/#/#itinerary:kde.org)
