@@ -36,7 +36,7 @@ FormCard.FormCardPage {
             description: i18n("The page shown when the application starts.")
             model: [
                 { text: i18nc("@title:tab This isn't the app name, but the English noun", "Itinerary"), value: Settings.ItineraryStartPage },
-                { text: i18nc("@title:tab", "Tickets"), value: Settings.TicketsStartPage },
+                { text: i18nc("@title:tab", "Current Ticket"), value: Settings.TicketsStartPage },
                 { text: i18nc("@title:tab", "My Data"), value: Settings.MyDataStartPage },
             ]
             textRole: "text"

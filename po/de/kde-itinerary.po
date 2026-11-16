@@ -5862,11 +5862,6 @@ msgid "Recent Journeys"
 msgstr "Letzte Verbindungen"
 
 #: fork
-msgctxt "@title:tab"
-msgid "Tickets"
-msgstr "Tickets"
-
-#: fork
 msgctxt "@title"
 msgid "Tickets"
 msgstr "Tickets"

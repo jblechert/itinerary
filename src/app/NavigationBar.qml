@@ -38,22 +38,27 @@ Kirigami.NavigationTabBar {
             }
         },
         Kirigami.PagePoolAction {
+            id: currentTicketAction
+
+            readonly property bool hasCurrentReservation: TripGroupModel.currentBatchId !== ""
+
+            text: i18nc("@title:tab", "Current Ticket")
             icon.name: "view-barcode-qr"
-            text: i18nc("@title:tab", "Tickets")
             pagePool: pagepool
-            page: Qt.resolvedUrl("TicketsPage.qml")
+            // with an empty page the page pool action does nothing, and we show the current reservation instead
+            page: currentTicketAction.hasCurrentReservation ? "" : Qt.resolvedUrl("TicketsPage.qml")
+            onTriggered: {
+                if (currentTicketAction.hasCurrentReservation) {
+                    currentTicketAction.checked = false;
+                    pagepool.loadPage(Qt.resolvedUrl("TripGroupsPage.qml")).openCurrentReservation();
+                }
+            }
         },
         Kirigami.PagePoolAction {
             icon.name: "user-identity-symbolic"
             text: i18nc("@title:tab", "My Data")
             pagePool: pagepool
             page: Qt.resolvedUrl("MyDataPage.qml")
-        },
-        Kirigami.Action {
-            text: i18nc("@title:tab", "Current Ticket")
-            icon.name: "view-barcode-qr"
-            visible: TripGroupModel.currentBatchId !== ""
-            onTriggered: pagepool.loadPage(Qt.resolvedUrl("TripGroupsPage.qml")).openCurrentReservation()
         }
     ]
 }
