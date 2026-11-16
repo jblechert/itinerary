@@ -6092,11 +6092,6 @@ msgid "You left the route, looking for a new one."
 msgstr "Du hast die Route verlassen, ich suche eine neue."
 
 #: fork
-msgctxt "@info:tts walking navigation, %1 is the destination, %2 the first instruction"
-msgid "Walking to %1. %2"
-msgstr "Fußweg zu %1. %2"
-
-#: fork
 msgctxt "@info:tts walking navigation"
 msgid "You have arrived at %1."
 msgstr "Du bist an %1 angekommen."
@@ -6107,7 +6102,7 @@ msgid "In %1 meters: %2"
 msgstr "In %1 Metern: %2"
 
 #: fork
-msgctxt "@info start of walking navigation"
+msgctxt "@info start of navigation"
 msgid "Current location"
 msgstr "Aktueller Standort"
 
@@ -6127,14 +6122,14 @@ msgid "Looking for a route…"
 msgstr "Suche eine Route …"
 
 #: fork
-msgctxt "@info walking navigation"
-msgid "No walking route found"
-msgstr "Keine Fußroute gefunden"
+msgctxt "@info navigation"
+msgid "No route found"
+msgstr "Keine Route gefunden"
 
 #: fork
 msgctxt "@info reason for keeping the screen on"
-msgid "Walking navigation"
-msgstr "Fußgängernavigation"
+msgid "Navigation"
+msgstr "Navigation"
 
 #: fork
 msgctxt "@action:button"
@@ -6142,7 +6137,7 @@ msgid "Follow my location"
 msgstr "Meinem Standort folgen"
 
 #: fork
-msgctxt "@info remaining walking distance"
+msgctxt "@info remaining distance"
 msgid "%1 to go"
 msgstr "Noch %1"
 
@@ -6157,7 +6152,7 @@ msgid "Open in Map Application"
 msgstr "In Karten-App öffnen"
 
 #: fork
-msgctxt "@action:button end walking navigation"
+msgctxt "@action:button end navigation"
 msgid "End"
 msgstr "Beenden"
 
@@ -6170,3 +6165,78 @@ msgstr "Route vom aktuellen Standort, mit Sprachansagen"
 msgctxt "@info:tts walking navigation, %1 is the destination"
 msgid "Walking to %1."
 msgstr "Fußweg zu %1."
+
+#: fork
+msgctxt "@title navigation by bike, %1 is a place"
+msgid "Cycle to %1"
+msgstr "Mit dem Rad zu %1"
+
+#: fork
+msgctxt "@title navigation by car, %1 is a place"
+msgid "Drive to %1"
+msgstr "Mit dem Auto zu %1"
+
+#: fork
+msgctxt "@title"
+msgid "Map"
+msgstr "Karte"
+
+#: fork
+msgctxt "@title:tab"
+msgid "Map"
+msgstr "Karte"
+
+#: fork
+msgctxt "@action:inmenu map overlay"
+msgid "Map Only"
+msgstr "Nur Karte"
+
+#: fork
+msgctxt "@action:inmenu map overlay"
+msgid "Hiking Routes"
+msgstr "Wanderrouten"
+
+#: fork
+msgctxt "@action:inmenu map overlay"
+msgid "Cycling Routes"
+msgstr "Radrouten"
+
+#: fork
+msgctxt "@action:inmenu map overlay"
+msgid "Mountain Bike Routes"
+msgstr "Mountainbike-Routen"
+
+#: fork
+msgctxt "@info a place picked on the map"
+msgid "Selected place"
+msgstr "Ausgewählter Ort"
+
+#: fork
+msgctxt "@action:inmenu"
+msgid "Walk Here"
+msgstr "Zu Fuß hierher"
+
+#: fork
+msgctxt "@action:inmenu"
+msgid "Cycle Here"
+msgstr "Mit dem Rad hierher"
+
+#: fork
+msgctxt "@action:inmenu"
+msgid "Drive Here"
+msgstr "Mit dem Auto hierher"
+
+#: fork
+msgctxt "@info attribution of the hiking/cycling route overlay"
+msgid "Routes: <a href=\"https://waymarkedtrails.org\">Waymarked Trails</a> (CC BY-SA)"
+msgstr "Routen: <a href=\"https://waymarkedtrails.org\">Waymarked Trails</a> (CC BY-SA)"
+
+#: fork
+msgctxt "@info:tts navigation by bike, %1 is the destination"
+msgid "Cycling to %1."
+msgstr "Mit dem Rad zu %1."
+
+#: fork
+msgctxt "@info:tts navigation by car, %1 is the destination"
+msgid "Driving to %1."
+msgstr "Mit dem Auto zu %1."
