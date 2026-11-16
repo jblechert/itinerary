@@ -12,6 +12,8 @@
 #include <QGuiApplication>
 #include <QImage>
 
+#include <cmath>
+
 using namespace Qt::Literals::StringLiterals;
 
 PkPassImageProvider::PkPassImageProvider()
@@ -51,7 +53,8 @@ QImage PkPassImageProvider::requestImage(const QString &id, QSize *size, const Q
             continue;
         }
 
-        auto img = pass->image(assetName, qGuiApp->devicePixelRatio()); // TODO pass this via id from Item.window.devicePixelRatio
+        // round up, so we don't end up with a lower resolution asset on fractional scale factors
+        auto img = pass->image(assetName, std::ceil(qGuiApp->devicePixelRatio())); // TODO pass this via id from Item.window.devicePixelRatio
         if (img.isNull()) {
             return {};
         }
