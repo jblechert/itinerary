@@ -35,6 +35,10 @@ class WalkingNavigationController : public QObject
     Q_PROPERTY(KPublicTransport::Location destination READ destination WRITE setDestination NOTIFY destinationChanged)
     /** How we travel, a KPublicTransport::IndividualTransport::Mode. Determines routing and when instructions are announced. */
     Q_PROPERTY(int travelMode READ travelMode WRITE setTravelMode NOTIFY travelModeChanged)
+    /** A route to follow, such as a marked hiking trail. When away from it, routes are found to its
+     *  nearest point and continue along it, see rejoinLocation() and joinTrail().
+     */
+    Q_PROPERTY(KPublicTransport::Path trail READ trail WRITE setTrail NOTIFY trailChanged)
     /** Announce instructions by voice. */
     Q_PROPERTY(bool speechEnabled MEMBER m_speechEnabled NOTIFY speechEnabledChanged)
 
@@ -61,6 +65,8 @@ public:
     void setDestination(const KPublicTransport::Location &destination);
     [[nodiscard]] int travelMode() const;
     void setTravelMode(int mode);
+    [[nodiscard]] KPublicTransport::Path trail() const;
+    void setTrail(const KPublicTransport::Path &trail);
 
     [[nodiscard]] bool hasRoute() const;
     [[nodiscard]] bool hasPosition() const;
@@ -80,11 +86,16 @@ public:
     Q_INVOKABLE [[nodiscard]] static KPublicTransport::Path routePath(const KPublicTransport::Journey &journey);
     /** A location at the given coordinate, e.g. for a destination picked on a map. */
     Q_INVOKABLE [[nodiscard]] static KPublicTransport::Location locationAt(double latitude, double longitude, const QString &name);
+    /** The point of the trail closest to the given position, to find a route to. */
+    Q_INVOKABLE [[nodiscard]] KPublicTransport::Location rejoinLocation(double latitude, double longitude);
+    /** @p approach followed by the trail from the point returned by the last call of rejoinLocation(). */
+    Q_INVOKABLE [[nodiscard]] KPublicTransport::Path joinTrail(const KPublicTransport::Path &approach) const;
 
 Q_SIGNALS:
     void pathChanged();
     void destinationChanged();
     void travelModeChanged();
+    void trailChanged();
     void speechEnabledChanged();
     void progressChanged();
     /** A new route from the given position is needed, as there is none or the user left it. */
@@ -136,6 +147,11 @@ private:
     bool m_announcedStart = false;
 
     SpeechOutput m_speech;
+    KPublicTransport::Path m_trail;
+    // where to rejoin the trail: section, index of the segment's first point, and the point itself
+    int m_rejoinSection = 0;
+    qsizetype m_rejoinSegment = 0;
+    QPointF m_rejoinPoint;
     bool m_notificationShown = false;
     QString m_notificationText;
 };

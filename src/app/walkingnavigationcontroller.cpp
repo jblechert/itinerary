@@ -11,7 +11,9 @@
 
 #include <KPublicTransport/IndividualTransport>
 
+#include <algorithm>
 #include <cmath>
+#include <limits>
 
 #ifdef Q_OS_ANDROID
 #include <QCoreApplication>
@@ -90,6 +92,68 @@ WalkingNavigationController::Thresholds WalkingNavigationController::thresholds(
     default:
         return {.announceAhead = 40.0, .announceNow = 10.0, .arrival = 15.0, .offRoute = 35.0, .backOnRoute = 20.0};
     }
+}
+
+KPublicTransport::Path WalkingNavigationController::trail() const
+{
+    return m_trail;
+}
+
+void WalkingNavigationController::setTrail(const KPublicTransport::Path &trail)
+{
+    m_trail = trail;
+    m_rejoinSection = 0;
+    m_rejoinSegment = 0;
+    Q_EMIT trailChanged();
+}
+
+KPublicTransport::Location WalkingNavigationController::rejoinLocation(double latitude, double longitude)
+{
+    // project onto a local plane around the position, good enough for finding the closest point
+    const auto lonScale = std::cos(toRadians(latitude));
+    const auto project = [&](QPointF p) {
+        return QPointF((p.x() - longitude) * lonScale, p.y() - latitude);
+    };
+    double best = std::numeric_limits<double>::max();
+    const auto &sections = m_trail.sections();
+    for (int s = 0; s < (int)sections.size(); ++s) {
+        const auto points = sections[s].path();
+        for (qsizetype i = 0; i + 1 < points.size(); ++i) {
+            const auto a = project(points[i]);
+            const auto b = project(points[i + 1]);
+            const auto ab = b - a;
+            const auto len2 = QPointF::dotProduct(ab, ab);
+            const auto t = len2 > 0.0 ? std::clamp(QPointF::dotProduct(-a, ab) / len2, 0.0, 1.0) : 0.0;
+            const auto c = a + t * ab;
+            const auto d = QPointF::dotProduct(c, c);
+            if (d < best) {
+                best = d;
+                m_rejoinSection = s;
+                m_rejoinSegment = i;
+                m_rejoinPoint = points[i] + t * (points[i + 1] - points[i]);
+            }
+        }
+    }
+    return locationAt(m_rejoinPoint.y(), m_rejoinPoint.x(), m_destination.name());
+}
+
+KPublicTransport::Path WalkingNavigationController::joinTrail(const KPublicTransport::Path &approach) const
+{
+    auto sections = approach.sections();
+    const auto &trailSections = m_trail.sections();
+    for (int s = m_rejoinSection; s < (int)trailSections.size(); ++s) {
+        auto section = trailSections[s];
+        if (s == m_rejoinSection) {
+            auto points = section.path();
+            points.remove(0, std::min(m_rejoinSegment + 1, points.size()));
+            points.prepend(m_rejoinPoint);
+            section.setPath(points);
+        }
+        sections.push_back(section);
+    }
+    KPublicTransport::Path path;
+    path.setSections(std::move(sections));
+    return path;
 }
 
 KPublicTransport::Location WalkingNavigationController::destination() const
@@ -288,7 +352,8 @@ void WalkingNavigationController::processPosition(double latitude, double longit
             break;
         }
         const auto firstInstruction = m_path.sections().front().description();
-        speak(firstInstruction.isEmpty() ? start : (start + QLatin1Char(' ') + firstInstruction));
+        const bool sayInstruction = !firstInstruction.isEmpty() && firstInstruction != m_destination.name();
+        speak(sayInstruction ? (start + QLatin1Char(' ') + firstInstruction) : start);
     }
 
     // announcements for the next maneuver

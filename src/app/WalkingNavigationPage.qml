@@ -29,11 +29,18 @@ Kirigami.Page {
     property var destination
     /** How to get there, a KPublicTransport.IndividualTransport mode. */
     property int travelMode: KPublicTransport.IndividualTransport.Walk
+    /** A route to follow, e.g. a marked hiking trail, ending at the destination. */
+    property var trail
 
-    title: switch (root.travelMode) {
+    title: {
+        if (root.trail) {
+            return i18nc("@title following a marked route, %1 is its name", "Follow %1", root.destination.name);
+        }
+        switch (root.travelMode) {
         case KPublicTransport.IndividualTransport.Bike: return i18nc("@title navigation by bike, %1 is a place", "Cycle to %1", root.destination.name);
         case KPublicTransport.IndividualTransport.Car: return i18nc("@title navigation by car, %1 is a place", "Drive to %1", root.destination.name);
         default: return i18nc("@title walking navigation, %1 is a stop", "Walk to %1", root.destination.name);
+        }
     }
     padding: 0
 
@@ -44,7 +51,7 @@ Kirigami.Page {
 
     function requestRoute(latitude: real, longitude: real): void {
         root.noRoute = false;
-        routeModel.request = controller.routeRequest(latitude, longitude, root.destination);
+        routeModel.request = controller.routeRequest(latitude, longitude, root.trail ? controller.rejoinLocation(latitude, longitude) : root.destination);
     }
 
     WalkingNavigationController {
@@ -53,7 +60,10 @@ Kirigami.Page {
         travelMode: root.travelMode
         onRerouteRequested: (latitude, longitude) => root.requestRoute(latitude, longitude)
         Component.onCompleted: {
-            if (root.journey) {
+            if (root.trail) {
+                controller.trail = root.trail;
+                controller.path = root.trail;
+            } else if (root.journey) {
                 controller.path = controller.routePath(root.journey);
             }
         }
@@ -67,7 +77,8 @@ Kirigami.Page {
                 return;
             }
             if (routeModel.rowCount() > 0) {
-                controller.path = controller.routePath(routeModel.data(routeModel.index(0, 0), KPublicTransport.JourneyQueryModel.JourneyRole));
+                const route = controller.routePath(routeModel.data(routeModel.index(0, 0), KPublicTransport.JourneyQueryModel.JourneyRole));
+                controller.path = root.trail ? controller.joinTrail(route) : route;
             } else if (!controller.hasRoute) {
                 root.noRoute = true;
             }
