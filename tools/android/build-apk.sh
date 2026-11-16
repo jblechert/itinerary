@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-FileCopyrightText: 2026 Janis Blechert <janis@blechert.at>
-# SPDX-License-Identifier: BSD-2-Clause
+# SPDX-License-Identifier: BSD-3-Clause
 #
 # Build an Itinerary APK locally, mirroring KDE's craft-android CI job.
 #
