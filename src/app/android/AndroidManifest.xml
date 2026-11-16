@@ -23,7 +23,11 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/> <!-- for Android >= 33 -->
     <!-- %%INSERT_FEATURES -->
 
-    <application android:name="org.qtproject.qt.android.bindings.QtApplication" android:label="@string/application_name_full" android:icon="@mipmap/ic_launcher">
+    <!-- Qt needs the legacy Back key events, with predictive back (default when targeting API 36+) Back closes the app instead -->
+    <application android:name="org.qtproject.qt.android.bindings.QtApplication"
+                 android:label="@string/application_name_full"
+                 android:icon="@mipmap/ic_launcher"
+                 android:enableOnBackInvokedCallback="false">
         <activity android:configChanges="orientation|uiMode|screenLayout|screenSize|smallestScreenSize|layoutDirection|locale|fontScale|keyboard|keyboardHidden|navigation"
                   android:name="org.kde.itinerary.Activity"
                   android:label="@string/application_name_short"
