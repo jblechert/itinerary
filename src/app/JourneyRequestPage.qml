@@ -134,7 +134,13 @@ FormCard.FormCardPage {
                 publicTransportManager: root.publicTransportManager
                 title: i18n("Select Journey")
                 onJourneyChanged: {
-                    let tripGroupDialog = TripGroupModel.rowCount() < 1 ? newTripGroupDialogComponent.createObject() : tripGroupDialogComponent.createObject();
+                    // reset when the dialog is closed, so the same journey can be selected again
+                    if (!queryPage.journey) {
+                        return;
+                    }
+                    // popups need a parent with a window to be shown at all
+                    const dialogParent = root.QQC2.Overlay.overlay;
+                    let tripGroupDialog = TripGroupModel.rowCount() < 1 ? newTripGroupDialogComponent.createObject(dialogParent) : tripGroupDialogComponent.createObject(dialogParent);
 
                     tripGroupDialog.tripGroupSelected.connect((tgId) => {
                         for (const section of queryPage.journey.sections) {
@@ -151,6 +157,9 @@ FormCard.FormCardPage {
                         pageStack.push(pagepool.loadPage(Qt.resolvedUrl("TripGroupsPage.qml")))
                     })
                     tripGroupDialog.closed.connect(() => {
+                        if (queryPage) {
+                            queryPage.journey = undefined;
+                        }
                         tripGroupDialog.destroy()
                     })
 
