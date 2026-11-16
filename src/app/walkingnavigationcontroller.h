@@ -48,6 +48,8 @@ class WalkingNavigationController : public QObject
     Q_PROPERTY(QString instruction READ instruction NOTIFY progressChanged)
     /** Icon of the next maneuver. */
     Q_PROPERTY(QString instructionIconName READ instructionIconName NOTIFY progressChanged)
+    /** Direction of the next turn in degrees, negative to the left, positive to the right, NaN if unknown. */
+    Q_PROPERTY(double instructionTurnAngle READ instructionTurnAngle NOTIFY progressChanged)
     /** Distance to the next maneuver, in meters. */
     Q_PROPERTY(double distanceToInstruction READ distanceToInstruction NOTIFY progressChanged)
     /** Remaining distance to the destination along the path, in meters. */
@@ -72,6 +74,7 @@ public:
     [[nodiscard]] bool hasPosition() const;
     [[nodiscard]] QString instruction() const;
     [[nodiscard]] QString instructionIconName() const;
+    [[nodiscard]] double instructionTurnAngle() const;
     [[nodiscard]] double distanceToInstruction() const;
     [[nodiscard]] double distanceRemaining() const;
     [[nodiscard]] bool offRoute() const;

@@ -140,7 +140,9 @@ Kirigami.Page {
             spacing: Kirigami.Units.largeSpacing
 
             Kirigami.Icon {
-                source: controller.instructionIconName
+                // an arrow pointing in the direction of the next turn, where known
+                source: isNaN(controller.instructionTurnAngle) ? controller.instructionIconName : "go-up-symbolic"
+                rotation: isNaN(controller.instructionTurnAngle) ? 0 : controller.instructionTurnAngle
                 isMask: true
                 Layout.preferredWidth: Kirigami.Units.iconSizes.large
                 Layout.preferredHeight: Kirigami.Units.iconSizes.large

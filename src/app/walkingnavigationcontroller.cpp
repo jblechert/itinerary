@@ -246,6 +246,44 @@ QString WalkingNavigationController::instructionIconName() const
     return u"flag"_s;
 }
 
+double WalkingNavigationController::instructionTurnAngle() const
+{
+#if HAVE_KPUBLICTRANSPORT_NAVIGATION_INSTRUCTIONS
+    const auto next = m_currentSection + 1;
+    if (m_arrived || next < 1 || next >= (int)m_path.sections().size()) {
+        return NAN;
+    }
+    const auto &section = m_path.sections()[next];
+    if (section.maneuver() != KPublicTransport::PathSection::Move) {
+        return NAN;
+    }
+    using KPublicTransport::PathSection;
+    switch (section.turnDirection()) {
+    case PathSection::Straight:
+        return 0.0;
+    case PathSection::SlightLeft:
+        return -45.0;
+    case PathSection::Left:
+        return -90.0;
+    case PathSection::SharpLeft:
+        return -135.0;
+    case PathSection::UTurnLeft:
+        return -180.0;
+    case PathSection::SlightRight:
+        return 45.0;
+    case PathSection::Right:
+        return 90.0;
+    case PathSection::SharpRight:
+        return 135.0;
+    case PathSection::UTurnRight:
+        return 180.0;
+    case PathSection::UnknownTurnDirection:
+        break;
+    }
+#endif
+    return NAN;
+}
+
 double WalkingNavigationController::distanceToInstruction() const
 {
     const auto next = m_currentSection + 1;
