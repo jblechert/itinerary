@@ -14,6 +14,8 @@
 #   intl     rebuild libintl-lite from LIBINTL_LITE_SRC and KI18n, which links it statically
 #            (needed for working plural form translations until that fix is in Craft;
 #            run it again after 'deps', which restores the cached versions)
+#   kpt      rebuild KPublicTransport from KPT_SRC, our branch with elevation, turn instructions and
+#            booking links (run 'app' afterwards, and again after 'deps')
 #
 # Workspace (craft root, downloads, build dirs) lives next to the checkout in ../itinary-craft (override with ITINERARY_CRAFT_DIR); it must stay outside the source tree, as packaging scans the tree for AndroidManifest files.
 set -euo pipefail
@@ -26,6 +28,8 @@ SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 WS="${ITINERARY_CRAFT_DIR:-$(dirname "$SRC")/itinary-craft}"
 # libintl-lite checkout with plural form support, based on the revision Craft uses
 LIBINTL_LITE_SRC="${LIBINTL_LITE_SRC:-$(dirname "$SRC")/libintl-lite-craft}"
+# KPublicTransport checkout with our changes not yet in a KDE release
+KPT_SRC="${KPT_SRC:-$(dirname "$SRC")/kpublictransport-integration}"
 TARGET="android-${ARCH}-clang"
 
 mkdir -p "$WS/downloads"
@@ -75,6 +79,7 @@ case "$STEP" in
            [ -d /craft/src/ki18n ] || git clone --depth 1 --branch "v$(cm -c -q --get version kde/frameworks/tier1/ki18n | tail -1)" \
                https://invent.kde.org/frameworks/ki18n.git /craft/src/ki18n
            cm -c --no-cache --compile --install --qmerge --options kde/frameworks/tier1/ki18n.srcDir=/craft/src/ki18n kde/frameworks/tier1/ki18n ;;
+  kpt)     cm -c --no-cache --compile --install --qmerge --options kde/libs/kpublictransport.srcDir=/kpublictransport kde/libs/kpublictransport ;;
   shell)   bash ;;
   *) echo "unknown step: $STEP" >&2; exit 2 ;;
 esac
@@ -82,6 +87,7 @@ EOF
 
 INTL_MOUNT=()
 [ -d "$LIBINTL_LITE_SRC" ] && INTL_MOUNT=(-v "$LIBINTL_LITE_SRC:/libintl-lite")
+[ -d "$KPT_SRC" ] && INTL_MOUNT+=(-v "$KPT_SRC:/kpublictransport")
 
 TTY=()
 [ -t 0 ] && TTY=(-it)
