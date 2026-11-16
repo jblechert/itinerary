@@ -1,0 +1,53 @@
+diff --git a/src/lib/engine/extractordocumentnodefactory.cpp b/src/lib/engine/extractordocumentnodefactory.cpp
+index df2a6fb..37d6acd 100644
+--- a/src/lib/engine/extractordocumentnodefactory.cpp
++++ b/src/lib/engine/extractordocumentnodefactory.cpp
+@@ -257,9 +257,14 @@ void ExtractorDocumentNodeFactory::registerProcessor(std::unique_ptr<ExtractorDo
+ 
+ void ExtractorDocumentNodeFactory::setUseSeparateProcess(bool separateProcess)
+ {
++#if QT_CONFIG(process)
+     if (separateProcess && !d->interceptProcessor) {
+         d->interceptProcessor = std::make_unique<ExternalProcessor>();
+     } else if (!separateProcess && d->interceptProcessor) {
+         d->interceptProcessor.reset();
+     }
++#else
++    // no separate processes on this platform (e.g. iOS), extract in this process
++    Q_UNUSED(separateProcess);
++#endif
+ }
+diff --git a/src/lib/processors/externalprocessor.cpp b/src/lib/processors/externalprocessor.cpp
+index 89760d9..4a394e9 100644
+--- a/src/lib/processors/externalprocessor.cpp
++++ b/src/lib/processors/externalprocessor.cpp
+@@ -18,7 +18,9 @@
+ #include <QFileInfo>
+ #include <QJsonArray>
+ #include <QJsonDocument>
++#if QT_CONFIG(process)
+ #include <QProcess>
++#endif
+ 
+ using namespace KItinerary;
+ 
+@@ -52,6 +54,7 @@ ExtractorDocumentNode ExternalProcessor::createNodeFromData(const QByteArray &en
+     return node;
+ }
+ 
++#if QT_CONFIG(process)
+ void ExternalProcessor::preExtract(ExtractorDocumentNode &node, const ExtractorEngine *engine) const
+ {
+     std::vector<const AbstractExtractor*> extractors;
+@@ -98,3 +101,11 @@ void ExternalProcessor::preExtract(ExtractorDocumentNode &node, const ExtractorE
+     const auto res = QJsonDocument::fromJson(proc.readAllStandardOutput()).array();
+     node.addResult(res);
+ }
++#else
++void ExternalProcessor::preExtract(ExtractorDocumentNode &node, const ExtractorEngine *engine) const
++{
++    // no separate processes on this platform, e.g. iOS
++    Q_UNUSED(node);
++    Q_UNUSED(engine);
++}
++#endif
