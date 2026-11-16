@@ -458,6 +458,7 @@ if (ANDROID)
         wallet-open
         window-close-symbolic
         exchange-positions
+        arrow-up
         internet-services
         zoom-in-symbolic
         zoom-out-symbolic
