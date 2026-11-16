@@ -5895,3 +5895,58 @@ msgstr "Abfahrt ab %1"
 msgctxt "@action:button add the selected journey to a trip"
 msgid "Add to Itinerary"
 msgstr "Zum Reiseplan hinzufügen"
+
+#: fork
+msgctxt "@info departure time of the first train, bus, etc. of a journey"
+msgid "(Departure: %1)"
+msgstr "(Abfahrt: %1)"
+
+#: fork
+msgctxt "@action:button"
+msgid "Show as List"
+msgstr "Als Liste anzeigen"
+
+#: fork
+msgctxt "@action:button"
+msgid "Show as Timeline"
+msgstr "Als Zeitleiste anzeigen"
+
+#: fork
+msgctxt "@title"
+msgid "Connection Details"
+msgstr "Verbindungsdetails"
+
+#: fork
+msgctxt "@label:listbox"
+msgid "Show connections as"
+msgstr "Verbindungen anzeigen als"
+
+#: fork
+msgctxt "@item:inlistbox how to show journey search results"
+msgid "List"
+msgstr "Liste"
+
+#: fork
+msgctxt "@item:inlistbox how to show journey search results"
+msgid "Timeline"
+msgstr "Zeitleiste"
+
+#: fork
+msgctxt "time, date"
+msgid "%1, %2"
+msgstr "%1, %2"
+
+#: fork
+msgctxt "@label:listbox the kind of ticket to find journeys for"
+msgid "Ticket"
+msgstr "Ticket"
+
+#: fork
+msgctxt "@item:inlistbox ticket type"
+msgid "All connections (e.g. BahnCard 100)"
+msgstr "Alle Verbindungen (z. B. BahnCard 100)"
+
+#: fork
+msgctxt "@item:inlistbox ticket type"
+msgid "Local transport only (e.g. Deutschlandticket)"
+msgstr "Nur Nahverkehr (z. B. Deutschlandticket)"
