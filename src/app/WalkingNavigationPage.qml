@@ -31,6 +31,10 @@ Kirigami.Page {
     property int travelMode: KPublicTransport.IndividualTransport.Walk
     /** A route to follow, e.g. a marked hiking trail, ending at the destination. */
     property var trail
+    /** Elevation profile of the trail, if known: points of distance from its start and elevation, in meters. */
+    property var trailProfile: []
+    /** Elevation profile shown, of the trail or else of the route, if available. */
+    readonly property var elevationProfile: root.trailProfile.length >= 2 ? root.trailProfile : (controller.path.elevationProfile ?? [])
 
     title: {
         if (root.trail) {
@@ -240,32 +244,44 @@ Kirigami.Page {
     }
 
     footer: QQC2.ToolBar {
-        contentItem: RowLayout {
-            QQC2.Label {
-                text: controller.hasRoute && controller.hasPosition
-                    ? i18nc("@info remaining distance", "%1 to go", CoreAddons.Format.formatDistance(controller.distanceRemaining, Settings.distanceFormat))
-                    : ""
+        contentItem: ColumnLayout {
+            spacing: 0
+            ElevationProfile {
+                profile: root.elevationProfile
+                // the route ends where the profile ends, so this also works with a way to the trail in front
+                position: root.elevationProfile.length >= 2 ? root.elevationProfile[root.elevationProfile.length - 1].x - controller.distanceRemaining : NaN
+                implicitHeight: Kirigami.Units.gridUnit * 3
                 Layout.fillWidth: true
+                Layout.topMargin: Kirigami.Units.smallSpacing
             }
-            QQC2.ToolButton {
-                icon.name: controller.speechEnabled ? "audio-volume-high" : "audio-volume-muted"
-                text: i18nc("@action:button", "Voice guidance")
-                display: QQC2.AbstractButton.IconOnly
-                checkable: true
-                checked: controller.speechEnabled
-                onToggled: controller.speechEnabled = checked
-            }
-            QQC2.ToolButton {
-                icon.name: "map-symbolic"
-                text: i18nc("@action:button", "Open in Map Application")
-                display: QQC2.AbstractButton.IconOnly
-                visible: root.destination.hasCoordinate
-                onClicked: NavigationController.walkTo(root.destination.latitude, root.destination.longitude, root.destination.name)
-            }
-            QQC2.ToolButton {
-                icon.name: "dialog-close"
-                text: i18nc("@action:button end navigation", "End")
-                onClicked: root.QQC2.ApplicationWindow.window.pageStack.layers.pop()
+            RowLayout {
+                Layout.fillWidth: true
+                QQC2.Label {
+                    text: controller.hasRoute && controller.hasPosition
+                        ? i18nc("@info remaining distance", "%1 to go", CoreAddons.Format.formatDistance(controller.distanceRemaining, Settings.distanceFormat))
+                        : ""
+                    Layout.fillWidth: true
+                }
+                QQC2.ToolButton {
+                    icon.name: controller.speechEnabled ? "audio-volume-high" : "audio-volume-muted"
+                    text: i18nc("@action:button", "Voice guidance")
+                    display: QQC2.AbstractButton.IconOnly
+                    checkable: true
+                    checked: controller.speechEnabled
+                    onToggled: controller.speechEnabled = checked
+                }
+                QQC2.ToolButton {
+                    icon.name: "map-symbolic"
+                    text: i18nc("@action:button", "Open in Map Application")
+                    display: QQC2.AbstractButton.IconOnly
+                    visible: root.destination.hasCoordinate
+                    onClicked: NavigationController.walkTo(root.destination.latitude, root.destination.longitude, root.destination.name)
+                }
+                QQC2.ToolButton {
+                    icon.name: "dialog-close"
+                    text: i18nc("@action:button end navigation", "End")
+                    onClicked: root.QQC2.ApplicationWindow.window.pageStack.layers.pop()
+                }
             }
         }
     }

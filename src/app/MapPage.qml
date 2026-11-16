@@ -92,6 +92,7 @@ Kirigami.Page {
             destination: helper.locationAt(end.latitude, end.longitude, markedRoutes.routeName),
             travelMode: root.overlay === "hiking" ? KPublicTransport.IndividualTransport.Walk : KPublicTransport.IndividualTransport.Bike,
             trail: markedRoutes.path,
+            trailProfile: markedRoutes.elevationProfile,
         });
     }
 
