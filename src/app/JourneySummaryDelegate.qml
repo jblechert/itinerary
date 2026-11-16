@@ -79,6 +79,7 @@ FormCard.AbstractFormDelegate {
 
             QQC2.Label {
                 text: ' | ' + Localizer.formatDuration(root.journey.duration) + ' | ' + i18ncp("number of switches to another transport", "One change", "%1 changes", root.journey.numberOfChanges)
+                    + (root.journey.ascent > 0 ? ' | ' + i18nc("@info total ascent of a journey, in meters", "↑ %1 m", root.journey.ascent) : '')
                 elide: Text.ElideRight
                 Layout.fillWidth: true
             }

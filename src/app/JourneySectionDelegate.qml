@@ -151,11 +151,20 @@ anchors.centerIn: parent
                         case JourneySection.RentedVehicle:
                             return i18n("%1 %2 (%3)", root.modelData.rentalVehicle.network.name, CoreAddons.Format.formatDistance(root.modelData.distance, Settings.distanceFormat), Localizer.formatDuration(root.modelData.duration));
                         case JourneySection.IndividualTransport:
+                            if (root.modelData.individualTransport.mode === IndividualTransport.Bike)
+                                return i18n("Cycle %1 (%2)", CoreAddons.Format.formatDistance(root.modelData.distance, Settings.distanceFormat), Localizer.formatDuration(root.modelData.duration));
                             return i18n("Drive %1 (%2)", CoreAddons.Format.formatDistance(root.modelData.distance, Settings.distanceFormat), Localizer.formatDuration(root.modelData.duration));
                         return "???";
                         }
 
                         Layout.topMargin: root.modelData.mode !== JourneySection.PublicTransport ? Kirigami.Units.largeSpacing : 0
+                        Layout.fillWidth: true
+                    }
+                    // uphill and downhill, for walking and cycling
+                    QQC2.Label {
+                        visible: root.modelData.mode !== JourneySection.PublicTransport && (root.modelData.ascent > 0 || root.modelData.descent > 0)
+                        text: visible ? i18nc("@info total ascent and descent of a walk or bike ride", "↑ %1 m ↓ %2 m", root.modelData.ascent, root.modelData.descent) : ""
+                        opacity: 0.7
                         Layout.fillWidth: true
                     }
                 }
