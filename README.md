@@ -15,6 +15,8 @@ platforms and its documentation, see the [upstream repository](https://invent.kd
 - The page shown on start can be chosen, by default this is the *Tickets* tab.
 - Journey search remembers previously searched connections. Selecting one, or its return journey,
   shows the connections departing now.
+- Journey search results show what was searched for, and adding a journey to a trip is only offered
+  when searching from within that trip.
 
 ## Download
 
