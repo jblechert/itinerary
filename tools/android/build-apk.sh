@@ -10,6 +10,7 @@
 #   package  produce the APK (unsigned) in the workspace apk/ dir
 #   all      deps + app + package (default)
 #   shell    open a shell in the build container
+#   install  sign the APK with the Android debug key and install it via adb (runs on the host)
 #
 # Workspace (craft root, downloads, build dirs) lives next to the checkout in ../itinary-craft (override with ITINERARY_CRAFT_DIR); it must stay outside the source tree, as packaging scans the tree for AndroidManifest files.
 set -euo pipefail
@@ -32,6 +33,16 @@ cat > "$WS/local-override.ini" <<EOF
 Paths/DownloadDir = /craft/downloads/
 EOF
 
+if [ "$STEP" = "install" ]; then
+    BT="$(ls -d "${ANDROID_HOME:-/opt/android-sdk}"/build-tools/*/ | sort -V | tail -1)"
+    case "$ARCH" in arm64) ABI=arm64-v8a ;; *) ABI="$ARCH" ;; esac
+    APK="$WS/apk/itinerary-app-$ABI.apk"
+    SIGNED="$WS/apk/itinerary-app-$ABI-debugsigned.apk"
+    "${BT}zipalign" -f -p 4 "$APK" "$SIGNED"
+    "${BT}apksigner" sign --ks "$HOME/.android/debug.keystore" --ks-pass pass:android "$SIGNED"
+    exec adb install -r "$SIGNED"
+fi
+
 read -r -d '' INNER <<'EOF' || true
 set -euo pipefail
 # NDK in the image is owner-only executable, so we run as root and hand files back.
@@ -48,7 +59,7 @@ cm() {
 OPTS=(--options itinerary.srcDir=/src)
 case "$STEP" in
   deps)    cm --setup; cm -c -i craft; cm -c --install-deps itinerary ;;
-  app)     cm -c --no-cache "${OPTS[@]}" itinerary ;;
+  app)     cm -c --no-cache --compile --install --qmerge "${OPTS[@]}" itinerary ;;
   package) cm -c --package "${OPTS[@]}" itinerary
            ls -l /craft/*/apk/ 2>/dev/null || true ;;
   all)     cm --setup; cm -c -i craft; cm -c --install-deps itinerary
