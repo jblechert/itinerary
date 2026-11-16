@@ -1,0 +1,40 @@
+# SPDX-FileCopyrightText: 2026 Janis Blechert <janis@blechert.at>
+# SPDX-License-Identifier: CC0-1.0
+#
+# Dependencies of Itinerary for iOS, in build order.
+# Versions match the Android build (KDE Craft): KF 6.31.0, KDE Gear 26.08.3.
+# Format: name  git-url  ref  [extra CMake arguments...]
+# Left out for now: poppler (GPL, see docs/ios/PORTING.md), khealthcertificate, libquotient/olm (Matrix), maplibre-native-qt.
+
+extra-cmake-modules  https://invent.kde.org/frameworks/extra-cmake-modules.git  v6.31.0
+libintl-lite         https://github.com/jblechert/libintl-lite.git               plural-forms
+kcoreaddons          https://invent.kde.org/frameworks/kcoreaddons.git          v6.31.0  -DKCOREADDONS_USE_QML=ON
+ki18n                https://invent.kde.org/frameworks/ki18n.git                v6.31.0
+kconfig              https://invent.kde.org/frameworks/kconfig.git              v6.31.0  -DKCONFIG_USE_GUI=ON -DKCONFIG_USE_QML=ON
+kguiaddons           https://invent.kde.org/frameworks/kguiaddons.git           v6.31.0  -DWITH_WAYLAND=OFF -DWITH_X11=OFF -DBUILD_GEO_SCHEME_HANDLER=OFF
+kcolorscheme         https://invent.kde.org/frameworks/kcolorscheme.git         v6.31.0
+kirigami             https://invent.kde.org/frameworks/kirigami.git             v6.31.0
+kitemmodels          https://invent.kde.org/frameworks/kitemmodels.git          v6.31.0
+karchive             https://invent.kde.org/frameworks/karchive.git             v6.31.0  -DWITH_BZIP2=OFF -DWITH_LIBLZMA=OFF -DWITH_LIBZSTD=OFF -DWITH_OPENSSL=OFF
+kcodecs              https://invent.kde.org/frameworks/kcodecs.git              v6.31.0
+kcontacts            https://invent.kde.org/frameworks/kcontacts.git            v6.31.0
+libical              https://github.com/libical/libical.git                     v3.0.20  -DICAL_GLIB=OFF -DICAL_BUILD_DOCS=OFF -DGOBJECT_INTROSPECTION=OFF -DLIBICAL_BUILD_TESTING=OFF -DSTATIC_ONLY=ON -DENABLE_GTK_DOC=OFF -DICAL_ERRORS_ARE_FATAL=OFF -DUSE_BUILTIN_TZDATA=ON
+kcalendarcore        https://invent.kde.org/frameworks/kcalendarcore.git        v6.31.0
+kholidays            https://invent.kde.org/frameworks/kholidays.git            v6.31.0
+kunitconversion      https://invent.kde.org/frameworks/kunitconversion.git      v6.31.0
+knotifications       https://invent.kde.org/frameworks/knotifications.git       v6.31.0
+kcrash               https://invent.kde.org/frameworks/kcrash.git               v6.31.0
+qrencode             https://github.com/fukuchi/libqrencode.git                 v4.1.1   -DWITH_TOOLS=OFF
+libdmtx              https://github.com/dmtx/libdmtx.git                        v0.7.8
+zxing-cpp            https://github.com/zxing-cpp/zxing-cpp.git                 v2.3.0   -DZXING_EXAMPLES=OFF -DZXING_BLACKBOX_TESTS=OFF -DZXING_UNIT_TESTS=OFF
+prison               https://invent.kde.org/frameworks/prison.git               v6.31.0
+kirigami-addons      https://invent.kde.org/libraries/kirigami-addons.git       v1.16.1
+kmime                https://invent.kde.org/frameworks/kmime.git                v6.31.0
+recastnavigation     https://github.com/recastnavigation/recastnavigation.git   v1.6.0   -DRECASTNAVIGATION_DEMO=OFF -DRECASTNAVIGATION_TESTS=OFF -DRECASTNAVIGATION_EXAMPLES=OFF
+kopeninghours        https://invent.kde.org/libraries/kopeninghours.git         v26.08.3 -DCMAKE_DISABLE_FIND_PACKAGE_Python3=ON -DCMAKE_DISABLE_FIND_PACKAGE_Boost=ON
+kpublictransport     https://invent.kde.org/libraries/kpublictransport.git      v26.08.3
+kosmindoormap        https://invent.kde.org/libraries/kosmindoormap.git         v26.08.3
+kpkpass              https://invent.kde.org/pim/kpkpass.git                     v26.08.3
+kitinerary           https://invent.kde.org/pim/kitinerary.git                  v26.08.3 -DCMAKE_DISABLE_FIND_PACKAGE_Poppler=ON
+qtkeychain           https://github.com/frankosterfeld/qtkeychain.git           0.16.0   -DBUILD_WITH_QT6=ON -DBUILD_TRANSLATIONS=OFF
+qcoro                https://github.com/qcoro/qcoro.git                         v0.12.0  -DUSE_QT_VERSION=6 -DQCORO_BUILD_EXAMPLES=OFF -DQCORO_WITH_QTDBUS=OFF -DQCORO_WITH_QML=ON

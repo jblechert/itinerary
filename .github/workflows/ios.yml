@@ -1,0 +1,62 @@
+# SPDX-FileCopyrightText: 2026 Janis Blechert <janis@blechert.at>
+# SPDX-License-Identifier: CC0-1.0
+#
+# Build for iOS on GitHub's macOS runners, see docs/ios/PORTING.md.
+# Currently this builds the dependencies only.
+name: iOS
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [android-fork]
+    paths:
+      - 'tools/ios/**'
+      - '.github/workflows/ios.yml'
+
+jobs:
+  dependencies:
+    runs-on: macos-15
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install host tools
+        run: brew install ninja gettext gperf bison flex
+
+      - name: Install Qt for iOS
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.11.*'
+          host: mac
+          target: ios
+          arch: ios
+          autodesktop: true
+          modules: 'qtpositioning qtlocation qtmultimedia qtshadertools qtimageformats qtwebsockets'
+          cache: true
+
+      # keep partial progress between runs, so a failure doesn't mean starting over
+      - name: Restore dependency build
+        uses: actions/cache/restore@v4
+        with:
+          path: ios-prefix
+          key: ios-deps-${{ github.run_id }}
+          restore-keys: ios-deps-
+
+      - name: Build dependencies
+        run: |
+          export PATH="$(brew --prefix bison)/bin:$(brew --prefix flex)/bin:$(brew --prefix gettext)/bin:$PATH"
+          tools/ios/build-deps.sh "$QT_ROOT_DIR" "$PWD/ios-prefix"
+
+      - name: Save dependency build
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: ios-prefix
+          key: ios-deps-${{ github.run_id }}
+
+      - name: Upload build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-dependency-logs
+          path: ios-prefix/logs
