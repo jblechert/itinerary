@@ -5780,3 +5780,108 @@ msgstr "%1%2 von %3 nach %4 am %5"
 
 #~ msgid "%1 %2°C / %3°C ☂ %4 mm"
 #~ msgstr "%1 %2 °C / %3 °C ☂ %4 mm"
+
+#: fork
+msgctxt "@action:button"
+msgid "Remove from history"
+msgstr "Aus dem Verlauf entfernen"
+
+#: fork
+msgctxt "@action:button search the journey in the opposite direction"
+msgid "Search return journey"
+msgstr "Rückfahrt suchen"
+
+#: fork
+msgctxt "@action:button"
+msgid "Show Details"
+msgstr "Details anzeigen"
+
+#: fork
+msgctxt "journey from departure to arrival stop"
+msgid "%1 → %2"
+msgstr "%1 → %2"
+
+#: fork
+msgctxt "@label current date and time"
+msgid "Now"
+msgstr "Jetzt"
+
+#: fork
+msgctxt "@label:listbox"
+msgid "Moving image"
+msgstr "Bewegtes Bild"
+
+#: fork
+msgctxt "@label:listbox"
+msgid "Start page"
+msgstr "Startseite"
+
+#: fork
+msgctxt "@label ticket validity time range"
+msgid "Valid"
+msgstr "Gültig"
+
+#: fork
+msgctxt "pkpass image type"
+msgid "Background"
+msgstr "Hintergrund"
+
+#: fork
+msgctxt "pkpass image type"
+msgid "Footer"
+msgstr "Fußzeile"
+
+#: fork
+msgctxt "pkpass image type"
+msgid "Icon"
+msgstr "Symbol"
+
+#: fork
+msgctxt "pkpass image type"
+msgid "Logo"
+msgstr "Logo"
+
+#: fork
+msgctxt "pkpass image type"
+msgid "Strip"
+msgstr "Streifen"
+
+#: fork
+msgctxt "pkpass image type"
+msgid "Thumbnail"
+msgstr "Vorschaubild"
+
+#: fork
+msgctxt "@title:group"
+msgid "General"
+msgstr "Allgemein"
+
+#: fork
+msgctxt "@title:group previously searched journeys"
+msgid "Recent Journeys"
+msgstr "Letzte Verbindungen"
+
+#: fork
+msgctxt "@title:tab"
+msgid "Tickets"
+msgstr "Tickets"
+
+#: fork
+msgctxt "@title"
+msgid "Tickets"
+msgstr "Tickets"
+
+#: fork
+msgid "No valid tickets or flat rate passes found."
+msgstr "Keine gültigen Tickets oder Pauschalfahrscheine gefunden."
+
+#: fork
+msgid "The page shown when the application starts."
+msgstr "Die Seite, die beim Start der Anwendung angezeigt wird."
+
+#: fork
+msgctxt "number of times a journey was searched"
+msgid "Searched once"
+msgid_plural "Searched %1 times"
+msgstr[0] "Einmal gesucht"
+msgstr[1] "%1-mal gesucht"
