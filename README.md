@@ -10,13 +10,12 @@ platforms and its documentation, see the [upstream repository](https://invent.kd
 ## Differences to upstream
 
 - The Android Back gesture navigates back inside the application instead of closing it.
-- A *Tickets* tab gives direct access to your currently valid tickets and passes, ready to be shown
-  for inspection.
-- The page shown on start can be chosen, by default this is the *Tickets* tab.
+- The *Current Ticket* tab is always available: during a trip it shows the current reservation, otherwise
+  your currently valid tickets and passes, ready to be shown for inspection.
+- The page shown on start can be chosen, by default this is the *Current Ticket* tab.
 - Journey search remembers previously searched connections. Selecting one, or its return journey,
   shows the connections departing now.
-- Journey search results show what was searched for, and adding a journey to a trip is only offered
-  when searching from within that trip.
+- Journey search results show what was searched for.
 
 ## Download
 
