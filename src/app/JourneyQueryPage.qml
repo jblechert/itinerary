@@ -31,6 +31,47 @@ Kirigami.ScrollablePage {
     Kirigami.Theme.inherit: false
     Kirigami.Theme.colorSet: Kirigami.Theme.Window
 
+    // summary of what we are searching for, so it's clear which results these are
+    header: QQC2.Control {
+        visible: root.journeyRequest.from.name !== "" && root.journeyRequest.to.name !== ""
+        padding: Kirigami.Units.largeSpacing
+
+        Kirigami.Theme.inherit: false
+        Kirigami.Theme.colorSet: Kirigami.Theme.Header
+
+        background: Rectangle {
+            color: Kirigami.Theme.backgroundColor
+
+            Kirigami.Separator {
+                anchors {
+                    left: parent.left
+                    right: parent.right
+                    bottom: parent.bottom
+                }
+            }
+        }
+
+        contentItem: ColumnLayout {
+            spacing: 0
+
+            QQC2.Label {
+                text: i18nc("journey from departure to arrival stop", "%1 → %2", root.journeyRequest.from.name, root.journeyRequest.to.name)
+                font.bold: true
+                elide: Text.ElideRight
+                Layout.fillWidth: true
+            }
+            QQC2.Label {
+                readonly property string dateTime: root.journeyRequest.dateTime.toLocaleString(Qt.locale(), Locale.ShortFormat)
+                text: root.isArrival ? i18nc("@info journey search, arrival time", "Arriving by %1", dateTime)
+                                     : i18nc("@info journey search, departure time", "Departing from %1", dateTime)
+                font: Kirigami.Theme.smallFont
+                color: Kirigami.Theme.disabledTextColor
+                elide: Text.ElideRight
+                Layout.fillWidth: true
+            }
+        }
+    }
+
     ListView {
         id: journeyView
 
