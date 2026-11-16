@@ -3280,7 +3280,7 @@ msgstr "Reiseplan"
 #, kde-format
 msgctxt "@title:tab"
 msgid "Plan Trip"
-msgstr "Reise planen"
+msgstr "Verbindung suchen"
 
 #: app/NavigationBar.qml:42
 #, kde-format
@@ -5885,3 +5885,13 @@ msgid "Searched once"
 msgid_plural "Searched %1 times"
 msgstr[0] "Einmal gesucht"
 msgstr[1] "%1-mal gesucht"
+
+#: fork
+msgctxt "@info journey search, arrival time"
+msgid "Arriving by %1"
+msgstr "Ankunft bis %1"
+
+#: fork
+msgctxt "@info journey search, departure time"
+msgid "Departing from %1"
+msgstr "Abfahrt ab %1"
