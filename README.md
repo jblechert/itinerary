@@ -39,7 +39,11 @@ tickets you set once where they are valid: a country, or within a radius of wher
   questionable. Standing on the shoulders of giants.
 - From a connection you can go straight to buying the ticket: with the booking link where the data source
   provides one, otherwise on the website of the transport company running it.
-- Walking directions to the departure stop, with voice guidance, are handed to Organic Maps or Google Maps.
+- Turn-by-turn navigation in the app, on foot, by bike or by car: to the departure stop of a connection, or to any place
+  picked on the map. A map follows your position, instructions are spoken ahead of each turn, and a new route is found
+  when you leave it. Routes come from KPublicTransport. Handing over to Organic Maps or Google Maps remains possible.
+- A map tab, with marked hiking, cycling and mountain bike routes from [Waymarked Trails](https://waymarkedtrails.org)
+  on top if you like.
 - The journey search remembers the kind of ticket you travel with, e.g. local transport only for the
   Deutschlandticket, so long distance trains don't show up when you can't use them.
 
