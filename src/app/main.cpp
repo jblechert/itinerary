@@ -26,6 +26,7 @@
 #include "migrator.h"
 #include "navigationcontroller.h"
 #include "notificationconfigcontroller.h"
+#include "markedroutecontroller.h"
 #include "onlineticketimporter.h"
 #include "passmanager.h"
 #include "pkpassimageprovider.h"
@@ -383,6 +384,7 @@ int main(int argc, char **argv)
     QObject::connect(&appController, &ApplicationController::reloadSettings, &settings, &Settings::reloadSettings);
 
     OnlineTicketImporter::setNetworkAccessManagerFactory(namFactory);
+    MarkedRouteController::setNetworkAccessManagerFactory(namFactory);
 
     MatrixController matrixController;
     MatrixControllerInstance::instance = &matrixController;
