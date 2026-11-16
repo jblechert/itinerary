@@ -1,0 +1,58 @@
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index afa298e..f9417f7 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -40,7 +40,8 @@ if (WITH_SNORETOAST)
+     target_sources(KF6Notifications PRIVATE notifybysnore.cpp)
+ endif ()
+ 
+-if (APPLE)
++# the notification center backend is for macOS only, it uses AppKit
++if (APPLE AND NOT IOS)
+     target_sources(KF6Notifications PRIVATE notifybymacosnotificationcenter.mm)
+ endif()
+ 
+@@ -99,7 +100,7 @@ if (TARGET Canberra::Canberra)
+     target_link_libraries(KF6Notifications PRIVATE Canberra::Canberra)
+ endif()
+ 
+-if(APPLE)
++if(APPLE AND NOT IOS)
+   target_link_libraries(KF6Notifications PRIVATE "-framework Foundation" "-framework AppKit")
+ endif()
+ 
+diff --git a/src/knotificationconfiguration.cpp b/src/knotificationconfiguration.cpp
+index 6134b5a..e8f3526 100644
+--- a/src/knotificationconfiguration.cpp
++++ b/src/knotificationconfiguration.cpp
+@@ -59,12 +59,14 @@ static void detectCapabilities()
+ 
+     s_capabilities.hasSystemSettingsUri = !QStandardPaths::findExecutable(u"systemsettings"_s).isEmpty();
+ 
++#if QT_CONFIG(process)
+     if (!s_capabilities.hasSystemSettingsUri) {
+         QProcess proc;
+         proc.start(u"kcmshell6"_s, {u"--list"_s});
+         proc.waitForFinished();
+         s_capabilities.hasKcm = proc.readAllStandardOutput().contains("\nkcm_notifications "_L1);
+     }
++#endif
+ }
+ #endif
+ 
+@@ -93,6 +95,7 @@ void KNotificationConfiguration::show()
+         return;
+     }
+ 
++#if QT_CONFIG(process)
+     if (s_capabilities.hasKcm) {
+         QProcess proc;
+         proc.setProgram(u"kcmshell6"_s);
+@@ -100,6 +103,7 @@ void KNotificationConfiguration::show()
+         proc.startDetached();
+     }
+ #endif
++#endif
+ }
+ 
+ #include "moc_knotificationconfiguration.cpp"
