@@ -1,0 +1,16 @@
+diff --git a/KOpeningHoursConfig.cmake.in b/KOpeningHoursConfig.cmake.in
+index 4737331..3bd41a3 100644
+--- a/KOpeningHoursConfig.cmake.in
++++ b/KOpeningHoursConfig.cmake.in
+@@ -5,6 +5,11 @@
+ 
+ include(CMakeFindDependencyMacro)
+ find_dependency(Qt@QT_MAJOR_VERSION@Core)
++# private dependencies are part of the link interface of a static library
++if (NOT "@BUILD_SHARED_LIBS@" AND NOT "@VALIDATOR_ONLY@")
++    find_dependency(KF@KF_MAJOR_VERSION@Holidays)
++    find_dependency(KF@KF_MAJOR_VERSION@I18n)
++endif()
+ 
+ include("${CMAKE_CURRENT_LIST_DIR}/KOpeningHoursTargets.cmake")
+ @PACKAGE_INCLUDE_QCHTARGETS@
