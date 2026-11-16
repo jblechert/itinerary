@@ -11,6 +11,9 @@
 #   all      deps + app + package (default)
 #   shell    open a shell in the build container
 #   install  sign the APK with the Android debug key and install it via adb (runs on the host)
+#   intl     rebuild libintl-lite from LIBINTL_LITE_SRC and KI18n, which links it statically
+#            (needed for working plural form translations until that fix is in Craft;
+#            run it again after 'deps', which restores the cached versions)
 #
 # Workspace (craft root, downloads, build dirs) lives next to the checkout in ../itinary-craft (override with ITINERARY_CRAFT_DIR); it must stay outside the source tree, as packaging scans the tree for AndroidManifest files.
 set -euo pipefail
@@ -21,6 +24,8 @@ IMAGE="${ITINERARY_ANDROID_IMAGE:-invent-registry.kde.org/sysadmin/ci-images/and
 
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 WS="${ITINERARY_CRAFT_DIR:-$(dirname "$SRC")/itinary-craft}"
+# libintl-lite checkout with plural form support, based on the revision Craft uses
+LIBINTL_LITE_SRC="${LIBINTL_LITE_SRC:-$(dirname "$SRC")/libintl-lite-craft}"
 TARGET="android-${ARCH}-clang"
 
 mkdir -p "$WS/downloads"
@@ -65,10 +70,18 @@ case "$STEP" in
   all)     cm --setup; cm -c -i craft; cm -c --install-deps itinerary
            cm -c --no-cache "${OPTS[@]}" itinerary
            cm -c --package "${OPTS[@]}" itinerary ;;
+  intl)    cm -c --no-cache --compile --install --qmerge --options libs/libintl-lite.srcDir=/libintl-lite libs/libintl-lite
+           # build from a local checkout, as fetching the source archive is broken in Craft
+           [ -d /craft/src/ki18n ] || git clone --depth 1 --branch "v$(cm -c -q --get version kde/frameworks/tier1/ki18n | tail -1)" \
+               https://invent.kde.org/frameworks/ki18n.git /craft/src/ki18n
+           cm -c --no-cache --compile --install --qmerge --options kde/frameworks/tier1/ki18n.srcDir=/craft/src/ki18n kde/frameworks/tier1/ki18n ;;
   shell)   bash ;;
   *) echo "unknown step: $STEP" >&2; exit 2 ;;
 esac
 EOF
+
+INTL_MOUNT=()
+[ -d "$LIBINTL_LITE_SRC" ] && INTL_MOUNT=(-v "$LIBINTL_LITE_SRC:/libintl-lite")
 
 TTY=()
 [ -t 0 ] && TTY=(-it)
@@ -79,4 +92,5 @@ exec docker run --rm "${TTY[@]}" \
   -e HOME=/craft/home -e TARGET="$TARGET" -e STEP="$STEP" \
   -v "$SRC:/src" \
   -v "$WS:/craft" \
+  "${INTL_MOUNT[@]}" \
   "$IMAGE" bash -c "mkdir -p /craft/home; $INNER"
