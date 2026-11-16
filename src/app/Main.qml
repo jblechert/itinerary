@@ -225,6 +225,9 @@ Kirigami.ApplicationWindow {
             break;
         }
 
+        // once on startup, to check which tickets are valid where we are
+        TicketValidityManager.updatePosition();
+
         if (!Settings.welcomePageShown && ReservationManager.isEmpty() && TripGroupManager.isEmpty()) {
             pageStack.layers.push(Qt.createComponent("org.kde.itinerary", "WelcomePage"));
         }

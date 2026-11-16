@@ -24,6 +24,7 @@ target_sources(itinerary PRIVATE
     importexport.cpp
     intenthandler.cpp
     journeyrequesthistorymodel.cpp
+    ticketvaliditymanager.cpp
     journeysectionmodel.cpp
     json.cpp
     jsonio.cpp

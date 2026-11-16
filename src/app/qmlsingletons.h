@@ -17,6 +17,7 @@
 #include "qmlregistrationhelper.h"
 #include "reservationmanager.h"
 #include "settings.h"
+#include "ticketvaliditymanager.h"
 #include "traewellingcontroller.h"
 #include "transfermanager.h"
 #include "tripgroupmanager.h"
@@ -32,6 +33,7 @@ REGISTER_SINGLETON_INSTANCE(FavoriteLocationModel)
 REGISTER_SINGLETON_INSTANCE(JourneyRequestHistoryModel)
 REGISTER_SINGLETON_INSTANCE(PkPassManager)
 REGISTER_SINGLETON_INSTANCE(Settings)
+REGISTER_SINGLETON_INSTANCE(TicketValidityManager)
 REGISTER_SINGLETON_INSTANCE(TransferManager)
 REGISTER_SINGLETON_INSTANCE(TripGroupManager)
 REGISTER_SINGLETON_INSTANCE(LiveDataManager)

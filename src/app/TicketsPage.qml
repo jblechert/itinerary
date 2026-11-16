@@ -21,7 +21,7 @@ FormCard.FormCardPage {
 
     data: BarcodeScanModeButton {
         page: root
-        visible: ticketRepeater.count === 1
+        visible: root.shownTicketRow >= 0
     }
 
     readonly property KSortFilterProxyModel ticketModel: KSortFilterProxyModel {
@@ -61,6 +61,67 @@ FormCard.FormCardPage {
         }
     }
 
+    // bumped whenever the current location or validity areas change, to re-evaluate validity bindings
+    property int validityRevision: 0
+    Connections {
+        target: TicketValidityManager
+        function onPositionChanged(): void { ++root.validityRevision; }
+        function onValidityAreasChanged(): void { ++root.validityRevision; }
+    }
+
+    function validityAt(row: int): int {
+        root.validityRevision; // dependency for bindings
+        const idx = root.ticketModel.index(row, 0);
+        return TicketValidityManager.validity(root.ticketModel.data(idx, PassManager.PassIdRole), root.ticketModel.data(idx, PassManager.NameRole));
+    }
+
+    /** The ticket best usable at the current location: one valid in the entire country, otherwise one valid in the area. */
+    readonly property int bestTicketRow: {
+        root.validityRevision;
+        let best = -1;
+        let bestValidity = TicketValidityManager.NotValidHere;
+        for (let row = 0; row < ticketRepeater.count; ++row) {
+            const validity = root.validityAt(row);
+            if (validity > bestValidity && validity !== TicketValidityManager.Unknown) {
+                best = row;
+                bestValidity = validity;
+            }
+        }
+        return best;
+    }
+    readonly property int bestValidity: root.bestTicketRow >= 0 ? root.validityAt(root.bestTicketRow) : TicketValidityManager.NotValidHere
+    /** The ticket shown right away: the only one, or the one best usable here. */
+    readonly property int shownTicketRow: ticketRepeater.count === 1 ? 0 : root.bestTicketRow
+
+    // where we are and whether we have a ticket for here
+    FormCard.FormCard {
+        Layout.topMargin: Kirigami.Units.largeSpacing
+        visible: TicketValidityManager.hasPosition && ticketRepeater.count > 0
+
+        FormCard.FormTextDelegate {
+            text: TicketValidityManager.locationName
+            description: switch (root.bestValidity) {
+                case TicketValidityManager.ValidInCountry:
+                    return i18nc("@info", "You have a ticket valid in the entire country.");
+                case TicketValidityManager.ValidInArea:
+                    return i18nc("@info", "You have a ticket valid in this area. Mind its zones or area limits.");
+                default:
+                    return i18nc("@info", "None of your tickets is known to be valid here.");
+            }
+            leading: Kirigami.Icon {
+                source: root.bestValidity === TicketValidityManager.NotValidHere ? "dialog-cancel" : "checkmark"
+                color: switch (root.bestValidity) {
+                    case TicketValidityManager.ValidInCountry: return Kirigami.Theme.positiveTextColor;
+                    case TicketValidityManager.ValidInArea: return Kirigami.Theme.neutralTextColor;
+                    default: return Kirigami.Theme.negativeTextColor;
+                }
+                isMask: true
+                implicitWidth: Kirigami.Units.iconSizes.large
+                implicitHeight: Kirigami.Units.iconSizes.large
+            }
+        }
+    }
+
     // no tickets
     FormCard.FormCard {
         Layout.topMargin: Kirigami.Units.largeSpacing
@@ -79,7 +140,7 @@ FormCard.FormCardPage {
         }
     }
 
-    // exactly one ticket, show it right away
+    // the only ticket or the one valid here, shown right away
     Repeater {
         id: ticketRepeater
 
@@ -87,13 +148,14 @@ FormCard.FormCardPage {
         delegate: Loader {
             id: ticketLoader
 
+            required property int index
             required property var pass
             required property string passId
             required property int type
             required property string validRangeLabel
 
             Layout.fillWidth: true
-            active: ticketRepeater.count === 1
+            active: ticketLoader.index === root.shownTicketRow
             visible: active
             sourceComponent: TicketQuickView {
                 pass: ticketLoader.pass
@@ -105,8 +167,12 @@ FormCard.FormCardPage {
     }
 
     // multiple tickets, let the user choose
+    FormCard.FormHeader {
+        title: i18nc("@title:group", "Other Tickets")
+        visible: ticketRepeater.count > 1 && root.shownTicketRow >= 0
+    }
     FormCard.FormCard {
-        Layout.topMargin: Kirigami.Units.largeSpacing
+        Layout.topMargin: root.shownTicketRow >= 0 ? 0 : Kirigami.Units.largeSpacing
         visible: ticketRepeater.count > 1
 
         Repeater {
@@ -114,7 +180,23 @@ FormCard.FormCardPage {
             delegate: PassDelegate {
                 id: ticketDelegate
 
+                required property int index
+                readonly property int validity: root.validityAt(ticketDelegate.index)
+
+                visible: ticketDelegate.index !== root.shownTicketRow
                 showDetailsOnClick: false
+                trailing: Kirigami.Icon {
+                    visible: ticketDelegate.validity !== TicketValidityManager.Unknown
+                    source: ticketDelegate.validity === TicketValidityManager.NotValidHere ? "dialog-cancel" : "checkmark"
+                    color: switch (ticketDelegate.validity) {
+                        case TicketValidityManager.ValidInCountry: return Kirigami.Theme.positiveTextColor;
+                        case TicketValidityManager.ValidInArea: return Kirigami.Theme.neutralTextColor;
+                        default: return Kirigami.Theme.negativeTextColor;
+                    }
+                    isMask: true
+                    implicitWidth: Kirigami.Units.iconSizes.smallMedium
+                    implicitHeight: Kirigami.Units.iconSizes.smallMedium
+                }
                 onClicked: root.QQC2.ApplicationWindow.window.pageStack.push(ticketPageComponent, {
                     pass: ticketDelegate.pass,
                     passId: ticketDelegate.passId,

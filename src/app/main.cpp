@@ -288,6 +288,9 @@ int main(int argc, char **argv)
     FavoriteLocationModel favLocModel;
     FavoriteLocationModelInstance::instance = &favLocModel;
 
+    TicketValidityManager ticketValidityMgr;
+    TicketValidityManagerInstance::instance = &ticketValidityMgr;
+
     JourneyRequestHistoryModel journeyRequestHistoryModel;
     JourneyRequestHistoryModelInstance::instance = &journeyRequestHistoryModel;
 
