@@ -6255,3 +6255,58 @@ msgstr "In %1 m: %2"
 msgctxt "@title notification channel"
 msgid "Navigation"
 msgstr "Navigation"
+
+#: fork
+msgctxt "@info"
+msgid "Marked routes could not be looked up: %1"
+msgstr "Markierte Routen konnten nicht abgefragt werden: %1"
+
+#: fork
+msgctxt "@info"
+msgid "The route could not be loaded: %1"
+msgstr "Die Route konnte nicht geladen werden: %1"
+
+#: fork
+msgctxt "@info"
+msgid "The course of this route is not available."
+msgstr "Der Verlauf dieser Route ist nicht verfügbar."
+
+#: fork
+msgctxt "@title"
+msgid "Marked Routes Here"
+msgstr "Markierte Routen hier"
+
+#: fork
+msgctxt "@info"
+msgid "No marked routes here. Tap on a route on the map."
+msgstr "Hier gibt es keine markierten Routen. Tippe auf eine Route auf der Karte."
+
+#: fork
+msgctxt "@info route length, total ascent and descent"
+msgid "%1 · ↑ %2 m · ↓ %3 m"
+msgstr "%1 · ↑ %2 m · ↓ %3 m"
+
+#: fork
+msgctxt "@action:button"
+msgid "Follow Route"
+msgstr "Route folgen"
+
+#: fork
+msgctxt "@action:button"
+msgid "Reverse"
+msgstr "Umkehren"
+
+#: fork
+msgctxt "@action:button"
+msgid "Website"
+msgstr "Webseite"
+
+#: fork
+msgctxt "@info elevation in meters"
+msgid "%1 m"
+msgstr "%1 m"
+
+#: fork
+msgctxt "@title following a marked route, %1 is its name"
+msgid "Follow %1"
+msgstr "%1 folgen"
