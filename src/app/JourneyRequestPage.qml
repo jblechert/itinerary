@@ -133,6 +133,7 @@ FormCard.FormCardPage {
 
                 publicTransportManager: root.publicTransportManager
                 title: i18n("Select Journey")
+                selectText: i18nc("@action:button add the selected journey to a trip", "Add to Itinerary")
                 onJourneyChanged: {
                     // reset when the dialog is closed, so the same journey can be selected again
                     if (!queryPage.journey) {

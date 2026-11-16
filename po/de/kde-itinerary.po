@@ -5895,3 +5895,8 @@ msgstr "Ankunft bis %1"
 msgctxt "@info journey search, departure time"
 msgid "Departing from %1"
 msgstr "Abfahrt ab %1"
+
+#: fork
+msgctxt "@action:button add the selected journey to a trip"
+msgid "Add to Itinerary"
+msgstr "Zum Reiseplan hinzufügen"

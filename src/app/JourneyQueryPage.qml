@@ -24,6 +24,8 @@ Kirigami.ScrollablePage {
     /** The journey to query for. */
     property alias journeyRequest: journeyModel.request
     property alias publicTransportManager: journeyModel.manager
+    /** Label of the button for selecting a journey, describing what selecting it does. */
+    property string selectText: i18n("Select")
 
     /** Showing results for an arrival query. */
     readonly property bool isArrival: root.journeyRequest.dateTimeMode == JourneyRequest.Arrival
@@ -150,7 +152,7 @@ Kirigami.ScrollablePage {
                             FormCard.FormButtonDelegate {
                                 id: selectButton
 
-                                text: i18n("Select")
+                                text: root.selectText
                                 icon.name: "checkmark"
                                 enabled: expandedLayout.journey.disruptionEffect !== Disruption.NoService
                                 onClicked: root.journey = expandedLayout.journey
