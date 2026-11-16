@@ -157,6 +157,7 @@ ecm_add_qml_module(itinerary GENERATE_PLUGIN_SOURCE
         JourneySectionStopDelegate.qml
         JourneySectionStopDelegateLineSegment.qml
         JourneySummaryDelegate.qml
+        JourneyTimelineView.qml
         LiveStatusPage.qml
         LocationInfoDelegate.qml
         LocationPicker.qml

@@ -44,6 +44,20 @@ FormCard.FormCardPage {
             Component.onCompleted: currentIndex = indexOfValue(Settings.startPage)
             onActivated: Settings.startPage = currentValue
         }
+
+        FormCard.FormDelegateSeparator {}
+
+        FormCard.FormComboBoxDelegate {
+            text: i18nc("@label:listbox", "Show connections as")
+            model: [
+                { text: i18nc("@item:inlistbox how to show journey search results", "List"), value: false },
+                { text: i18nc("@item:inlistbox how to show journey search results", "Timeline"), value: true },
+            ]
+            textRole: "text"
+            valueRole: "value"
+            currentIndex: Settings.journeyResultsAsTimeline ? 1 : 0
+            onActivated: Settings.journeyResultsAsTimeline = currentValue
+        }
     }
 
     FormCard.FormHeader {

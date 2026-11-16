@@ -41,6 +41,7 @@ void Settings::load()
     m_startPage = static_cast<StartPage>(std::clamp(s.value("StartPage"_L1, static_cast<int>(m_startPage)).toInt(),
                                                     static_cast<int>(ItineraryStartPage),
                                                     static_cast<int>(MyDataStartPage)));
+    m_journeyResultsAsTimeline = s.value("JourneyResultsAsTimeline"_L1, m_journeyResultsAsTimeline).toBool();
     m_welcomePageShown = s.value("WelcomePageShown"_L1, m_welcomePageShown).toBool();
     m_currencyConversion = s.value("PerformCurrencyConversion"_L1, m_currencyConversion).toBool();
     m_wikimediaOnlineContentEnabled = s.value("WikimediaOnlineContent"_L1, m_wikimediaOnlineContentEnabled).toBool();
@@ -67,6 +68,7 @@ void Settings::reloadSettings()
     Q_EMIT queryLiveDataChanged(m_queryLiveData);
     Q_EMIT preloadMapDataChanged(m_preloadMapData);
     Q_EMIT startPageChanged(m_startPage);
+    Q_EMIT journeyResultsAsTimelineChanged(m_journeyResultsAsTimeline);
     Q_EMIT welcomePageShownChanged(m_welcomePageShown);
     Q_EMIT performCurrencyConversionChanged(m_currencyConversion);
     Q_EMIT wikimediaOnlineContentEnabledChanged(m_wikimediaOnlineContentEnabled);
@@ -219,6 +221,25 @@ void Settings::setStartPage(StartPage startPage)
     s.setValue("StartPage"_L1, static_cast<int>(startPage));
 
     Q_EMIT startPageChanged(startPage);
+}
+
+bool Settings::journeyResultsAsTimeline() const
+{
+    return m_journeyResultsAsTimeline;
+}
+
+void Settings::setJourneyResultsAsTimeline(bool asTimeline)
+{
+    if (m_journeyResultsAsTimeline == asTimeline) {
+        return;
+    }
+
+    m_journeyResultsAsTimeline = asTimeline;
+    QSettings s;
+    s.beginGroup("Settings"_L1);
+    s.setValue("JourneyResultsAsTimeline"_L1, asTimeline);
+
+    Q_EMIT journeyResultsAsTimelineChanged(asTimeline);
 }
 
 bool Settings::welcomePageShown() const

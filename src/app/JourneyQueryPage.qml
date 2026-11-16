@@ -36,6 +36,248 @@ Kirigami.ScrollablePage {
     property bool showEarlierJourneys: false
     onShowEarlierJourneysChanged: sortedJourneyModel.invalidateFilter()
 
+    /** Show the results on a time axis rather than as a list.
+     *  The timeline shows the entire day, including journeys that already departed.
+     */
+    readonly property bool showTimeline: Settings.journeyResultsAsTimeline
+    onShowTimelineChanged: {
+        sortedJourneyModel.invalidateFilter();
+        Qt.callLater(root.loadRestOfDay);
+    }
+
+    // state for loadRestOfDay()
+    readonly property double dayMs: 24 * 60 * 60 * 1000
+    /** The time range to load journeys for in timeline mode.
+     *  Initially the service day of the requested time, which like for the railways runs from 03:00 to 03:00.
+     */
+    property double loadRangeStart: 0
+    property double loadRangeEnd: 0
+    property int dayLoadQueries: 0
+    property double lastEarliestDeparture: 0
+    property double lastLatestDeparture: 0
+
+    function initLoadRange(): void {
+        const start = new Date(root.journeyRequest.dateTime);
+        if (start.getHours() < 3) {
+            start.setDate(start.getDate() - 1);
+        }
+        start.setHours(3, 0, 0, 0);
+        root.loadRangeStart = start.getTime();
+        root.loadRangeEnd = start.getTime() + root.dayMs;
+    }
+
+    /** Extend the time range to load by one day, earlier or later. */
+    function extendLoadRange(earlier: bool): void {
+        if (journeyModel.loading || (earlier ? !journeyModel.canQueryPrevious : !journeyModel.canQueryNext)) {
+            return;
+        }
+        if (earlier) {
+            root.loadRangeStart -= root.dayMs;
+            root.lastEarliestDeparture = 0;
+        } else {
+            root.loadRangeEnd += root.dayMs;
+            root.lastLatestDeparture = 0;
+        }
+        root.dayLoadQueries = 0;
+        root.loadRestOfDay();
+    }
+
+    /** In timeline mode, load further journeys until the time range to load is covered.
+     *  One query at a time, and only as long as queries actually extend the covered time range.
+     */
+    function loadRestOfDay(): void {
+        if (!root.showTimeline || journeyModel.loading || root.dayLoadQueries >= 20) {
+            return;
+        }
+        if (root.loadRangeEnd === 0) {
+            root.initLoadRange();
+        }
+        let earliest = Number.MAX_VALUE;
+        let latest = 0;
+        for (let row = 0; row < journeyModel.rowCount(); ++row) {
+            const departure = journeyModel.data(journeyModel.index(row, 0), JourneyQueryModel.JourneyRole).scheduledDepartureTime.getTime();
+            earliest = Math.min(earliest, departure);
+            latest = Math.max(latest, departure);
+        }
+        if (latest === 0) {
+            return;
+        }
+        if (journeyModel.canQueryPrevious && earliest > root.loadRangeStart && earliest !== root.lastEarliestDeparture) {
+            root.lastEarliestDeparture = earliest;
+            ++root.dayLoadQueries;
+            journeyModel.queryPrevious();
+        } else if (journeyModel.canQueryNext && latest < root.loadRangeEnd && latest !== root.lastLatestDeparture) {
+            root.lastLatestDeparture = latest;
+            ++root.dayLoadQueries;
+            journeyModel.queryNext();
+        }
+    }
+
+    // load the next or previous day when scrolling to the end of the timeline
+    Connections {
+        target: journeyView
+        enabled: root.showTimeline
+        function onAtYEndChanged(): void {
+            if (journeyView.atYEnd && journeyView.moving) {
+                root.extendLoadRange(false);
+            }
+        }
+        function onAtYBeginningChanged(): void {
+            if (journeyView.atYBeginning && journeyView.moving) {
+                root.extendLoadRange(true);
+            }
+        }
+    }
+
+    Connections {
+        target: journeyModel
+        function onLoadingChanged(): void {
+            if (!journeyModel.loading) {
+                Qt.callLater(root.loadRestOfDay);
+            }
+        }
+    }
+
+    actions: [
+        Kirigami.Action {
+            icon.name: root.showTimeline ? "view-list-details" : "view-calendar-day"
+            text: root.showTimeline ? i18nc("@action:button", "Show as List") : i18nc("@action:button", "Show as Timeline")
+            onTriggered: Settings.journeyResultsAsTimeline = !Settings.journeyResultsAsTimeline
+        }
+    ]
+
+    /** Details of a single journey, with the actions for it. */
+    component JourneyDetailsLayout: ColumnLayout {
+        id: detailsLayout
+
+        required property var journey
+        required property string selectText
+
+        signal selected()
+
+        spacing: 0
+
+        Repeater {
+            id: sectionRepeater
+            delegate: JourneySectionDelegate {
+                Layout.fillWidth: true
+                modelLength: sectionRepeater.count - 1
+            }
+            model: detailsLayout.journey.sections
+        }
+
+        FormCard.FormDelegateSeparator {
+            above: bookButton
+            visible: bookButton.visible
+        }
+        FormCard.FormButtonDelegate {
+            id: bookButton
+            text: i18nc("purchase a ticket", "Book")
+            icon.name: "view-financial-account-cash-symbolic"
+            visible: detailsLayout.journey.bookingUrl != "" && detailsLayout.journey.disruptionEffect !== Disruption.NoService
+            onClicked: Qt.openUrlExternally(detailsLayout.journey.bookingUrl)
+        }
+
+        FormCard.FormDelegateSeparator {
+            above: selectButton
+        }
+
+        FormCard.FormButtonDelegate {
+            id: selectButton
+
+            text: detailsLayout.selectText
+            icon.name: "checkmark"
+            enabled: detailsLayout.journey.disruptionEffect !== Disruption.NoService
+            onClicked: detailsLayout.selected()
+        }
+    }
+
+    readonly property KSortFilterProxyModel journeyProxyModel: KSortFilterProxyModel {
+        id: sortedJourneyModel
+
+        sourceModel: JourneyQueryModel {
+            id: journeyModel
+        }
+        sortRole: JourneyQueryModel.ScheduledDepartureTime
+        dynamicSortFilter: true
+        filterRowCallback: function(sourceRow, sourceParent) {
+            if (root.isArrival || root.showEarlierJourneys || root.showTimeline) {
+                return true;
+            }
+            const journey = sourceModel.data(sourceModel.index(sourceRow, 0, sourceParent), JourneyQueryModel.JourneyRole);
+            // what matters is when the first train, bus, etc. leaves, not when walking to it would have to start
+            let departing = journey;
+            for (const section of journey.sections) {
+                if (section.mode === JourneySection.PublicTransport) {
+                    departing = section;
+                    break;
+                }
+            }
+            const departure = departing.hasExpectedDepartureTime ? departing.expectedDepartureTime : departing.scheduledDepartureTime;
+            // the requested time is picked with minute precision, so compare with that
+            const requested = new Date(root.journeyRequest.dateTime);
+            requested.setSeconds(0, 0);
+            return departure.getTime() >= requested.getTime();
+        }
+        Component.onCompleted: Util.sortModel(sortedJourneyModel, 0, Qt.Ascending)
+    }
+
+    Component {
+        id: journeyDetailsPage
+
+        FormCard.FormCardPage {
+            id: detailsPage
+
+            property var journey
+
+            title: i18nc("@title", "Connection Details")
+
+            FormCard.FormCard {
+                Layout.topMargin: Kirigami.Units.largeSpacing
+
+                JourneyDetailsLayout {
+                    journey: detailsPage.journey
+                    selectText: root.selectText
+                    onSelected: root.journey = detailsPage.journey
+                }
+            }
+        }
+    }
+
+    Component {
+        id: earlierButtonComponent
+
+        VerticalNavigationButton {
+            visible: journeyModel.canQueryPrevious
+            width: journeyView.width
+            text: i18nc("@action:button", "Load earlier connections")
+            iconName: "go-up-symbolic"
+            onClicked: {
+                root.showEarlierJourneys = true;
+                journeyModel.queryPrevious();
+            }
+        }
+    }
+
+    Component {
+        id: timelineComponent
+
+        JourneyTimelineView {
+            width: journeyView.width
+            journeys: sortedJourneyModel
+            verticalFlickable: journeyView
+            focusTime: root.journeyRequest.dateTime
+            canQueryPrevious: journeyModel.canQueryPrevious
+            canQueryNext: journeyModel.canQueryNext
+            onQueryPrevious: {
+                root.showEarlierJourneys = true;
+                journeyModel.queryPrevious();
+            }
+            onQueryNext: journeyModel.queryNext()
+            onJourneyClicked: (journey) => root.QQC2.ApplicationWindow.window.pageStack.push(journeyDetailsPage, { journey: journey })
+        }
+    }
+
     Kirigami.Theme.inherit: false
     Kirigami.Theme.colorSet: Kirigami.Theme.Window
 
@@ -87,161 +329,100 @@ Kirigami.ScrollablePage {
         reuseItems: true
         cacheBuffer: height
 
-        delegate: FormCard.FormCard {
-            id: topDelegate
+        delegate: root.showTimeline ? timelineComponent : listDelegate
 
-            required property int index
-            required property var journey
-            width: ListView.view.width
-            height: loader.status === Loader.Ready ? loader.item.implicitHeight : 100 // TODO can we predict the height accurately?
+        Component {
+            id: listDelegate
 
-            Loader {
-                id: loader
-                Layout.fillWidth: true
+            FormCard.FormCard {
+                id: topDelegate
 
-                Rectangle {
-                    id: loadingAnimationItem
-                    color: Kirigami.Theme.backgroundColor
-                    anchors.fill: parent
+                required property int index
+                required property var journey
+                width: ListView.view.width
+                height: loader.status === Loader.Ready ? loader.item.implicitHeight : 100 // TODO can we predict the height accurately?
 
-                    z: 1000
-
-                    OpacityAnimator {
-                        target: loadingAnimationItem
-                        from: 1
-                        to: 0
-                        duration: Kirigami.Units.shortDuration
-                        running: loader.status === Loader.Ready
-                    }
-                }
-
-                visible: loader.status === Loader.Ready
-                asynchronous: true
-                sourceComponent: Loader {
+                Loader {
+                    id: loader
                     Layout.fillWidth: true
 
-                    Component {
-                        id: expanded
+                    Rectangle {
+                        id: loadingAnimationItem
+                        color: Kirigami.Theme.backgroundColor
+                        anchors.fill: parent
 
-                        ColumnLayout {
-                            id: expandedLayout
+                        z: 1000
 
-                            property var journey: topDelegate.journey
-
-                            spacing: 0
-
-                            Repeater {
-                                id: journeyRepeater
-                                delegate: JourneySectionDelegate {
-                                    Layout.fillWidth: true
-                                    modelLength: journeyRepeater.count - 1
-                                }
-                                model: expandedLayout.journey.sections
-                            }
-
-                            FormCard.FormDelegateSeparator {
-                                above: bookButton
-                                visible: bookButton.visible
-                            }
-                            FormCard.FormButtonDelegate {
-                                id: bookButton
-                                text: i18nc("purchase a ticket", "Book")
-                                icon.name: "view-financial-account-cash-symbolic"
-                                visible: expandedLayout.journey.bookingUrl != "" && expandedLayout.journey.disruptionEffect !== Disruption.NoService
-                                onClicked: Qt.openUrlExternally(expandedLayout.journey.bookingUrl)
-                            }
-
-                            FormCard.FormDelegateSeparator {
-                                above: selectButton
-                            }
-
-                            FormCard.FormButtonDelegate {
-                                id: selectButton
-
-                                text: root.selectText
-                                icon.name: "checkmark"
-                                enabled: expandedLayout.journey.disruptionEffect !== Disruption.NoService
-                                onClicked: root.journey = expandedLayout.journey
-                            }
+                        OpacityAnimator {
+                            target: loadingAnimationItem
+                            from: 1
+                            to: 0
+                            duration: Kirigami.Units.shortDuration
+                            running: loader.status === Loader.Ready
                         }
                     }
 
-                    Component {
-                        id: compact
+                    visible: loader.status === Loader.Ready
+                    asynchronous: true
+                    sourceComponent: Loader {
+                        Layout.fillWidth: true
 
-                        JourneySummaryDelegate {
-                            id: summaryButton
+                        Component {
+                            id: expanded
 
-                            journey: topDelegate.journey
-
-                            onClicked: journeyView.currentIndex = topDelegate.index
-
-                            Layout.fillWidth: true
+                            JourneyDetailsLayout {
+                                journey: topDelegate.journey
+                                selectText: root.selectText
+                                onSelected: root.journey = topDelegate.journey
+                            }
                         }
-                    }
 
-                    sourceComponent: journeyView.currentIndex == topDelegate.index ? expanded : compact
+                        Component {
+                            id: compact
+
+                            JourneySummaryDelegate {
+                                id: summaryButton
+
+                                journey: topDelegate.journey
+
+                                onClicked: journeyView.currentIndex = topDelegate.index
+
+                                Layout.fillWidth: true
+                            }
+                        }
+
+                        sourceComponent: journeyView.currentIndex == topDelegate.index ? expanded : compact
+                    }
                 }
             }
         }
 
         section {
-            property: root.isArrival ? "scheduledArrivalDate" : "scheduledDepartureDate"
+            property: root.showTimeline ? "" : (root.isArrival ? "scheduledArrivalDate" : "scheduledDepartureDate")
             delegate: TimelineSectionDelegate {
                 required property string section
                 day: section
             }
         }
 
-        model: KSortFilterProxyModel {
-            id: sortedJourneyModel
-
-            sourceModel: JourneyQueryModel {
-                id: journeyModel
-            }
-            sortRole: JourneyQueryModel.ScheduledDepartureTime
-            dynamicSortFilter: true
-            filterRowCallback: function(sourceRow, sourceParent) {
-                if (root.isArrival || root.showEarlierJourneys) {
-                    return true;
-                }
-                const journey = sourceModel.data(sourceModel.index(sourceRow, 0, sourceParent), JourneyQueryModel.JourneyRole);
-                // what matters is when the first train, bus, etc. leaves, not when walking to it would have to start
-                let departing = journey;
-                for (const section of journey.sections) {
-                    if (section.mode === JourneySection.PublicTransport) {
-                        departing = section;
-                        break;
-                    }
-                }
-                const departure = departing.hasExpectedDepartureTime ? departing.expectedDepartureTime : departing.scheduledDepartureTime;
-                // the requested time is picked with minute precision, so compare with that
-                const requested = new Date(root.journeyRequest.dateTime);
-                requested.setSeconds(0, 0);
-                return departure.getTime() >= requested.getTime();
-            }
-            Component.onCompleted: Util.sortModel(sortedJourneyModel, 0, Qt.Ascending)
-        }
+        // the timeline is a single item showing all journeys
+        model: root.showTimeline ? 1 : sortedJourneyModel
 
         spacing: Kirigami.Units.largeSpacing
 
-        header: VerticalNavigationButton {
-            visible: journeyModel.canQueryPrevious
-            width: journeyView.width
-            text: i18nc("@action:button", "Load earlier connections")
-            iconName: "go-up-symbolic"
-            onClicked: {
-                root.showEarlierJourneys = true;
-                journeyModel.queryPrevious();
-            }
-        }
+        header: root.showTimeline ? null : earlierButtonComponent
 
-        footer: VerticalNavigationButton {
-            visible: journeyModel.canQueryNext
+        footer: ColumnLayout {
             width: journeyView.width
-            iconName: "go-down-symbolic"
-            text: i18nc("@action:button", "Load later connections")
-            onClicked: journeyModel.queryNext()
+            spacing: 0
+
+            VerticalNavigationButton {
+                visible: journeyModel.canQueryNext && !root.showTimeline
+                Layout.fillWidth: true
+                iconName: "go-down-symbolic"
+                text: i18nc("@action:button", "Load later connections")
+                onClicked: journeyModel.queryNext()
+            }
 
             FormCard.FormCard {
                 visible: journeyModel.attributions.length > 0
@@ -262,7 +443,7 @@ Kirigami.ScrollablePage {
             } else {
                 return i18nc("@info:placeholder", "No journeys found")
             }
-            visible: journeyView.count === 0
+            visible: sortedJourneyModel.count === 0
 
             icon.name: journeyModel.errorMessage.length > 0 ? "network-disconnect-symbolic" : ""
             explanation: journeyModel.errorMessage
@@ -287,7 +468,7 @@ Kirigami.ScrollablePage {
     footer: ColumnLayout {
         spacing: 0
         height: indicator.running ? layout.implicitHeight : 0
-        visible: journeyModel.loading && journeyView.count !== 0
+        visible: journeyModel.loading && sortedJourneyModel.count !== 0
 
         Behavior on height {
             NumberAnimation { duration: Kirigami.Units.shortDuration }
@@ -302,7 +483,7 @@ Kirigami.ScrollablePage {
 
             QQC2.BusyIndicator {
                 id: indicator
-                running: journeyModel.loading && journeyView.count !== 0
+                running: journeyModel.loading && sortedJourneyModel.count !== 0
             }
 
             QQC2.Label {

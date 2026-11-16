@@ -18,6 +18,8 @@ class Settings : public QObject
     Q_OBJECT
     /** The page shown when the application starts. */
     Q_PROPERTY(StartPage startPage READ startPage WRITE setStartPage NOTIFY startPageChanged)
+    /** Show journey search results on a time axis rather than as a list. */
+    Q_PROPERTY(bool journeyResultsAsTimeline READ journeyResultsAsTimeline WRITE setJourneyResultsAsTimeline NOTIFY journeyResultsAsTimelineChanged)
     Q_PROPERTY(bool weatherForecastEnabled READ weatherForecastEnabled WRITE setWeatherForecastEnabled NOTIFY weatherForecastEnabledChanged)
     Q_PROPERTY(QString homeCountryIsoCode READ homeCountryIsoCode WRITE setHomeCountryIsoCode NOTIFY homeCountryIsoCodeChanged)
     Q_PROPERTY(bool forceMetricUnits READ forceMetricUnits WRITE setForceMetricUnits NOTIFY forceMetricUnitsChanged)
@@ -79,6 +81,9 @@ public:
     [[nodiscard]] StartPage startPage() const;
     void setStartPage(StartPage startPage);
 
+    [[nodiscard]] bool journeyResultsAsTimeline() const;
+    void setJourneyResultsAsTimeline(bool asTimeline);
+
     [[nodiscard]] bool welcomePageShown() const;
     void setWelcomePageShown(bool shown);
 
@@ -123,6 +128,7 @@ Q_SIGNALS:
     void queryLiveDataChanged(bool enabled);
     void preloadMapDataChanged(bool preload);
     void startPageChanged(Settings::StartPage startPage);
+    void journeyResultsAsTimelineChanged(bool asTimeline);
     void welcomePageShownChanged(bool shown);
     void performCurrencyConversionChanged(bool enabled);
     void wikimediaOnlineContentEnabledChanged(bool enabled);
@@ -142,6 +148,7 @@ private:
     bool m_queryLiveData = false;
     bool m_preloadMapData = false;
     StartPage m_startPage = TicketsStartPage;
+    bool m_journeyResultsAsTimeline = true;
     bool m_welcomePageShown = false;
     bool m_currencyConversion = false;
     bool m_wikimediaOnlineContentEnabled = false;
