@@ -43,7 +43,10 @@ tickets you set once where they are valid: a country, or within a radius of wher
   picked on the map. A map follows your position, instructions are spoken ahead of each turn, and a new route is found
   when you leave it. Routes come from KPublicTransport. Handing over to Organic Maps or Google Maps remains possible.
 - A map tab, with marked hiking, cycling and mountain bike routes from [Waymarked Trails](https://waymarkedtrails.org)
-  on top if you like.
+  on top if you like. Tap a route to see its length, ascent and elevation profile, and follow it: if you're not on it,
+  you're guided to its closest point first. Navigation keeps going with the screen off.
+- Ascent and descent of walks and bike rides, where the routing service provides them (KPublicTransport extension,
+  to be proposed to KDE).
 - The journey search remembers the kind of ticket you travel with, e.g. local transport only for the
   Deutschlandticket, so long distance trains don't show up when you can't use them.
 
