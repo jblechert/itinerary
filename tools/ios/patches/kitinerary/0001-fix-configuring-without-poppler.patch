@@ -1,0 +1,13 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 5a946b6..a87fc34 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -95,7 +95,7 @@ if(TARGET Poppler::Core)
+         message(FATAL_ERROR "Poppler was not build with ENABLE_UNSTABLE_API_ABI_HEADERS!")
+     endif()
+ endif()
+-string(REGEX MATCH "([0-9]+)\.0*([0-9]+)\.0*([0-9]+)" _match ${Poppler_VERSION})
++string(REGEX MATCH "([0-9]+)\.0*([0-9]+)\.0*([0-9]+)" _match "${Poppler_VERSION}")
+ set(POPPLER_VERSION_MAJOR ${CMAKE_MATCH_1})
+ set(POPPLER_VERSION_MINOR ${CMAKE_MATCH_2})
+ set(POPPLER_VERSION_PATCH ${CMAKE_MATCH_3})
