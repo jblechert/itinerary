@@ -30,6 +30,12 @@ Kirigami.ScrollablePage {
     /** Showing results for an arrival query. */
     readonly property bool isArrival: root.journeyRequest.dateTimeMode == JourneyRequest.Arrival
 
+    /** Also show journeys departing before the requested time.
+     *  Backends tend to include a few of those, which aren't useful unless explicitly asked for.
+     */
+    property bool showEarlierJourneys: false
+    onShowEarlierJourneysChanged: sortedJourneyModel.invalidateFilter()
+
     Kirigami.Theme.inherit: false
     Kirigami.Theme.colorSet: Kirigami.Theme.Window
 
@@ -195,6 +201,25 @@ Kirigami.ScrollablePage {
             }
             sortRole: JourneyQueryModel.ScheduledDepartureTime
             dynamicSortFilter: true
+            filterRowCallback: function(sourceRow, sourceParent) {
+                if (root.isArrival || root.showEarlierJourneys) {
+                    return true;
+                }
+                const journey = sourceModel.data(sourceModel.index(sourceRow, 0, sourceParent), JourneyQueryModel.JourneyRole);
+                // what matters is when the first train, bus, etc. leaves, not when walking to it would have to start
+                let departing = journey;
+                for (const section of journey.sections) {
+                    if (section.mode === JourneySection.PublicTransport) {
+                        departing = section;
+                        break;
+                    }
+                }
+                const departure = departing.hasExpectedDepartureTime ? departing.expectedDepartureTime : departing.scheduledDepartureTime;
+                // the requested time is picked with minute precision, so compare with that
+                const requested = new Date(root.journeyRequest.dateTime);
+                requested.setSeconds(0, 0);
+                return departure.getTime() >= requested.getTime();
+            }
             Component.onCompleted: Util.sortModel(sortedJourneyModel, 0, Qt.Ascending)
         }
 
@@ -205,7 +230,10 @@ Kirigami.ScrollablePage {
             width: journeyView.width
             text: i18nc("@action:button", "Load earlier connections")
             iconName: "go-up-symbolic"
-            onClicked: journeyModel.queryPrevious()
+            onClicked: {
+                root.showEarlierJourneys = true;
+                journeyModel.queryPrevious();
+            }
         }
 
         footer: VerticalNavigationButton {

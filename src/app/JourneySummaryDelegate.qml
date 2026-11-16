@@ -19,6 +19,19 @@ FormCard.AbstractFormDelegate {
 
     property var journey
 
+    /** The first section actually using public transport, i.e. not walking to it. */
+    readonly property var firstTransportSection: {
+        for (const section of root.journey.sections) {
+            if (section.mode === JourneySection.PublicTransport) {
+                return section;
+            }
+        }
+        return null;
+    }
+    /** Whether the journey starts with something else than public transport, e.g. walking to the departure stop. */
+    readonly property bool hasLeadingSections: root.firstTransportSection !== null
+        && root.firstTransportSection.scheduledDepartureTime.getTime() !== root.journey.scheduledDepartureTime.getTime()
+
     contentItem: ColumnLayout {
         id: mainLayout
 
@@ -56,6 +69,12 @@ FormCard.AbstractFormDelegate {
                     weight: Font.DemiBold
                     strikeout: root.journey.disruptionEffect === Disruption.NoService
                 }
+            }
+
+            QQC2.Label {
+                text: i18nc("@info departure time of the first train, bus, etc. of a journey", "(Departure: %1)",
+                            Localizer.formatTime(root.firstTransportSection, root.firstTransportSection.hasExpectedDepartureTime ? "expectedDepartureTime" : "scheduledDepartureTime"))
+                visible: root.hasLeadingSections
             }
 
             QQC2.Label {
