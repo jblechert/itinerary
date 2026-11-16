@@ -193,6 +193,8 @@ ecm_add_qml_module(itinerary GENERATE_PLUGIN_SOURCE
         StopPickerPage.qml
         TicketEditor.qml
         TicketPage.qml
+        TicketQuickView.qml
+        TicketsPage.qml
         TicketTokenDelegate.qml
         TicketTokenEditorCard.qml
         TimelineDelegateArrivalLayout.qml

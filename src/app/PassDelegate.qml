@@ -15,6 +15,8 @@ FormCard.FormButtonDelegate {
     required property string validRangeLabel
     readonly property string pkPassId: PkPassManager.passId(pass)
     readonly property var pkPass: PkPassManager.pass(pkPassId)
+    /** Open the details page for this pass when clicked. */
+    property bool showDetailsOnClick: true
 
     icon.name: pkPassId !== "" ? "image://org.kde.pkpass/" + pkPassId + "/icon" : ReservationHelper.defaultIconName(pass);
 
@@ -44,28 +46,34 @@ FormCard.FormButtonDelegate {
         return i18nc("name - valid time range", "%1 - %2", pass.underName.name, validRangeLabel);
     }
 
-    onClicked: switch (type) {
-    case PassManager.ProgramMembership:
-        const programMembershipPage = Qt.createComponent("org.kde.itinerary", "ProgramMembershipPage");
-        QQC2.ApplicationWindow.window.pageStack.push(programMembershipPage, {
-            programMembership: pass,
-            passId: passId,
-        });
-        return;
-    case PassManager.PkPass:
-        const pkpassComponent = Qt.createComponent("org.kde.itinerary", "GenericPkPassPage");
-        QQC2.ApplicationWindow.window.pageStack.push(pkpassComponent, {
-            passId: pkPassId,
-            pass: pkPass,
-            genericPassId: passId,
-        });
-        return;
-    case PassManager.Ticket:
-        const ticketComponent = Qt.createComponent("org.kde.itinerary", "TicketPage");
-        QQC2.ApplicationWindow.window.pageStack.push(ticketComponent, {
-            ticket: pass,
-            passId: passId,
-        });
-        return;
+    onClicked: if (showDetailsOnClick) {
+        showDetails();
+    }
+
+    function showDetails(): void {
+        switch (type) {
+        case PassManager.ProgramMembership:
+            const programMembershipPage = Qt.createComponent("org.kde.itinerary", "ProgramMembershipPage");
+            QQC2.ApplicationWindow.window.pageStack.push(programMembershipPage, {
+                programMembership: pass,
+                passId: passId,
+            });
+            return;
+        case PassManager.PkPass:
+            const pkpassComponent = Qt.createComponent("org.kde.itinerary", "GenericPkPassPage");
+            QQC2.ApplicationWindow.window.pageStack.push(pkpassComponent, {
+                passId: pkPassId,
+                pass: pkPass,
+                genericPassId: passId,
+            });
+            return;
+        case PassManager.Ticket:
+            const ticketComponent = Qt.createComponent("org.kde.itinerary", "TicketPage");
+            QQC2.ApplicationWindow.window.pageStack.push(ticketComponent, {
+                ticket: pass,
+                passId: passId,
+            });
+            return;
+        }
     }
 }

@@ -38,6 +38,12 @@ Kirigami.NavigationTabBar {
             }
         },
         Kirigami.PagePoolAction {
+            icon.name: "view-barcode-qr"
+            text: i18nc("@title:tab", "Tickets")
+            pagePool: pagepool
+            page: Qt.resolvedUrl("TicketsPage.qml")
+        },
+        Kirigami.PagePoolAction {
             icon.name: "user-identity-symbolic"
             text: i18nc("@title:tab", "My Data")
             pagePool: pagepool
