@@ -12,6 +12,9 @@ platforms and its documentation, see the [upstream repository](https://invent.kd
 - The Android Back gesture navigates back inside the application instead of closing it.
 - A *Tickets* tab gives direct access to your currently valid tickets and passes, ready to be shown
   for inspection.
+- The page shown on start can be chosen, by default this is the *Tickets* tab.
+- Journey search remembers previously searched connections. Selecting one, or its return journey,
+  shows the connections departing now.
 
 ## Download
 
