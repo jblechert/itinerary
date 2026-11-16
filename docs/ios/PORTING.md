@@ -60,14 +60,19 @@ A first draft of the required Info.plist entries is in [`Info.plist.in`](Info.pl
 - Public transport data providers: check the terms of the APIs used by KPublicTransport, some require keys
   that are registered to KDE.
 
+## PDF import is removed on iOS, for licensing reasons only
+
+Decision: the iOS version is built without Poppler, so it can't import PDF tickets. Poppler is GPL licensed, and
+distributing GPL code through Apple's App Store is widely considered incompatible with the App Store terms. That is
+the only reason for this. PDF import works fine technically and stays enabled on all other platforms; Apple Wallet
+passes, barcodes and the other import paths are available on iOS.
+
 ## Licensing (needs to be resolved before publishing)
 
 - Itinerary and the KDE libraries are LGPL. LGPL code in an App Store app requires that users can relink the
   app with modified libraries, e.g. by building the libraries as dynamic frameworks or providing object files.
 - Qt is used under LGPLv3 with the same requirement.
-- Poppler (PDF ticket extraction in kitinerary) is GPL. Distributing GPL code through the App Store is widely
-  considered incompatible with the App Store terms. Options: build kitinerary without Poppler (loses PDF ticket
-  import, Apple Wallet passes and barcodes still work), or get this checked properly.
+- Poppler (PDF ticket extraction in kitinerary) is GPL, which is why PDF import is removed on iOS, see above.
 - KDE e.V. publishes some apps in Apple's App Store (e.g. KDE Connect), they may be able to advise.
 
 ## Publishing
