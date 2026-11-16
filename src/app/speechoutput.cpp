@@ -1,0 +1,57 @@
+/*
+    SPDX-FileCopyrightText: 2026 Janis Blechert <janis@blechert.at>
+    SPDX-License-Identifier: LGPL-2.0-or-later
+*/
+
+#include "speechoutput.h"
+
+#include "logging.h"
+
+#ifdef Q_OS_ANDROID
+#include <QCoreApplication>
+
+#include <functional>
+#endif
+
+#ifdef Q_OS_ANDROID
+// Android's TextToSpeech needs to be created and used on a thread with a looper, i.e. the Android main thread
+static void runOnMainThread(std::function<void()> &&func)
+{
+    QNativeInterface::QAndroidApplication::runOnAndroidMainThread(std::move(func));
+}
+#endif
+
+SpeechOutput::SpeechOutput()
+#ifdef Q_OS_ANDROID
+    : m_speech(std::make_shared<QJniObject>())
+#endif
+{
+#ifdef Q_OS_ANDROID
+    runOnMainThread([speech = m_speech]() {
+        *speech = QJniObject("org/kde/itinerary/SpeechOutput", "(Landroid/content/Context;)V", QNativeInterface::QAndroidApplication::context().object());
+    });
+#endif
+}
+
+SpeechOutput::~SpeechOutput()
+{
+#ifdef Q_OS_ANDROID
+    runOnMainThread([speech = m_speech]() {
+        if (speech->isValid()) {
+            speech->callMethod<void>("shutdown", "()V");
+        }
+    });
+#endif
+}
+
+void SpeechOutput::speak(const QString &text)
+{
+    qCInfo(Log) << "speaking:" << text;
+#ifdef Q_OS_ANDROID
+    runOnMainThread([speech = m_speech, text]() {
+        if (speech->isValid()) {
+            speech->callMethod<void>("speak", "(Ljava/lang/String;)V", QJniObject::fromString(text).object<jstring>());
+        }
+    });
+#endif
+}
