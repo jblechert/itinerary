@@ -1,0 +1,18 @@
+diff --git a/src/osm/CMakeLists.txt b/src/osm/CMakeLists.txt
+index a50dba6..1bdd560 100644
+--- a/src/osm/CMakeLists.txt
++++ b/src/osm/CMakeLists.txt
+@@ -18,10 +18,12 @@ add_library(KOSM STATIC
+     io/o5mplugin.cpp
+ )
+ generate_export_header(KOSM BASE_NAME KOSM)
++# installed for static builds only, under a name not clashing with KOSMIndoorMap's KOSM library
+ set_target_properties(KOSM PROPERTIES
+     VERSION ${KPUBLICTRANSPORT_VERSION}
+     SOVERSION ${KPUBLICTRANSPORT_SOVERSION}
+-    EXPORT_NAME KOSM
++    OUTPUT_NAME KPublicTransportOSM
++    EXPORT_NAME KPublicTransportOSM
+ )
+ 
+ target_include_directories(KOSM PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>")
