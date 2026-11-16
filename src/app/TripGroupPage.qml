@@ -140,8 +140,7 @@ Kirigami.ScrollablePage {
             publicTransportManager: LiveDataManager.publicTransportManager,
             initialCountry: country,
             initialDateTime: dt,
-            departureStop: departureLocation,
-            allowAddingToTrip: true,
+            departureStop: departureLocation
         });
     }
 
