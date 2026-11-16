@@ -7,6 +7,20 @@ getting to your ticket quickly.
 It is not affiliated with or endorsed by KDE. For the original application, its official releases for all
 platforms and its documentation, see the [upstream repository](https://invent.kde.org/pim/itinerary).
 
+## Do I have a ticket for here?
+
+You wake up in Barcelona. Can you get on the metro with what you have? Open the app, and the *Current Ticket* tab
+answers that first, for where you are right now:
+
+- 🟢 **Green check:** you have a ticket valid in the entire country, e.g. the Deutschlandticket in Germany.
+- 🟡 **Yellow check:** you have a ticket valid in this area, e.g. a city day, week or month ticket. It's valid here,
+  but mind its zones and area limits.
+- 🔴 **Red cross:** none of your tickets is known to be valid here.
+
+The ticket that is valid here is shown right away, barcode included. The location is determined once when the app
+starts, country and region are worked out offline. The Deutschlandticket is recognized automatically, for other
+tickets you set once where they are valid: a country, or within a radius of where you are.
+
 ## Differences to upstream
 
 - The Android Back gesture navigates back inside the application instead of closing it.
@@ -19,11 +33,13 @@ platforms and its documentation, see the [upstream repository](https://invent.kd
   when the first train or bus actually leaves when a journey starts with a walk.
 - Journey search results can be shown on a timeline: each connection is a column, with its trains and
   buses placed at the time they run, so you see at a glance when and how you can get somewhere. It
-  shows the entire service day (03:00 to 03:00) and loads the next or previous day when scrolling to
-  the edge.
+  opens at the current time, and loads earlier or later connections when scrolling to its edge.
   The idea comes from Andreas Schildbach's app [Öffi](https://oeffi.schildbach.de/), which shows
   connections this way. Simple in hindsight, but whether it would have come up without his work is
   questionable. Standing on the shoulders of giants.
+- From a connection you can go straight to buying the ticket: with the booking link where the data source
+  provides one, otherwise on the website of the transport company running it.
+- Walking directions to the departure stop, with voice guidance, are handed to Organic Maps or Google Maps.
 - The journey search remembers the kind of ticket you travel with, e.g. local transport only for the
   Deutschlandticket, so long distance trains don't show up when you can't use them.
 
