@@ -1,0 +1,37 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 4cc23a4..ee1ec33 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -97,8 +97,10 @@ install(EXPORT KF6ConfigTargets DESTINATION "${CMAKECONFIG_INSTALL_DIR}"
+         FILE KF6ConfigTargets.cmake NAMESPACE KF6:: COMPONENT Devel)
+ 
+ 
+-install(EXPORT KF6ConfigCompilerTargets DESTINATION "${KDE_INSTALL_CMAKEPACKAGEDIR}/KF6Config"
+-        FILE KF6ConfigCompilerTargets.cmake NAMESPACE KF6:: COMPONENT Devel)
++if(NOT IOS)
++    install(EXPORT KF6ConfigCompilerTargets DESTINATION "${KDE_INSTALL_CMAKEPACKAGEDIR}/KF6Config"
++            FILE KF6ConfigCompilerTargets.cmake NAMESPACE KF6:: COMPONENT Devel)
++endif()
+ 
+ install(FILES ${kconfig_version_header}
+         DESTINATION ${KDE_INSTALL_INCLUDEDIR_KF}/KConfig COMPONENT Devel)
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index ab5ddc8..ba76a42 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -5,9 +5,12 @@ endif()
+ if(KCONFIG_USE_QML)
+     add_subdirectory(qml)
+ endif()
+-add_subdirectory(kconfig_compiler)
+-add_subdirectory(kconf_update)
+-add_subdirectory(kreadconfig)
++# command line tools can't be used on iOS, there the compiler comes from KF6_HOST_TOOLING
++if(NOT IOS)
++    add_subdirectory(kconfig_compiler)
++    add_subdirectory(kconf_update)
++    add_subdirectory(kreadconfig)
++endif()
+ 
+ ecm_qt_install_logging_categories(
+     EXPORT KCONFIG
