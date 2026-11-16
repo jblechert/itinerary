@@ -6310,3 +6310,17 @@ msgstr "%1 m"
 msgctxt "@title following a marked route, %1 is its name"
 msgid "Follow %1"
 msgstr "%1 folgen"
+
+#: fork
+msgid "Cycle %1 (%2)"
+msgstr "Radfahrt %1 (%2)"
+
+#: fork
+msgctxt "@info total ascent and descent of a walk or bike ride"
+msgid "↑ %1 m ↓ %2 m"
+msgstr "↑ %1 m ↓ %2 m"
+
+#: fork
+msgctxt "@info total ascent of a journey, in meters"
+msgid "↑ %1 m"
+msgstr "↑ %1 m"
