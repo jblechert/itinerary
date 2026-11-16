@@ -13,6 +13,11 @@
 
 #include <cmath>
 
+#ifdef Q_OS_ANDROID
+#include <QCoreApplication>
+#include <QJniObject>
+#endif
+
 using namespace Qt::Literals;
 
 constexpr inline int OffRouteUpdates = 3; // consecutive position updates
@@ -37,7 +42,10 @@ WalkingNavigationController::WalkingNavigationController(QObject *parent)
 {
 }
 
-WalkingNavigationController::~WalkingNavigationController() = default;
+WalkingNavigationController::~WalkingNavigationController()
+{
+    stopNotification();
+}
 
 KPublicTransport::Path WalkingNavigationController::path() const
 {
@@ -195,6 +203,12 @@ void WalkingNavigationController::speak(const QString &text)
 
 void WalkingNavigationController::updatePosition(double latitude, double longitude, double accuracy)
 {
+    processPosition(latitude, longitude, accuracy);
+    updateNotification();
+}
+
+void WalkingNavigationController::processPosition(double latitude, double longitude, double accuracy)
+{
     const bool firstPosition = !m_hasPosition;
     m_hasPosition = true;
 
@@ -297,6 +311,49 @@ void WalkingNavigationController::updatePosition(double latitude, double longitu
     }
 
     Q_EMIT progressChanged();
+}
+
+void WalkingNavigationController::updateNotification()
+{
+    QString text;
+    if (m_arrived) {
+        text = instruction();
+    } else if (m_offRoute || !hasRoute()) {
+        text = i18nc("@info navigation notification", "Looking for a route…");
+    } else {
+        // round, so the notification isn't updated every second
+        const auto distance = std::round(distanceToInstruction() / 10.0) * 10.0;
+        text = i18nc("@info navigation notification, %1 is a distance in meters, %2 an instruction", "In %1 m: %2", (int)distance, instruction());
+    }
+    if (m_notificationShown && text == m_notificationText) {
+        return;
+    }
+    m_notificationText = text;
+
+#ifdef Q_OS_ANDROID
+    const auto channelName = QJniObject::fromString(i18nc("@title notification channel", "Navigation"));
+    const auto title = QJniObject::fromString(m_destination.name());
+    const auto jtext = QJniObject::fromString(text);
+    QJniObject::callStaticMethod<void>("org/kde/itinerary/NavigationService",
+                                       m_notificationShown ? "update" : "start",
+                                       "(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V",
+                                       QNativeInterface::QAndroidApplication::context().object(),
+                                       channelName.object<jstring>(),
+                                       title.object<jstring>(),
+                                       jtext.object<jstring>());
+#endif
+    m_notificationShown = true;
+}
+
+void WalkingNavigationController::stopNotification()
+{
+    if (!m_notificationShown) {
+        return;
+    }
+#ifdef Q_OS_ANDROID
+    QJniObject::callStaticMethod<void>("org/kde/itinerary/NavigationService", "stop", "(Landroid/content/Context;)V", QNativeInterface::QAndroidApplication::context().object());
+#endif
+    m_notificationShown = false;
 }
 
 KPublicTransport::JourneyRequest WalkingNavigationController::routeRequest(double latitude, double longitude, const KPublicTransport::Location &destination) const

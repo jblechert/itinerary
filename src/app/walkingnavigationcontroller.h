@@ -98,7 +98,11 @@ private:
     };
 
     void rebuildGeometry();
+    void processPosition(double latitude, double longitude, double accuracy);
     void speak(const QString &text);
+    /** Keep the navigation notification (and the foreground service behind it on Android) up to date. */
+    void updateNotification();
+    void stopNotification();
 
     /** Distances (in meters) for announcements and route tracking, depending on the travel mode. */
     struct Thresholds {
@@ -132,6 +136,8 @@ private:
     bool m_announcedStart = false;
 
     SpeechOutput m_speech;
+    bool m_notificationShown = false;
+    QString m_notificationText;
 };
 
 #endif // WALKINGNAVIGATIONCONTROLLER_H
