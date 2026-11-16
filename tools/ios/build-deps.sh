@@ -54,6 +54,7 @@ while read -r name url ref args; do
             -DBUILD_PYTHON_BINDINGS=OFF \
             -DBUILD_QCH=OFF \
             -DUSE_DBUS=OFF \
+            -DKF_IGNORE_PLATFORM_CHECK=ON \
             $args \
         && cmake --build "$build" \
         && cmake --install "$build"
