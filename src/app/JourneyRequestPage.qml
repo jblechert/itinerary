@@ -39,6 +39,43 @@ FormCard.FormCardPage {
 
     title: i18n("Select Journey")
 
+    /** Search departures from @p from to @p to starting now, regardless of the time selected in the form. */
+    function searchJourneyNow(from: var, to: var): void {
+        root.departureStop = PublicTransport.copyLocation(from);
+        root.arrivalStop = PublicTransport.copyLocation(to);
+        departureArrivalSelector.selectedIndex = 0;
+        dateTimeInput.value = new Date();
+        root.searchJourney();
+    }
+
+    function searchJourney(): void {
+        JourneyRequestHistoryModel.addJourneyRequest(root.departureStop, root.arrivalStop);
+
+        applicationWindow().pageStack.push(journeyQueryPage);
+        const req = applicationWindow().pageStack.currentItem.journeyRequest;
+        req.from = root.departureStop;
+        req.to = root.arrivalStop;
+
+        console.log(dateTimeInput.value);
+        req.dateTime = dateTimeInput.value;
+        req.maximumResults = 6;
+        req.downloadAssets = Settings.wikimediaOnlineContentEnabled;
+        req.includePaths = true;
+        // TODO rental vehicle support
+        req.modes = JourneySection.PublicTransport | JourneySection.Walking;
+
+        req.lineModes = root.lineModes;
+
+        if (departureArrivalSelector.selectedIndex === 0) {
+            req.dateTimeMode = JourneyRequest.Departure
+        } else if (departureArrivalSelector.selectedIndex === 1) {
+            req.dateTimeMode = JourneyRequest.Arrival
+        }
+
+        console.log(req);
+        applicationWindow().pageStack.currentItem.journeyRequest = req;
+    }
+
     // This is used if we are creating the first trip group
     Component {
         id: newTripGroupDialogComponent
@@ -231,30 +268,76 @@ FormCard.FormCardPage {
             icon.name: "search"
             text: i18n("Search Journey")
             enabled: root.departureStop != undefined && root.arrivalStop != undefined && lineModes.length != 0
-            onClicked: {
-                applicationWindow().pageStack.push(journeyQueryPage);
-                const req = applicationWindow().pageStack.currentItem.journeyRequest;
-                req.from = root.departureStop;
-                req.to = root.arrivalStop;
+            onClicked: root.searchJourney()
+        }
+    }
 
-                console.log(dateTimeInput.value);
-                req.dateTime = dateTimeInput.value;
-                req.maximumResults = 6;
-                req.downloadAssets = Settings.wikimediaOnlineContentEnabled;
-                req.includePaths = true;
-                // TODO rental vehicle support
-                req.modes = JourneySection.PublicTransport | JourneySection.Walking;
+    FormCard.FormHeader {
+        title: i18nc("@title:group previously searched journeys", "Recent Journeys")
+        visible: historyRepeater.count > 0
+    }
 
-                req.lineModes = root.lineModes;
+    FormCard.FormCard {
+        visible: historyRepeater.count > 0
 
-                if (departureArrivalSelector.selectedIndex === 0) {
-                    req.dateTimeMode = JourneyRequest.Departure
-                } else if (departureArrivalSelector.selectedIndex === 1) {
-                    req.dateTimeMode = JourneyRequest.Arrival
+        Repeater {
+            id: historyRepeater
+
+            model: JourneyRequestHistoryModel
+            delegate: FormCard.AbstractFormDelegate {
+                id: historyDelegate
+
+                required property int index
+                required property var from
+                required property var to
+                required property int useCount
+
+                text: i18nc("journey from departure to arrival stop", "%1 → %2", historyDelegate.from.name, historyDelegate.to.name)
+                onClicked: root.searchJourneyNow(historyDelegate.from, historyDelegate.to)
+
+                contentItem: RowLayout {
+                    spacing: Kirigami.Units.largeSpacing
+
+                    QQC2.ToolButton {
+                        icon.name: "reverse"
+                        text: i18nc("@action:button search the journey in the opposite direction", "Search return journey")
+                        display: QQC2.AbstractButton.IconOnly
+                        onClicked: root.searchJourneyNow(historyDelegate.to, historyDelegate.from)
+
+                        QQC2.ToolTip.text: text
+                        QQC2.ToolTip.visible: hovered
+                        QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
+                    }
+
+                    ColumnLayout {
+                        spacing: Kirigami.Units.smallSpacing
+                        Layout.fillWidth: true
+
+                        QQC2.Label {
+                            text: historyDelegate.text
+                            elide: Text.ElideRight
+                            Layout.fillWidth: true
+                        }
+                        QQC2.Label {
+                            text: i18ncp("number of times a journey was searched", "Searched once", "Searched %1 times", historyDelegate.useCount)
+                            font: Kirigami.Theme.smallFont
+                            color: Kirigami.Theme.disabledTextColor
+                            elide: Text.ElideRight
+                            Layout.fillWidth: true
+                        }
+                    }
+
+                    QQC2.ToolButton {
+                        icon.name: "edit-delete"
+                        text: i18nc("@action:button", "Remove from history")
+                        display: QQC2.AbstractButton.IconOnly
+                        onClicked: JourneyRequestHistoryModel.removeEntry(historyDelegate.index)
+
+                        QQC2.ToolTip.text: text
+                        QQC2.ToolTip.visible: hovered
+                        QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
+                    }
                 }
-
-                console.log(req);
-                applicationWindow().pageStack.currentItem.journeyRequest = req;
             }
         }
     }

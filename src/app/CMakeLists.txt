@@ -23,6 +23,7 @@ target_sources(itinerary PRIVATE
     importcontroller.cpp
     importexport.cpp
     intenthandler.cpp
+    journeyrequesthistorymodel.cpp
     journeysectionmodel.cpp
     json.cpp
     jsonio.cpp

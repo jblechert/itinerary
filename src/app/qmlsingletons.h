@@ -8,6 +8,7 @@
 #include "documentmanager.h"
 #include "favoritelocationmodel.h"
 #include "importcontroller.h"
+#include "journeyrequesthistorymodel.h"
 #include "livedatamanager.h"
 #include "mapdownloadmanager.h"
 #include "matrixcontroller.h"
@@ -28,6 +29,7 @@ struct Dummy { // HACK to convince CMake to run moc on this
 REGISTER_SINGLETON_INSTANCE(ReservationManager)
 REGISTER_SINGLETON_INSTANCE(DocumentManager)
 REGISTER_SINGLETON_INSTANCE(FavoriteLocationModel)
+REGISTER_SINGLETON_INSTANCE(JourneyRequestHistoryModel)
 REGISTER_SINGLETON_INSTANCE(PkPassManager)
 REGISTER_SINGLETON_INSTANCE(Settings)
 REGISTER_SINGLETON_INSTANCE(TransferManager)

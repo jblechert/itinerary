@@ -288,6 +288,9 @@ int main(int argc, char **argv)
     FavoriteLocationModel favLocModel;
     FavoriteLocationModelInstance::instance = &favLocModel;
 
+    JourneyRequestHistoryModel journeyRequestHistoryModel;
+    JourneyRequestHistoryModelInstance::instance = &journeyRequestHistoryModel;
+
     TripGroupManager tripGroupMgr;
     tripGroupMgr.setReservationManager(&resMgr);
     TripGroupManagerInstance::instance = &tripGroupMgr;
