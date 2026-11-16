@@ -5,6 +5,7 @@
 
 #include "walkingnavigationcontroller.h"
 
+#include "config-itinerary.h"
 #include "logging.h"
 
 #include <KLocalizedString>
@@ -201,6 +202,16 @@ bool WalkingNavigationController::hasPosition() const
     return m_hasPosition;
 }
 
+// the instruction to follow a path section, such as "Turn left onto Bahnhofstraße"
+static QString sectionInstruction(const KPublicTransport::PathSection &section)
+{
+#if HAVE_KPUBLICTRANSPORT_NAVIGATION_INSTRUCTIONS
+    return section.instruction();
+#else
+    return section.description();
+#endif
+}
+
 QString WalkingNavigationController::instruction() const
 {
     if (!hasRoute()) {
@@ -211,14 +222,14 @@ QString WalkingNavigationController::instruction() const
     }
     const auto next = m_currentSection + 1;
     if (next >= 1 && next < (int)m_path.sections().size()) {
-        const auto description = m_path.sections()[next].description();
-        if (!description.isEmpty()) {
-            return description;
+        const auto text = sectionInstruction(m_path.sections()[next]);
+        if (!text.isEmpty()) {
+            return text;
         }
         return i18nc("@info walking navigation", "Continue");
     }
     if (m_currentSection < 0 && !m_path.sections().empty()) {
-        return m_path.sections().front().description();
+        return sectionInstruction(m_path.sections().front());
     }
     return i18nc("@info walking navigation", "Walk to %1", m_destination.name());
 }
@@ -353,7 +364,7 @@ void WalkingNavigationController::processPosition(double latitude, double longit
             start = i18nc("@info:tts walking navigation, %1 is the destination", "Walking to %1.", m_destination.name());
             break;
         }
-        const auto firstInstruction = m_path.sections().front().description();
+        const auto firstInstruction = sectionInstruction(m_path.sections().front());
         const bool sayInstruction = !firstInstruction.isEmpty() && firstInstruction != m_destination.name();
         speak(sayInstruction ? (start + QLatin1Char(' ') + firstInstruction) : start);
     }

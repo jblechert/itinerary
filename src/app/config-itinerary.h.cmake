@@ -12,5 +12,6 @@
 #cmakedefine01 HAVE_MATRIX
 #cmakedefine01 HAVE_DBUS
 #cmakedefine01 HAVE_MAPLIBRE
+#cmakedefine01 HAVE_KPUBLICTRANSPORT_NAVIGATION_INSTRUCTIONS
 
 #endif

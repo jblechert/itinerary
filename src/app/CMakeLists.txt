@@ -1,6 +1,14 @@
 # SPDX-FileCopyrightText: 2018 Volker Krause <vkrause@kde.org>
 # SPDX-License-Identifier: BSD-3-Clause
 
+# localized turn-by-turn instructions, in KPublicTransport since 27.04
+include(CheckCXXSourceCompiles)
+set(CMAKE_REQUIRED_LIBRARIES KPublicTransport)
+set(CMAKE_REQUIRED_FLAGS "-std=c++20")
+check_cxx_source_compiles("#include <KPublicTransport/Path>
+int main() { return KPublicTransport::PathSection().instruction().size(); }" HAVE_KPUBLICTRANSPORT_NAVIGATION_INSTRUCTIONS)
+unset(CMAKE_REQUIRED_LIBRARIES)
+unset(CMAKE_REQUIRED_FLAGS)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config-itinerary.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config-itinerary.h)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/itinerary_version_detailed.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/itinerary_version_detailed.h)
 
