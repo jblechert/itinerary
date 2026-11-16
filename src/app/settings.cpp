@@ -12,6 +12,8 @@
 #include <QLocale>
 #include <QSettings>
 
+#include <algorithm>
+
 using namespace Qt::Literals::StringLiterals;
 
 Settings::Settings(QObject *parent)
@@ -36,6 +38,9 @@ void Settings::load()
 
     m_preloadMapData = s.value("PreloadMapData"_L1, m_preloadMapData).toBool();
 
+    m_startPage = static_cast<StartPage>(std::clamp(s.value("StartPage"_L1, static_cast<int>(m_startPage)).toInt(),
+                                                    static_cast<int>(ItineraryStartPage),
+                                                    static_cast<int>(MyDataStartPage)));
     m_welcomePageShown = s.value("WelcomePageShown"_L1, m_welcomePageShown).toBool();
     m_currencyConversion = s.value("PerformCurrencyConversion"_L1, m_currencyConversion).toBool();
     m_wikimediaOnlineContentEnabled = s.value("WikimediaOnlineContent"_L1, m_wikimediaOnlineContentEnabled).toBool();
@@ -61,6 +66,7 @@ void Settings::reloadSettings()
     Q_EMIT forceMetricUnitsChanged(m_forceMetricUnits);
     Q_EMIT queryLiveDataChanged(m_queryLiveData);
     Q_EMIT preloadMapDataChanged(m_preloadMapData);
+    Q_EMIT startPageChanged(m_startPage);
     Q_EMIT welcomePageShownChanged(m_welcomePageShown);
     Q_EMIT performCurrencyConversionChanged(m_currencyConversion);
     Q_EMIT wikimediaOnlineContentEnabledChanged(m_wikimediaOnlineContentEnabled);
@@ -194,6 +200,25 @@ void Settings::setPreloadMapData(bool preload)
     s.setValue("PreloadMapData"_L1, preload);
 
     Q_EMIT preloadMapDataChanged(preload);
+}
+
+Settings::StartPage Settings::startPage() const
+{
+    return m_startPage;
+}
+
+void Settings::setStartPage(StartPage startPage)
+{
+    if (m_startPage == startPage) {
+        return;
+    }
+
+    m_startPage = startPage;
+    QSettings s;
+    s.beginGroup("Settings"_L1);
+    s.setValue("StartPage"_L1, static_cast<int>(startPage));
+
+    Q_EMIT startPageChanged(startPage);
 }
 
 bool Settings::welcomePageShown() const

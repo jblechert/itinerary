@@ -28,6 +28,25 @@ FormCard.FormCardPage {
     }
 
     FormCard.FormHeader {
+        title: i18nc("@title:group", "General")
+    }
+    FormCard.FormCard {
+        FormCard.FormComboBoxDelegate {
+            text: i18nc("@label:listbox", "Start page")
+            description: i18n("The page shown when the application starts.")
+            model: [
+                { text: i18nc("@title:tab This isn't the app name, but the English noun", "Itinerary"), value: Settings.ItineraryStartPage },
+                { text: i18nc("@title:tab", "Tickets"), value: Settings.TicketsStartPage },
+                { text: i18nc("@title:tab", "My Data"), value: Settings.MyDataStartPage },
+            ]
+            textRole: "text"
+            valueRole: "value"
+            Component.onCompleted: currentIndex = indexOfValue(Settings.startPage)
+            onActivated: Settings.startPage = currentValue
+        }
+    }
+
+    FormCard.FormHeader {
         title: i18n("Localization")
         visible: localizationCard.visible
     }

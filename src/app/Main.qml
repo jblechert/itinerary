@@ -109,8 +109,6 @@ Kirigami.ApplicationWindow {
             else (pageStack.currentItem as Kirigami.Page)?.actions ?? [];
         }
     }
-    pageStack.initialPage: pagepool.loadPage(Qt.resolvedUrl("TripGroupsPage.qml"))
-
     DropArea {
         id: topDropArea
         onEntered: {
@@ -214,6 +212,19 @@ Kirigami.ApplicationWindow {
     }
 
     Component.onCompleted: {
+        // set imperatively rather than as binding, changing initialPage resets the page stack
+        switch (Settings.startPage) {
+        case Settings.TicketsStartPage:
+            pageStack.initialPage = pagepool.loadPage(Qt.resolvedUrl("TicketsPage.qml"));
+            break;
+        case Settings.MyDataStartPage:
+            pageStack.initialPage = pagepool.loadPage(Qt.resolvedUrl("MyDataPage.qml"));
+            break;
+        default:
+            pageStack.initialPage = pagepool.loadPage(Qt.resolvedUrl("TripGroupsPage.qml"));
+            break;
+        }
+
         if (!Settings.welcomePageShown && ReservationManager.isEmpty() && TripGroupManager.isEmpty()) {
             pageStack.layers.push(Qt.createComponent("org.kde.itinerary", "WelcomePage"));
         }

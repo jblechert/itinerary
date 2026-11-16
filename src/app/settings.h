@@ -16,6 +16,8 @@
 class Settings : public QObject
 {
     Q_OBJECT
+    /** The page shown when the application starts. */
+    Q_PROPERTY(StartPage startPage READ startPage WRITE setStartPage NOTIFY startPageChanged)
     Q_PROPERTY(bool weatherForecastEnabled READ weatherForecastEnabled WRITE setWeatherForecastEnabled NOTIFY weatherForecastEnabledChanged)
     Q_PROPERTY(QString homeCountryIsoCode READ homeCountryIsoCode WRITE setHomeCountryIsoCode NOTIFY homeCountryIsoCodeChanged)
     Q_PROPERTY(bool forceMetricUnits READ forceMetricUnits WRITE setForceMetricUnits NOTIFY forceMetricUnitsChanged)
@@ -67,6 +69,16 @@ public:
     [[nodiscard]] bool preloadMapData() const;
     void setPreloadMapData(bool preload);
 
+    enum StartPage {
+        ItineraryStartPage,
+        TicketsStartPage,
+        MyDataStartPage,
+    };
+    Q_ENUM(StartPage)
+
+    [[nodiscard]] StartPage startPage() const;
+    void setStartPage(StartPage startPage);
+
     [[nodiscard]] bool welcomePageShown() const;
     void setWelcomePageShown(bool shown);
 
@@ -110,6 +122,7 @@ Q_SIGNALS:
     void forceMetricUnitsChanged(bool force);
     void queryLiveDataChanged(bool enabled);
     void preloadMapDataChanged(bool preload);
+    void startPageChanged(Settings::StartPage startPage);
     void welcomePageShownChanged(bool shown);
     void performCurrencyConversionChanged(bool enabled);
     void wikimediaOnlineContentEnabledChanged(bool enabled);
@@ -128,6 +141,7 @@ private:
     bool m_weatherEnabled = false;
     bool m_queryLiveData = false;
     bool m_preloadMapData = false;
+    StartPage m_startPage = TicketsStartPage;
     bool m_welcomePageShown = false;
     bool m_currencyConversion = false;
     bool m_wikimediaOnlineContentEnabled = false;
