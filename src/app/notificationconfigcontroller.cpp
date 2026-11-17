@@ -13,7 +13,10 @@
 #include "kandroidextras/settings.h"
 #endif
 
+// not available on iOS, and only needed on desktop platforms
+#if !defined(Q_OS_ANDROID) && !defined(Q_OS_IOS)
 #include <KSandbox>
+#endif
 
 #include <QCoreApplication>
 #include <QDebug>
