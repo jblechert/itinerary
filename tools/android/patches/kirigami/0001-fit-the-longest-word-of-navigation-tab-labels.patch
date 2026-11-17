@@ -1,8 +1,8 @@
 diff --git a/src/controls/NavigationTabButton.qml b/src/controls/NavigationTabButton.qml
-index f04137f..bd5066f 100644
+index f04137f..5c035b0 100644
 --- a/src/controls/NavigationTabButton.qml
 +++ b/src/controls/NavigationTabButton.qml
-@@ -129,9 +129,32 @@ KT.NavigationTabButton {
+@@ -129,9 +129,43 @@ KT.NavigationTabButton {
              elide: Text.ElideMiddle
              color: control.checked ? control.__highlightForegroundColor : control.__foregroundColor
  
@@ -13,25 +13,36 @@ index f04137f..bd5066f 100644
 +            // Below the icon, scale the text down so that its longest word fits, as wrapping inside of a word
 +            // (e.g. "Verbindu/ng" in German) is hard to read. This is needed for long words with several tabs
 +            // on a phone, and with larger fonts, e.g. on iOS.
-+            readonly property real fitScale: {
-+                if (control.display !== T.AbstractButton.TextUnderIcon || control.availableWidth <= 0) {
-+                    return 1.0;
++            readonly property bool fitWords: control.display === T.AbstractButton.TextUnderIcon && control.availableWidth > 0
++            readonly property string longestWord: {
++                let longest = "";
++                for (const word of control.Primitives.MnemonicData.plainTextLabel.split(/\s+/)) {
++                    if (labelMetrics.advanceWidth(word) > labelMetrics.advanceWidth(longest)) {
++                        longest = word;
++                    }
 +                }
-+                const longestWord = Math.max(0, ...control.Primitives.MnemonicData.plainTextLabel.split(/\s+/).map(word => labelMetrics.advanceWidth(word)));
-+                const longestWordWidth = longestWord * basePointSize / Platform.Theme.defaultFont.pointSize;
-+                if (longestWordWidth <= control.availableWidth) {
-+                    return 1.0;
-+                }
-+                // font sizes are rounded, text scales a bit differently than its size, so leave some room;
-+                // not smaller than about the size of tab labels on iOS (10pt with its 17pt default font),
-+                // if it doesn't fit even then, it is wrapped inside the word after all
-+                return Math.max(0.6, 0.95 * control.availableWidth / longestWordWidth);
++                return longest;
 +            }
++            // the scale if text width was proportional to the font size
++            readonly property real roughFitScale: fitWords
++                ? Math.min(1.0, control.availableWidth / (labelMetrics.advanceWidth(longestWord) * basePointSize / Platform.Theme.defaultFont.pointSize))
++                : 1.0
++            // it isn't, e.g. due to font hinting, rounded font sizes or optical sizes, so check it at that size;
++            // not smaller than about the size of tab labels on iOS (10pt with its 17pt default font),
++            // if it doesn't fit even then, it is wrapped inside the word after all
++            readonly property real fitScale: roughFitScale >= 1.0
++                ? 1.0
++                : Math.max(0.6, roughFitScale * Math.min(1.0, 0.97 * control.availableWidth / scaledLabelMetrics.advanceWidth(longestWord)))
 +            font.pointSize: basePointSize * fitScale
 +
 +            FontMetrics {
 +                id: labelMetrics
 +                font: Platform.Theme.defaultFont
++            }
++            FontMetrics {
++                id: scaledLabelMetrics
++                font.family: Platform.Theme.defaultFont.family
++                font.pointSize: Math.max(1, label.basePointSize * label.roughFitScale)
 +            }
  
              Behavior on color { ColorAnimation { duration: Platform.Units.shortDuration } }
