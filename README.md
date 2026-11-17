@@ -46,8 +46,9 @@ tickets you set once where they are valid: a country, or within a radius of wher
   on top if you like. Tap a route to see its length, ascent and elevation profile, and follow it: if you're not on it,
   you're guided to its closest point first. Navigation keeps going with the screen off.
 - Journeys from the map: tap and hold to pick where to start or where to go, or search a station or address. Starting
-  from your current location is the default, and picked places are named by their address. "Search connection" then
-  finds connections between them, walking all the way included where that's all it takes.
+  from your current location is the default, and picked places are named by their address. Then choose how to get
+  there: public transport connections between them, walking all the way included where that's all it takes, or
+  navigation on foot, by bike or by car.
 - Ascent and descent of walks and bike rides, where the routing service provides them (KPublicTransport extension,
   to be proposed to KDE).
 - Rental bikes in the journey search, if you like: to and from stations or all the way, shown in the timeline with
