@@ -80,4 +80,15 @@ if [ -f "$app/LaunchScreen.storyboard" ]; then
         --minimum-deployment-target "${deployment_target:-$IOS_DEPLOYMENT_TARGET}" --target-device iphone --target-device ipad
     rm "$app/LaunchScreen.storyboard"
 fi
+# KI18n and Qt find translations in the locale directory of the bundle; only languages the app is translated to are
+# included, from the app's catalogs (built by ki18n_install()) and those of the dependencies (see build-deps.sh)
+rm -rf "$app/locale"
+for lang_dir in "$BUILD/locale"/*; do
+    lang="$(basename "$lang_dir")"
+    mkdir -p "$app/locale/$lang"
+    cp -R "$lang_dir/." "$app/locale/$lang/"
+    if [ -d "$PREFIX/share/locale/$lang" ]; then
+        cp -R "$PREFIX/share/locale/$lang/." "$app/locale/$lang/"
+    fi
+done
 echo "Built $app"
