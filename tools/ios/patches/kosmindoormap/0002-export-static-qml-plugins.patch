@@ -1,0 +1,61 @@
+diff --git a/src/editor/CMakeLists.txt b/src/editor/CMakeLists.txt
+index c9f7591..d0ec4cf 100644
+--- a/src/editor/CMakeLists.txt
++++ b/src/editor/CMakeLists.txt
+@@ -45,4 +45,8 @@ target_link_libraries(kosmeditorcontrollerplugin PRIVATE
+     KOSMEditorController
+     Qt::Quick
+ )
+-ecm_finalize_qml_module(kosmeditorcontrollerplugin)
++# static QML plugins are exported, so their dependencies need to be installed as well
++if (NOT BUILD_SHARED_LIBS)
++    install(TARGETS KOSMEditorController EXPORT KOSMIndoorMapTargets ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})
++endif()
++ecm_finalize_qml_module(kosmeditorcontrollerplugin EXPORT KOSMIndoorMapTargets)
+diff --git a/src/map-publictransport-integration/CMakeLists.txt b/src/map-publictransport-integration/CMakeLists.txt
+index 6385775..d013263 100644
+--- a/src/map-publictransport-integration/CMakeLists.txt
++++ b/src/map-publictransport-integration/CMakeLists.txt
+@@ -20,4 +20,4 @@ target_link_libraries(kosmindoormap_kpublictransport_integration_plugin PRIVATE
+     KOSMIndoorMap
+     KPublicTransport
+ )
+-ecm_finalize_qml_module(kosmindoormap_kpublictransport_integration_plugin)
++ecm_finalize_qml_module(kosmindoormap_kpublictransport_integration_plugin EXPORT KOSMIndoorMapTargets)
+diff --git a/src/map-quick/CMakeLists.txt b/src/map-quick/CMakeLists.txt
+index 90660df..f33211c 100644
+--- a/src/map-quick/CMakeLists.txt
++++ b/src/map-quick/CMakeLists.txt
+@@ -72,4 +72,8 @@ target_link_libraries(kosmindoormapquickplugin PRIVATE
+     KOSMIndoorMapQuick
+ )
+ 
+-ecm_finalize_qml_module(kosmindoormapquickplugin)
++# static QML plugins are exported, so their dependencies need to be installed as well
++if (NOT BUILD_SHARED_LIBS)
++    install(TARGETS KOSMIndoorMapQuick EXPORT KOSMIndoorMapTargets ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})
++endif()
++ecm_finalize_qml_module(kosmindoormapquickplugin EXPORT KOSMIndoorMapTargets)
+diff --git a/src/routing-quick/CMakeLists.txt b/src/routing-quick/CMakeLists.txt
+index f0a78bd..a8f3bc2 100644
+--- a/src/routing-quick/CMakeLists.txt
++++ b/src/routing-quick/CMakeLists.txt
+@@ -21,4 +21,4 @@ target_link_libraries(kosmindoorroutingquickplugin PRIVATE
+     KOSMIndoorRouting
+ )
+ 
+-ecm_finalize_qml_module(kosmindoorroutingquickplugin)
++ecm_finalize_qml_module(kosmindoorroutingquickplugin EXPORT KOSMIndoorMapTargets)
+diff --git a/src/wikidata/CMakeLists.txt b/src/wikidata/CMakeLists.txt
+index ac6c7ca..36d1ef7 100644
+--- a/src/wikidata/CMakeLists.txt
++++ b/src/wikidata/CMakeLists.txt
+@@ -24,3 +24,8 @@ ecm_qt_declare_logging_category(KWikidata
+     DESCRIPTION "KWikidata"
+     EXPORT KWIKIDATA
+ )
++
++# needed by the static QML plugin
++if (NOT BUILD_SHARED_LIBS)
++    install(TARGETS KWikidata EXPORT KOSMIndoorMapTargets ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})
++endif()
