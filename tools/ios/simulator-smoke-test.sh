@@ -20,14 +20,16 @@ mkdir -p "$OUT"
 bundle_id="$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$APP/Info.plist")"
 executable="$(/usr/libexec/PlistBuddy -c 'Print CFBundleExecutable' "$APP/Info.plist")"
 
-# the newest iPhone of the newest iOS runtime installed
+# a regular iPhone (not an SE, e, Plus, Pro or Air, if available) of the newest iOS runtime installed
 device="$(xcrun simctl list devices available --json | python3 -c '
-import json, sys
+import json, re, sys
 runtimes = json.load(sys.stdin)["devices"]
 for runtime in sorted((r for r in runtimes if "iOS" in r), key=lambda r: [int(v) for v in r.rsplit("iOS-", 1)[1].split("-")], reverse=True):
     phones = [d for d in runtimes[runtime] if d["name"].startswith("iPhone")]
     if phones:
-        print(phones[-1]["udid"], runtime, phones[-1]["name"])
+        regular = [d for d in phones if re.fullmatch(r"iPhone \d+", d["name"])]
+        phone = (regular or phones)[-1]
+        print(phone["udid"], runtime, phone["name"])
         break
 ')"
 read -r udid runtime name <<< "$device"

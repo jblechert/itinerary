@@ -91,6 +91,8 @@ jobs:
 
       - name: Start the app in the simulator
         if: matrix.platform == 'simulator'
+        # booting a new simulator takes about 6 minutes, but sometimes it hangs
+        timeout-minutes: 20
         run: tools/ios/simulator-smoke-test.sh ios-build/bin/*.app ios-smoke-test 30
 
       - name: Upload simulator screenshot and logs
