@@ -6364,3 +6364,28 @@ msgstr "Bei %1 leihen"
 msgctxt "@action:button pick departure and arrival on a map"
 msgid "Pick on Map"
 msgstr "Auf der Karte wählen"
+
+#: fork
+msgctxt "@action:button search public transport connections, short"
+msgid "Transit"
+msgstr "Öffis"
+
+#: fork
+msgctxt "@action:button navigate on foot"
+msgid "Walk"
+msgstr "Zu Fuß"
+
+#: fork
+msgctxt "@action:button navigate by bike"
+msgid "Bike"
+msgstr "Fahrrad"
+
+#: fork
+msgctxt "@action:button navigate by car"
+msgid "Car"
+msgstr "Auto"
+
+#: fork
+msgctxt "@info"
+msgid "Navigation on foot, by bike or by car starts at your location."
+msgstr "Die Navigation zu Fuß, mit dem Fahrrad oder Auto beginnt an Ihrem Standort."
