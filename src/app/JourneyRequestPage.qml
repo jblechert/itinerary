@@ -48,6 +48,22 @@ FormCard.FormCardPage {
 
     title: i18n("Select Journey")
 
+    actions: [
+        Kirigami.Action {
+            icon.name: "map-symbolic"
+            text: i18nc("@action:button pick departure and arrival on a map", "Pick on Map")
+            onTriggered: {
+                const map = pagepool.loadPage(Qt.resolvedUrl("MapPage.qml"));
+                map.journeyFrom = root.departureStop;
+                map.journeyTo = root.arrivalStop;
+                map.plannerShown = true;
+                applicationWindow().pageStack.clear();
+                applicationWindow().pageStack.push(map);
+                map.showJourneyEndpoints();
+            }
+        }
+    ]
+
     /** Search departures from @p from to @p to starting now, regardless of the time selected in the form. */
     function searchJourneyNow(from: var, to: var): void {
         root.departureStop = PublicTransport.copyLocation(from);
