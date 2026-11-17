@@ -31,7 +31,7 @@ protected:
 
 private:
     bool m_maximized;
-    int m_previousValue;
+    float m_previousValue;
 };
 
 class BrightnessManager : public QObject
@@ -48,7 +48,7 @@ public Q_SLOTS:
     void toggleBrightness();
 
 private:
-    BrightnessBackend *m_backend;
+    BrightnessBackend *m_backend = nullptr;
 };
 
 #endif //  BRIGHTNESSMANAGER_H
