@@ -10,6 +10,8 @@
 
 #if defined(Q_OS_ANDROID)
 #include "androidbrightnessbackend.h"
+#elif defined(Q_OS_IOS)
+#include "iosbrightnessbackend.h"
 #elif defined(Q_OS_LINUX)
 #include "solidbrightnessbackend.h"
 #endif
@@ -19,6 +21,8 @@ BrightnessManager::BrightnessManager(QObject *parent)
 {
 #if defined(Q_OS_ANDROID)
     m_backend = new AndroidBrightnessBackend(this);
+#elif defined(Q_OS_IOS)
+    m_backend = new IosBrightnessBackend(this);
 #elif defined(Q_OS_LINUX)
     m_backend = new SolidBrightnessBackend(this);
 #endif

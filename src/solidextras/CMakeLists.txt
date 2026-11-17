@@ -21,7 +21,12 @@ if (ANDROID)
     target_sources(SolidExtras PRIVATE
         androidbrightnessbackend.cpp
     )
-else()
+elseif (IOS)
+    target_sources(SolidExtras PRIVATE
+        iosbrightnessbackend.mm
+    )
+    target_link_libraries(SolidExtras PRIVATE "-framework UIKit")
+elseif (HAVE_DBUS)
     qt_add_dbus_interface(SolidExtras_SRCS org.kde.Solid.PowerManagement.Actions.BrightnessControl.xml brightnesscontroldbusinterface)
     target_sources(SolidExtras PRIVATE
         solidbrightnessbackend.cpp
@@ -31,8 +36,9 @@ endif()
 
 target_link_libraries(SolidExtras PUBLIC Qt::Core)
 
-if (NOT ANDROID)
+if (HAVE_DBUS)
     target_link_libraries(SolidExtras PRIVATE Qt::DBus)
-else()
+endif()
+if (ANDROID)
     install(TARGETS SolidExtras ${KF_INSTALL_TARGETS_DEFAULT_ARGS})
 endif()
