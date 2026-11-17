@@ -6359,3 +6359,8 @@ msgstr "Zu und von Haltestellen oder die ganze Strecke, wo Bikesharing bekannt i
 msgctxt "@action:button rent a bike from a bike sharing service"
 msgid "Rent at %1"
 msgstr "Bei %1 leihen"
+
+#: fork
+msgctxt "@action:button pick departure and arrival on a map"
+msgid "Pick on Map"
+msgstr "Auf der Karte wählen"
