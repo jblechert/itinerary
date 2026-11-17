@@ -13,7 +13,9 @@
 
 #include <KLocalizedString>
 
+#ifndef Q_OS_IOS // not available there, apps don't get the user's name on iOS
 #include <KUser>
+#endif
 
 using namespace KItinerary;
 
@@ -174,7 +176,11 @@ int TicketTokenModel::initialIndex() const
         return 0;
     }
 
+#ifndef Q_OS_IOS
     const auto fullName = KUser().property(KUser::FullName).toString();
+#else
+    const QString fullName;
+#endif
     int nameIdx = -1;
     int ticketIdx = -1;
     for (int i = 0; i < (int)m_data.size(); ++i) {
