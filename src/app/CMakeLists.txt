@@ -557,6 +557,12 @@ if (IOS)
             set_property(TARGET itinerary-app APPEND PROPERTY QT_QML_IMPORT_PATH "${_prefix}/${KDE_INSTALL_QMLDIR}")
         endif()
     endforeach()
+    # QML debugging and profiling services are not wanted in the app, and Qt Multimedia's
+    # FFmpeg backend would need FFmpeg, the native AVFoundation one is used instead
+    qt_import_plugins(itinerary-app
+        EXCLUDE_BY_TYPE qmltooling
+        EXCLUDE Qt6::QFFmpegMediaPlugin
+    )
     # Info.plist, launch screen and importing the static QML plugins
     qt_finalize_target(itinerary-app)
 endif()
