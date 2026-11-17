@@ -1,9 +1,63 @@
 # Porting this fork to iOS
 
-Status: planning. Nothing here has been built or tested on iOS yet.
+Status: the dependencies and the app build in CI (`.github/workflows/ios.yml`) as an unsigned app bundle for
+arm64 devices, uploaded as the `itinerary-ios-unsigned` workflow artifact. It has not been run on a device or in
+the simulator yet, see "Open issues".
 
 This document collects what an iPhone version of this fork needs, so the work can be picked up on a Mac.
 KDE Itinerary itself has no iOS version, and KDE's build infrastructure (Craft CI) has no iOS target.
+
+## Building
+
+Everything is built with Qt's `qt-cmake` for iOS and Ninja, as static libraries, on a Mac with Xcode,
+Qt for iOS and the matching desktop Qt (for host tools):
+
+    tools/ios/build-deps.sh <Qt for iOS dir> <prefix>     # dependencies, see tools/ios/deps.txt
+    tools/ios/build-app.sh <Qt for iOS dir> <prefix>      # the app, ios-build/bin/itinerary.app
+
+`build-deps.sh` applies the patches in `tools/ios/patches/<package>/` (fixes for iOS and static builds, all meant
+to go upstream) and only rebuilds a package when its version, patches or arguments change. The CI caches the prefix.
+
+`build-app.sh` sets the bundle identifier (`org.example.itinerary-fork`, a placeholder) and the name on the home
+screen (`Itinerary (unofficial)`); both can be overridden with `ITINERARY_IOS_BUNDLE_IDENTIFIER` and
+`ITINERARY_IOS_DISPLAY_NAME`. The Info.plist is `src/app/ios/Info.plist.in`.
+
+The bundle is not signed (signing is done by the publishing account, see "Publishing"). For running it from Xcode,
+configuring with `-G Xcode` instead of Ninja should work too, as Qt recommends for iOS apps; that is untested.
+
+### What is built differently on iOS
+
+- No D-Bus, KDBusService, KWindowSystem, QApplication or the desktop style: like on Android the app uses
+  QGuiApplication with the Breeze Qt Quick Controls style (qqc2-breeze-style, built with KIconThemes and
+  KWidgetsAddons), see the `IOS` branches in `CMakeLists.txt` and `Q_OS_IOS` in the code.
+- Everything is static: the runtime dependencies (Kirigami, Prison, ...) are linked explicitly, the QML plugins
+  are found by Qt's QML import scanner (`qt_finalize_target()`; most KDE libraries needed patches to export their
+  static QML plugins), and the Breeze icons are compiled into the app as resources
+  (`kirigami_package_breeze_icons(TARGET ...)`, added by a Kirigami patch). The QML debugging plugins and Qt
+  Multimedia's FFmpeg backend are left out, the camera uses the AVFoundation backend.
+- Disabled, as the libraries aren't built for iOS: Matrix location sharing (libQuotient, olm), the health
+  certificate manager (KHealthCertificate), MapLibre maps (maplibre-native-qt), Solid. KCrash is built but not
+  used (there is no crash handler on iOS), the calendar import plugin is Android only.
+- PDF import is removed for licensing reasons, see below.
+- No QProcess on iOS: KItinerary extracts in the app's process, the notification settings open the app's page
+  in the system settings. KSandbox and KUser are not available either (the latter was used to preselect the
+  ticket of the user by name).
+- Screen brightness for showing barcodes uses UIScreen (`solidextras/iosbrightnessbackend.mm`).
+- Files shared with the app (pkpass, ics, json) arrive as file URLs at `QDesktopServices` and are imported.
+
+### Open issues
+
+- Not tested at runtime. The simulator needs the dependencies built for the simulator architecture too
+  (`CMAKE_OSX_SYSROOT=iphonesimulator`, arm64/x86_64), which `build-deps.sh` doesn't do yet.
+- Translations: KI18n looks for them in the data directories, they are not in the app bundle yet.
+- Resources of static libraries that are not referenced from code (e.g. Qt resources in KOSMIndoorMap's
+  helper libraries) may need explicit `Q_INIT_RESOURCE` calls.
+- App icons (asset catalog), privacy manifest and the remaining App Store metadata are still missing, see
+  "App metadata". The launch screen is Qt's default one (compiled by `build-app.sh`, as Ninja only copies it).
+- Notifications: KNotifications has no iOS backend yet.
+- Opening documents and walking directions in other apps use the generic desktop code paths, see the table below.
+  Opening an attached document with `QDesktopServices` now ends up in the import, as file URLs are handled by it.
+- LGPL relinking requirement with a static app, see "Licensing".
 
 ## Prerequisites
 
@@ -16,7 +70,8 @@ KDE Itinerary itself has no iOS version, and KDE's build infrastructure (Craft C
 ## Building the dependency stack
 
 Everything Itinerary depends on has to be cross-compiled for iOS (arm64, and the simulator architecture for development).
-This is the largest part of the work. Order roughly as the Android build log shows, see `tools/android/build-apk.sh deps`:
+This is done for arm64 devices by `tools/ios/build-deps.sh`, see `tools/ios/deps.txt` for what is built; the
+original plan: Order roughly as the Android build log shows, see `tools/android/build-apk.sh deps`:
 
 | Group | Packages | Notes |
 |---|---|---|
@@ -36,10 +91,10 @@ Android specific code is behind `Q_OS_ANDROID`. Each of these needs an iOS count
 
 | Area | Android implementation | iOS counterpart |
 |---|---|---|
-| Opening files from other apps (pkpass, PDF, ics, json) | `src/app/android/Activity.java`, `intenthandler.cpp`, `importcontroller.cpp` | `CFBundleDocumentTypes` / UTIs in Info.plist, handle `QFileOpenEvent` or `QDesktopServices::setUrlHandler` in `ImportController` |
+| Opening files from other apps (pkpass, PDF, ics, json) | `src/app/android/Activity.java`, `intenthandler.cpp`, `importcontroller.cpp` | done: `CFBundleDocumentTypes` in Info.plist, `QDesktopServices::setUrlHandler` for file URLs in `main.cpp` (untested) |
 | File names of shared files | `filehelper.cpp` (content:// URIs) | security-scoped bookmark URLs |
-| Calendar import | `src/calendarextras/` Android plugin | EventKit plugin (new), or disable |
-| Screen brightness for barcode scanning | `solidextras/androidbrightnessbackend` | `UIScreen.mainScreen.brightness` (small Objective-C++ backend) |
+| Calendar import | `src/calendarextras/` Android plugin | disabled for now; EventKit plugin (new) |
+| Screen brightness for barcode scanning | `solidextras/androidbrightnessbackend` | done: `solidextras/iosbrightnessbackend.mm` (UIScreen) |
 | Keeping the screen on | KGuiAddons `SystemInhibitor` | `UIApplication.idleTimerDisabled` |
 | Notifications (delays, platform changes) | KNotifications Android backend | `UNUserNotificationCenter` backend for KNotifications (new) |
 | Walking directions to a stop | `NavigationController::walkTo()`: Organic Maps `om://`, Google Maps `google.navigation:`, `geo:` | Organic Maps `om://route?...`, Google Maps `comgooglemaps://?daddr=LAT,LON&directionsmode=walking`, Apple Maps `maps://?daddr=LAT,LON&dirflg=w`; needs `LSApplicationQueriesSchemes` |
@@ -50,7 +105,7 @@ Android specific code is behind `Q_OS_ANDROID`. Each of these needs an iOS count
 
 ## App metadata
 
-A first draft of the required Info.plist entries is in [`Info.plist.in`](Info.plist.in). Besides those:
+The Info.plist with the permissions and document types used is [`src/app/ios/Info.plist.in`](../../src/app/ios/Info.plist.in). Besides that:
 
 - Bundle identifier and app name: must belong to the publishing developer account. The name must not be
   "KDE Itinerary" (KDE trademark), and it should be clear the app is based on, but not made by, KDE.
