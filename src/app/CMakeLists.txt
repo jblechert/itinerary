@@ -346,6 +346,142 @@ target_link_libraries(itinerary-app PRIVATE
 if(TARGET KCalendarCoreExtras)
     target_link_libraries(itinerary-app PRIVATE KCalendarCoreExtras)
 endif()
+
+# icons that need to be bundled on platforms without an icon theme
+set(ITINERARY_ICONS
+    ${KIRIGAMI_ADDONS_ICONS}
+    ${KPUBLICTRANSPORT_ICONS}
+
+    applications-development-symbolic
+    application-pdf
+    arrow-down
+    arrow-left
+    arrow-right
+    arrow-up
+    audio-volume-high
+    audio-volume-muted
+    backup
+    bookmarks
+    call-start
+    channel-insecure-symbolic
+    channel-secure-symbolic
+    checkmark
+    clock
+    cloud-upload
+    crosshairs
+    cross-shape
+    dialog-cancel
+    dialog-close
+    dialog-warning-symbolic
+    dialog-error-symbolic
+    dialog-ok
+    document-edit
+    document-export-symbolic
+    document-import-symbolic
+    document-open
+    document-save
+    document-save-as-symbolic
+    documentinfo
+    donate-symbolic
+    download
+    edit-copy-symbolic
+    edit-cut
+    edit-delete
+    edit-download
+    edit-paste
+    edit-rename
+    emblem-important
+    emblem-shared-symbolic
+    filter-symbolic
+    flag
+    flashlight-off
+    flashlight-on
+    folder-documents-symbolic
+    format-list-unordered
+    globe-symbolic
+    go-down-symbolic
+    go-home-symbolic
+    go-next-symbolic
+    go-up-symbolic
+    help-about-symbolic
+    help-contents
+    license
+    list-add
+    mail-attachment-symbolic
+    mail-message-new
+    map-globe
+    map-gnomonic
+    map-symbolic
+    mark-location-symbolic
+    media-playback-playing
+    media-playback-start
+    media-playback-stop
+    meeting-attending
+    merge
+    message-rfc822
+    network-disconnect-symbolic
+    notifications
+    question
+    raindrop
+    reverse
+    search
+    security-high
+    security-medium-symbolic
+    security-low
+    settings-configure
+    speedometer
+    split
+    temperature-cold
+    temperature-normal
+    temperature-warm
+    tools-report-bug-symbolic
+    view-barcode-qr
+    view-calendar
+    view-calendar-day
+    view-currency-list
+    view-financial-account-cash-symbolic
+    view-list-details
+    view-refresh
+    view-statistics-symbolic
+    wallet-open
+    window-close-symbolic
+    exchange-positions
+    arrow-up
+    internet-services
+    zoom-in-symbolic
+    zoom-out-symbolic
+
+    weather-clear
+    weather-clear-wind
+    weather-clear-night
+    weather-clear-wind-night
+    weather-few-clouds
+    weather-few-clouds-wind
+    weather-few-clouds-night
+    weather-few-clouds-wind-night
+    weather-clouds
+    weather-clouds-wind
+    weather-clouds-night
+    weather-clouds-wind-night
+    weather-showers-day
+    weather-showers-night
+    weather-showers-scattered-day
+    weather-showers-scattered-night
+    weather-snow-scattered-day
+    weather-snow-scattered-night
+    weather-storm-day
+    weather-storm-night
+    weather-many-clouds
+    weather-many-clouds-wind
+    weather-fog
+    weather-showers
+    weather-showers-scattered
+    weather-hail
+    weather-snow
+    weather-snow-scattered
+    weather-storm
+)
+
 if (ANDROID)
     target_link_libraries(itinerary PUBLIC KAndroidExtras PRIVATE Qt::CorePrivate)
     # explicitly add runtime dependencies and transitive link dependencies,
@@ -360,142 +496,39 @@ if (ANDROID)
         OpenSSL::SSL
     )
 
-    kirigami_package_breeze_icons(ICONS
-        ${KIRIGAMI_ADDONS_ICONS}
-        ${KPUBLICTRANSPORT_ICONS}
-
-        applications-development-symbolic
-        application-pdf
-        arrow-down
-        arrow-left
-        arrow-right
-        arrow-up
-        audio-volume-high
-        audio-volume-muted
-        backup
-        bookmarks
-        call-start
-        channel-insecure-symbolic
-        channel-secure-symbolic
-        checkmark
-        clock
-        cloud-upload
-        crosshairs
-        cross-shape
-        dialog-cancel
-        dialog-close
-        dialog-warning-symbolic
-        dialog-error-symbolic
-        dialog-ok
-        document-edit
-        document-export-symbolic
-        document-import-symbolic
-        document-open
-        document-save
-        document-save-as-symbolic
-        documentinfo
-        donate-symbolic
-        download
-        edit-copy-symbolic
-        edit-cut
-        edit-delete
-        edit-download
-        edit-paste
-        edit-rename
-        emblem-important
-        emblem-shared-symbolic
-        filter-symbolic
-        flag
-        flashlight-off
-        flashlight-on
-        folder-documents-symbolic
-        format-list-unordered
-        globe-symbolic
-        go-down-symbolic
-        go-home-symbolic
-        go-next-symbolic
-        go-up-symbolic
-        help-about-symbolic
-        help-contents
-        license
-        list-add
-        mail-attachment-symbolic
-        mail-message-new
-        map-globe
-        map-gnomonic
-        map-symbolic
-        mark-location-symbolic
-        media-playback-playing
-        media-playback-start
-        media-playback-stop
-        meeting-attending
-        merge
-        message-rfc822
-        network-disconnect-symbolic
-        notifications
-        question
-        raindrop
-        reverse
-        search
-        security-high
-        security-medium-symbolic
-        security-low
-        settings-configure
-        speedometer
-        split
-        temperature-cold
-        temperature-normal
-        temperature-warm
-        tools-report-bug-symbolic
-        view-barcode-qr
-        view-calendar
-        view-calendar-day
-        view-currency-list
-        view-financial-account-cash-symbolic
-        view-list-details
-        view-refresh
-        view-statistics-symbolic
-        wallet-open
-        window-close-symbolic
-        exchange-positions
-        arrow-up
-        internet-services
-        zoom-in-symbolic
-        zoom-out-symbolic
-
-        weather-clear
-        weather-clear-wind
-        weather-clear-night
-        weather-clear-wind-night
-        weather-few-clouds
-        weather-few-clouds-wind
-        weather-few-clouds-night
-        weather-few-clouds-wind-night
-        weather-clouds
-        weather-clouds-wind
-        weather-clouds-night
-        weather-clouds-wind-night
-        weather-showers-day
-        weather-showers-night
-        weather-showers-scattered-day
-        weather-showers-scattered-night
-        weather-snow-scattered-day
-        weather-snow-scattered-night
-        weather-storm-day
-        weather-storm-night
-        weather-many-clouds
-        weather-many-clouds-wind
-        weather-fog
-        weather-showers
-        weather-showers-scattered
-        weather-hail
-        weather-snow
-        weather-snow-scattered
-        weather-storm
-    )
+    kirigami_package_breeze_icons(ICONS ${ITINERARY_ICONS})
 
     ecm_add_android_apk(itinerary-app ANDROID_DIR ${CMAKE_CURRENT_SOURCE_DIR}/android)
     install(FILES sc-apps-org.kde.itinerary.svg  DESTINATION ${KDE_INSTALL_QMLDIR}/org/kde/kirigami/breeze-internal/icons/ RENAME org.kde.itinerary.svg)
+elseif (IOS)
+    # everything is linked statically on iOS, so runtime dependencies have to be linked explicitly
+    target_link_libraries(itinerary-app PRIVATE
+        KF6::Archive
+        KF6::ColorScheme
+        KF6::Kirigami
+        KF6::Prison
+        Qt::Svg
+    )
+
+    kirigami_package_breeze_icons(TARGET itinerary-app ICONS ${ITINERARY_ICONS})
+    set_source_files_properties(sc-apps-org.kde.itinerary.svg PROPERTIES QT_RESOURCE_ALIAS org.kde.itinerary.svg)
+    qt_add_resources(itinerary-app "itinerary-app-icon"
+        PREFIX "/qt/qml/org/kde/kirigami/breeze-internal/icons"
+        FILES sc-apps-org.kde.itinerary.svg
+    )
+
+    set(ITINERARY_IOS_BUNDLE_IDENTIFIER "org.kde.itinerary" CACHE STRING "Bundle identifier of the iOS app")
+    set(ITINERARY_IOS_DISPLAY_NAME "KDE Itinerary" CACHE STRING "Name of the iOS app shown on the home screen")
+    set_target_properties(itinerary-app PROPERTIES
+        OUTPUT_NAME "itinerary"
+        MACOSX_BUNDLE TRUE
+        MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/ios/Info.plist.in"
+        MACOSX_BUNDLE_GUI_IDENTIFIER "${ITINERARY_IOS_BUNDLE_IDENTIFIER}"
+        MACOSX_BUNDLE_BUNDLE_NAME "itinerary"
+        MACOSX_BUNDLE_BUNDLE_VERSION "${ITINERARY_VERSION}"
+        MACOSX_BUNDLE_SHORT_VERSION_STRING "${ITINERARY_VERSION}"
+        XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "${ITINERARY_IOS_BUNDLE_IDENTIFIER}"
+    )
 else ()
     target_link_libraries(itinerary PRIVATE Qt::Positioning Qt::DBus Qt::Widgets)
     target_link_libraries(itinerary-app PRIVATE
@@ -511,8 +544,13 @@ if (TARGET KF6::Crash)
 endif()
 
 install(TARGETS itinerary-app ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})
-if (NOT ANDROID)
+if (NOT ANDROID AND NOT IOS)
     install(PROGRAMS org.kde.itinerary.desktop DESTINATION ${KDE_INSTALL_APPDIR})
     install(FILES org.kde.itinerary.appdata.xml DESTINATION ${KDE_INSTALL_METAINFODIR})
     install(FILES itinerary.notifyrc DESTINATION ${KDE_INSTALL_KNOTIFYRCDIR})
+endif()
+
+if (IOS)
+    # Info.plist, launch screen and importing the static QML plugins
+    qt_finalize_target(itinerary-app)
 endif()
