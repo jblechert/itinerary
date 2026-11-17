@@ -33,6 +33,10 @@ libdmtx              https://github.com/dmtx/libdmtx.git                        
 zxing-cpp            https://github.com/zxing-cpp/zxing-cpp.git                 v2.3.0   -DZXING_EXAMPLES=OFF -DZXING_BLACKBOX_TESTS=OFF -DZXING_UNIT_TESTS=OFF
 prison               https://invent.kde.org/frameworks/prison.git               v6.31.0
 kirigami-addons      https://invent.kde.org/libraries/kirigami-addons.git       v1.16.1
+# the Breeze Qt Quick Controls style, as on Android (Plasma 6.8 like Craft); the icons are bundled with the app instead
+kwidgetsaddons       https://invent.kde.org/frameworks/kwidgetsaddons.git       v6.31.0
+kiconthemes          https://invent.kde.org/frameworks/kiconthemes.git          v6.31.0  -DUSE_BreezeIcons=OFF -DKICONTHEMES_USE_QTQUICK=OFF
+qqc2-breeze-style    https://invent.kde.org/plasma/qqc2-breeze-style.git        v6.8.0
 kmime                https://invent.kde.org/frameworks/kmime.git                v6.31.0
 recastnavigation     https://github.com/recastnavigation/recastnavigation.git   v1.6.0   -DRECASTNAVIGATION_DEMO=OFF -DRECASTNAVIGATION_TESTS=OFF -DRECASTNAVIGATION_EXAMPLES=OFF
 kopeninghours        https://invent.kde.org/libraries/kopeninghours.git         v26.08.3 -DCMAKE_DISABLE_FIND_PACKAGE_Python=ON -DCMAKE_DISABLE_FIND_PACKAGE_Python3=ON -DCMAKE_DISABLE_FIND_PACKAGE_Boost=ON
