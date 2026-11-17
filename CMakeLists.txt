@@ -106,6 +106,8 @@ elseif (IOS)
     # also the packages of the static QML plugins used, so they can be linked
     find_package(KF6 ${KF_MIN_VERSION} REQUIRED COMPONENTS Archive ColorScheme ItemModels Kirigami Prison PrisonScanner)
     find_package(KOpeningHours ${GEAR_MIN_VERSION} CONFIG REQUIRED)
+    # the style used on mobile, loaded at runtime elsewhere
+    find_package(QQC2BreezeStyle CONFIG REQUIRED)
     if (NOT DEFINED BREEZEICONS_DIR AND EXISTS ${CMAKE_SOURCE_DIR}/../breeze-icons)
         set(BREEZEICONS_DIR ${CMAKE_SOURCE_DIR}/../breeze-icons)
     endif()
