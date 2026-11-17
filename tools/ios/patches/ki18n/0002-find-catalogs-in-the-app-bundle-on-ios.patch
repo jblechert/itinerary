@@ -1,0 +1,49 @@
+diff --git a/src/i18n/kcatalog.cpp b/src/i18n/kcatalog.cpp
+index c644d63..06a0d38 100644
+--- a/src/i18n/kcatalog.cpp
++++ b/src/i18n/kcatalog.cpp
+@@ -189,7 +189,7 @@ QString KCatalog::catalogLocaleDir(const QByteArray &domain, const QString &lang
+         const QString customLocaleDir = catalogStaticData->customCatalogDirs.value(domain);
+         const QString filename = customLocaleDir + QLatin1Char('/') + relpath;
+         if (!customLocaleDir.isEmpty() && QFileInfo::exists(filename)) {
+-#if defined(Q_OS_ANDROID)
++#if defined(Q_OS_ANDROID) || defined(LIBINTL_LITE_API)
+             // The exact file name must be returned on Android because libintl-lite loads a catalog by filename with bindtextdomain()
+             return filename;
+ #else
+@@ -213,7 +213,8 @@ QString KCatalog::catalogLocaleDir(const QByteArray &domain, const QString &lang
+     return assetPath;
+ 
+ #else
+-#ifdef Q_OS_MACOS
++#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
++    // this includes the resources of the app bundle
+     QString file = QStandardPaths::locate(QStandardPaths::AppLocalDataLocation, QStringLiteral("locale/") + relpath);
+ #else
+     QString file = QStandardPaths::locate(QStandardPaths::GenericDataLocation, QStringLiteral("locale/") + relpath);
+@@ -228,6 +229,10 @@ QString KCatalog::catalogLocaleDir(const QByteArray &domain, const QString &lang
+     }
+ #endif
+ 
++#ifdef LIBINTL_LITE_API
++    // libintl-lite's bindtextdomain() loads the catalog file given instead of looking in a locale directory
++    return file;
++#else
+     QString localeDir;
+     if (!file.isEmpty()) {
+         // Path of the locale/ directory must be returned.
+@@ -235,12 +240,13 @@ QString KCatalog::catalogLocaleDir(const QByteArray &domain, const QString &lang
+     }
+     return localeDir;
+ #endif
++#endif
+ }
+ 
+ QSet<QString> KCatalog::availableCatalogLanguages(const QByteArray &domain_)
+ {
+     QString domain = QFile::decodeName(domain_);
+-#ifdef Q_OS_MACOS
++#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+     QStringList localeDirPaths = QStandardPaths::locateAll(QStandardPaths::AppLocalDataLocation, QStringLiteral("locale"), QStandardPaths::LocateDirectory);
+ #else
+     QStringList localeDirPaths = QStandardPaths::locateAll(QStandardPaths::GenericDataLocation, QStringLiteral("locale"), QStandardPaths::LocateDirectory);

@@ -1,0 +1,65 @@
+diff --git a/src/qmlplugin/kpublictransportqmlplugin.cpp b/src/qmlplugin/kpublictransportqmlplugin.cpp
+index 9af9073..ae26f76 100644
+--- a/src/qmlplugin/kpublictransportqmlplugin.cpp
++++ b/src/qmlplugin/kpublictransportqmlplugin.cpp
+@@ -13,6 +13,17 @@
+ #include <QQmlEngine>
+ #include <QQmlContext>
+ 
++// reference the declarative type registration, otherwise it is dropped when linking statically
++extern void qml_register_types_org_kde_kpublictransport();
++Q_GHS_KEEP_REFERENCE(qml_register_types_org_kde_kpublictransport)
++
++KPublicTransportQmlPlugin::KPublicTransportQmlPlugin(QObject *parent)
++    : QQmlExtensionPlugin(parent)
++{
++    volatile auto registration = &qml_register_types_org_kde_kpublictransport;
++    Q_UNUSED(registration)
++}
++
+ void KPublicTransportQmlPlugin::registerTypes(const char*)
+ {
+     qmlRegisterSingletonType("org.kde.kpublictransport", 1, 0, "LineMetaData", [](QQmlEngine*, QJSEngine *engine) -> QJSValue {
+diff --git a/src/qmlplugin/kpublictransportqmlplugin.h b/src/qmlplugin/kpublictransportqmlplugin.h
+index 6f4fdb3..fdf8325 100644
+--- a/src/qmlplugin/kpublictransportqmlplugin.h
++++ b/src/qmlplugin/kpublictransportqmlplugin.h
+@@ -379,6 +379,9 @@ class KPublicTransportQmlPlugin : public QQmlExtensionPlugin
+ 
+     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface")
+ 
++public:
++    explicit KPublicTransportQmlPlugin(QObject *parent = nullptr);
++
+     void registerTypes(const char* uri) override;
+ };
+ 
+diff --git a/src/quick/quickplugin.cpp b/src/quick/quickplugin.cpp
+index f2fbe3d..01b0258 100644
+--- a/src/quick/quickplugin.cpp
++++ b/src/quick/quickplugin.cpp
+@@ -9,12 +9,24 @@
+ #include <QQmlExtensionPlugin>
+ 
+ 
++// reference the declarative type registration, otherwise it is dropped when linking statically
++extern void qml_register_types_org_kde_kpublictransport_ui();
++Q_GHS_KEEP_REFERENCE(qml_register_types_org_kde_kpublictransport_ui)
++
+ class KPublicTransportUiQuickPlugin : public QQmlExtensionPlugin
+ {
+     Q_OBJECT
+ 
+     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface")
+ 
++public:
++    explicit KPublicTransportUiQuickPlugin(QObject *parent = nullptr)
++        : QQmlExtensionPlugin(parent)
++    {
++        volatile auto registration = &qml_register_types_org_kde_kpublictransport_ui;
++        Q_UNUSED(registration)
++    }
++
+     void registerTypes(const char* uri) override;
+ };
+ 

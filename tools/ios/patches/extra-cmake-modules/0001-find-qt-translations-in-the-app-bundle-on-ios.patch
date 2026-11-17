@@ -1,0 +1,13 @@
+diff --git a/modules/ECMQmLoader.cpp.in b/modules/ECMQmLoader.cpp.in
+index 7271836..f514219 100644
+--- a/modules/ECMQmLoader.cpp.in
++++ b/modules/ECMQmLoader.cpp.in
+@@ -77,7 +77,7 @@ namespace {
+             return false;
+         }
+ #else
+-# ifdef Q_OS_MACOS
++# if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+         const QString fullPath = QStandardPaths::locate(QStandardPaths::AppLocalDataLocation, subPath);
+ # else
+         const QString fullPath = QStandardPaths::locate(QStandardPaths::GenericDataLocation, subPath);

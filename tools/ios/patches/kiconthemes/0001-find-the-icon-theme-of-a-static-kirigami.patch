@@ -1,0 +1,14 @@
+diff --git a/src/kicontheme.cpp b/src/kicontheme.cpp
+index 31ed28f..eb486db 100644
+--- a/src/kicontheme.cpp
++++ b/src/kicontheme.cpp
+@@ -376,6 +376,9 @@ KIconTheme::KIconTheme(const QString &name, const QString &appName, const QStrin
+ #ifdef Q_OS_ANDROID
+     // Android icon theme installed by Kirigami
+     icnlibs << QStringLiteral("assets:/qml/org/kde/kirigami");
++#else
++    // icon theme compiled into the app with a static Kirigami, see kirigami_package_breeze_icons()
++    icnlibs << QStringLiteral(":/qt/qml/org/kde/kirigami");
+ #endif
+ 
+     // global icons

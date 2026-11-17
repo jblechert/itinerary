@@ -1,0 +1,14 @@
+diff --git a/src/map-quick/types.h b/src/map-quick/types.h
+index b9abde5..487d200 100644
+--- a/src/map-quick/types.h
++++ b/src/map-quick/types.h
+@@ -67,7 +67,8 @@ struct MapLoaderForeign {
+     QML_UNCREATABLE("only provided via C++ API")
+ };
+ 
+-struct PlatformForeign {
++// not just PlatformForeign, KPublicTransport has one too, which clashes when linking both statically
++struct IndoorMapPlatformForeign {
+     Q_GADGET
+     QML_VALUE_TYPE(platform)
+     QML_FOREIGN(KOSMIndoorMap::Platform)

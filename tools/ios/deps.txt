@@ -11,6 +11,8 @@
 # there is no technical problem with PDF import on iOS, and it stays enabled on all other platforms.
 
 extra-cmake-modules  https://invent.kde.org/frameworks/extra-cmake-modules.git  v6.31.0
+# country and country subdivision data for KI18n's locale data, bundled with the app
+iso-codes            https://salsa.debian.org/iso-codes-team/iso-codes.git      v4.18.0
 libintl-lite         https://github.com/jblechert/libintl-lite.git               plural-forms
 kcoreaddons          https://invent.kde.org/frameworks/kcoreaddons.git          v6.31.0  -DKCOREADDONS_USE_QML=ON
 ki18n                https://invent.kde.org/frameworks/ki18n.git                v6.31.0
@@ -45,8 +47,8 @@ kosmindoormap        https://invent.kde.org/libraries/kosmindoormap.git         
 kpkpass              https://invent.kde.org/pim/kpkpass.git                     v26.08.3
 # no Poppler, so no PDF import on iOS - for App Store licensing reasons only, see the comment at the top
 # for verifying the signatures of UIC and VDV railway tickets in KItinerary
-# the extra arguments go to OpenSSL's Configure; the deployment target is Qt's minimum, otherwise it's the SDK version
-openssl              https://github.com/openssl/openssl.git                     openssl-3.5.4  -mios-version-min=17.0
+# extra arguments go to OpenSSL's Configure; build-deps.sh sets the target and Qt's minimum iOS version
+openssl              https://github.com/openssl/openssl.git                     openssl-3.5.4
 kitinerary           https://invent.kde.org/pim/kitinerary.git                  v26.08.3 -DCMAKE_DISABLE_FIND_PACKAGE_Poppler=ON -DBUILD_TOOLS=OFF -DOPENSSL_ROOT_DIR=$PREFIX -DOPENSSL_USE_STATIC_LIBS=ON
 qtkeychain           https://github.com/frankosterfeld/qtkeychain.git           0.16.0   -DBUILD_WITH_QT6=ON -DBUILD_TRANSLATIONS=OFF
 qcoro                https://github.com/qcoro/qcoro.git                         v0.12.0  -DUSE_QT_VERSION=6 -DQCORO_BUILD_EXAMPLES=OFF -DQCORO_WITH_QTDBUS=OFF -DQCORO_WITH_QML=ON

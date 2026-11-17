@@ -508,6 +508,8 @@ elseif (IOS)
         KF6::Kirigami
         KF6::Prison
         Qt::Svg
+        # the Kirigami theme of the Breeze style, a static plugin found by Kirigami when linked
+        org.kde.breeze
     )
 
     kirigami_package_breeze_icons(TARGET itinerary-app ICONS ${ITINERARY_ICONS})

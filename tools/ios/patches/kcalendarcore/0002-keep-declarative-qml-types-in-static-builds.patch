@@ -1,0 +1,28 @@
+diff --git a/src/qml/kcalendarcoreqmlplugin.cpp b/src/qml/kcalendarcoreqmlplugin.cpp
+index b80caf1..160bded 100644
+--- a/src/qml/kcalendarcoreqmlplugin.cpp
++++ b/src/qml/kcalendarcoreqmlplugin.cpp
+@@ -8,12 +8,23 @@
+ #include <QQmlEngine>
+ #include <QQmlExtensionPlugin>
+ 
++// reference the declarative type registration, otherwise it is dropped when linking statically
++extern void qml_register_types_org_kde_calendarcore();
++Q_GHS_KEEP_REFERENCE(qml_register_types_org_kde_calendarcore)
++
+ class KCalendarCoreQmlPlugin : public QQmlExtensionPlugin
+ {
+     Q_OBJECT
+     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
+ 
+ public:
++    explicit KCalendarCoreQmlPlugin(QObject *parent = nullptr)
++        : QQmlExtensionPlugin(parent)
++    {
++        volatile auto registration = &qml_register_types_org_kde_calendarcore;
++        Q_UNUSED(registration)
++    }
++
+     void registerTypes(const char *uri) override;
+ };
+ 
