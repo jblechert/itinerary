@@ -109,7 +109,7 @@ while read -r name url ref args; do
         if ! {
             cd "$src" \
             && ./Configure ios64-xcrun no-shared no-tests no-apps no-docs no-module \
-                --prefix="$PREFIX" --openssldir="$PREFIX/ssl" \
+                --prefix="$PREFIX" --openssldir="$PREFIX/ssl" $args \
             && make -j"$(sysctl -n hw.ncpu)" build_libs \
             && make install_dev \
             && cd - > /dev/null
