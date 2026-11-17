@@ -19,6 +19,7 @@ import org.kde.itinerary
 /** A map centered on the current location, with optional overlays for marked hiking, cycling and
  *  mountain bike routes, and routes on foot, by bike or by car to any place picked on the map.
  *  Tapping a marked route shows its course and elevation profile, and allows to follow it.
+ *  Departure and arrival of a journey can be picked on the map or searched, to search connections between them.
  */
 Kirigami.Page {
     id: root
@@ -34,6 +35,132 @@ Kirigami.Page {
     property bool followPosition: true
     /** The place picked on the map, to go to. */
     property var pickedCoordinate
+
+    /** Departure of the journey to search, the current location if not set. */
+    property var journeyFrom
+    /** Arrival of the journey to search. */
+    property var journeyTo
+    /** The journey planner is shown. */
+    property bool plannerShown: false
+    readonly property bool hasPosition: positionSource.valid && positionSource.position.latitudeValid && positionSource.position.longitudeValid
+
+    function currentLocation(): var {
+        const coord = positionSource.position.coordinate;
+        return helper.locationAt(coord.latitude, coord.longitude, i18nc("@info start of navigation", "Current location"));
+    }
+
+    /** Use the place picked on the map as departure ("from") or arrival ("to") of the journey. */
+    function setJourneyEndpoint(endpoint: string, coord: var): void {
+        const location = helper.locationAt(coord.latitude, coord.longitude, i18nc("@info a place picked on the map", "Selected place"));
+        if (endpoint === "from") {
+            root.journeyFrom = location;
+        } else {
+            root.journeyTo = location;
+        }
+        root.pickedCoordinate = undefined;
+        root.plannerShown = true;
+        // name the place by its address
+        const geocoder = endpoint === "from" ? fromGeocoder : toGeocoder;
+        // the plugin is created on demand, which must not happen in a binding
+        if (!geocoder.plugin) {
+            geocoder.plugin = applicationWindow().geocodingPlugin();
+        }
+        geocoder.query = coord;
+        geocoder.update();
+    }
+
+    /** Rename the departure or arrival to the address found for it, unless it changed meanwhile. */
+    function applyGeocoding(endpoint: string, geocoder: QtLocation.GeocodeModel): void {
+        const location = endpoint === "from" ? root.journeyFrom : root.journeyTo;
+        if (geocoder.status !== QtLocation.GeocodeModel.Ready || geocoder.count === 0 || !location) {
+            return;
+        }
+        const coord = geocoder.query;
+        if (Math.abs(location.latitude - coord.latitude) > 1e-7 || Math.abs(location.longitude - coord.longitude) > 1e-7) {
+            return;
+        }
+        const address = geocoder.get(0).address;
+        const street = [address.street, address.streetNumber].filter((s) => s).join(" ");
+        const name = [street, address.city].filter((s) => s).join(", ");
+        if (name === "") {
+            return;
+        }
+        const named = helper.locationAt(coord.latitude, coord.longitude, name);
+        if (endpoint === "from") {
+            root.journeyFrom = named;
+        } else {
+            root.journeyTo = named;
+        }
+    }
+
+    function searchConnection(): void {
+        const from = root.journeyFrom ?? root.currentLocation();
+        const page = root.QQC2.ApplicationWindow.window.pageStack.push(Qt.resolvedUrl("JourneyRequestPage.qml"), {
+            publicTransportManager: LiveDataManager.publicTransportManager,
+            departureStop: from,
+            arrivalStop: root.journeyTo,
+        });
+        page.searchJourney();
+    }
+
+    QtLocation.GeocodeModel {
+        id: fromGeocoder
+        autoUpdate: false
+        limit: 1
+        onStatusChanged: root.applyGeocoding("from", fromGeocoder)
+    }
+    QtLocation.GeocodeModel {
+        id: toGeocoder
+        autoUpdate: false
+        limit: 1
+        onStatusChanged: root.applyGeocoding("to", toGeocoder)
+    }
+
+    /** Show departure and arrival on the map, after one of them was searched. */
+    function showJourneyEndpoints(): void {
+        let coords = [];
+        for (const location of [root.journeyFrom ?? (root.hasPosition ? root.currentLocation() : undefined), root.journeyTo]) {
+            if (location && location.hasCoordinate) {
+                coords.push(QtPositioning.coordinate(location.latitude, location.longitude));
+            }
+        }
+        if (coords.length === 0) {
+            return;
+        }
+        root.followPosition = false;
+        if (coords.length === 1) {
+            map.center = coords[0];
+            return;
+        }
+        // with room for the journey planner on top
+        map.fitViewportToGeoShape(QtPositioning.rectangle(coords), Kirigami.Units.gridUnit * 6);
+    }
+
+    Component {
+        id: stopPickerComponent
+        StopPickerPage {
+            property string endpoint
+            publicTransportManager: LiveDataManager.publicTransportManager
+            initialCountry: Settings.homeCountryIsoCode
+            showUseCurrentLocationButton: endpoint === "from"
+            historySortRoleName: Settings.read("StopPicker/historySortMode", "lastUsed")
+            onHistorySortRoleChanged: (sortRoleName) => Settings.write("StopPicker/historySortMode", sortRoleName)
+            onLocationChanged: {
+                if (endpoint === "from") {
+                    root.journeyFrom = PublicTransport.copyLocation(location);
+                } else {
+                    root.journeyTo = PublicTransport.copyLocation(location);
+                }
+                root.showJourneyEndpoints();
+            }
+        }
+    }
+    function searchJourneyEndpoint(endpoint: string): void {
+        root.QQC2.ApplicationWindow.window.pageStack.push(stopPickerComponent, {
+            endpoint: endpoint,
+            title: endpoint === "from" ? i18nc("departure train station", "Select Departure Stop") : i18nc("arrival train station", "Select Arrival Stop"),
+        });
+    }
 
     // the plugin of a map can't be changed once set, so the overlay map is recreated when the overlay changes
     onOverlayChanged: {
@@ -98,6 +225,12 @@ Kirigami.Page {
 
     QQC2.ActionGroup { id: overlayGroup }
     actions: [
+        Kirigami.Action {
+            icon.name: "search"
+            text: i18nc("@action:button search a public transport connection between two places", "Plan Journey")
+            visible: !root.plannerShown
+            onTriggered: root.plannerShown = true
+        },
         Kirigami.Action {
             text: i18nc("@action:inmenu map overlay", "Map Only")
             checkable: true
@@ -188,6 +321,26 @@ Kirigami.Page {
             size: 24
         }
 
+        // departure and arrival of the journey to search
+        MapCircle {
+            visible: root.journeyFrom !== undefined
+            coordinate: root.journeyFrom ? QtPositioning.coordinate(root.journeyFrom.latitude, root.journeyFrom.longitude) : QtPositioning.coordinate()
+            color: "#27ae60"
+            textColor: "#eff0f1"
+            iconName: "flag"
+            size: 24
+            z: 6
+        }
+        MapCircle {
+            visible: root.journeyTo !== undefined
+            coordinate: root.journeyTo ? QtPositioning.coordinate(root.journeyTo.latitude, root.journeyTo.longitude) : QtPositioning.coordinate()
+            color: "#da4453"
+            textColor: "#eff0f1"
+            iconName: "flag"
+            size: 24
+            z: 6
+        }
+
         // the marked route shown
         QtLocation.MapPolyline {
             visible: markedRoutes.hasRoute
@@ -231,6 +384,121 @@ Kirigami.Page {
             icon.name: "mark-location-symbolic"
             text: i18nc("@action:inmenu", "Drive Here")
             onTriggered: root.startNavigation(KPublicTransport.IndividualTransport.Car)
+        }
+        QQC2.MenuSeparator {}
+        QQC2.MenuItem {
+            icon.name: "go-next-symbolic"
+            text: i18nc("@action:inmenu search public transport connections starting here", "Journey From Here")
+            onTriggered: root.setJourneyEndpoint("from", root.pickedCoordinate)
+        }
+        QQC2.MenuItem {
+            icon.name: "flag"
+            text: i18nc("@action:inmenu search public transport connections to here", "Journey To Here")
+            onTriggered: root.setJourneyEndpoint("to", root.pickedCoordinate)
+        }
+    }
+
+    // departure and arrival of a journey to search
+    QQC2.Pane {
+        id: plannerPane
+        visible: root.plannerShown
+        z: map.z + 3
+        anchors {
+            left: parent.left
+            right: parent.right
+            top: parent.top
+        }
+        Kirigami.Theme.colorSet: Kirigami.Theme.View
+        Kirigami.Theme.inherit: false
+
+        component EndpointDelegate: QQC2.ItemDelegate {
+            id: endpointDelegate
+            required property string label
+            required property string placeName
+            required property color flagColor
+            Layout.fillWidth: true
+            contentItem: RowLayout {
+                spacing: Kirigami.Units.largeSpacing
+                Kirigami.Icon {
+                    source: "flag"
+                    color: endpointDelegate.flagColor
+                    isMask: true
+                    Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
+                    Layout.preferredHeight: Kirigami.Units.iconSizes.smallMedium
+                }
+                ColumnLayout {
+                    spacing: 0
+                    Layout.fillWidth: true
+                    QQC2.Label {
+                        text: endpointDelegate.label
+                        font: Kirigami.Theme.smallFont
+                        opacity: 0.7
+                        Layout.fillWidth: true
+                    }
+                    QQC2.Label {
+                        text: endpointDelegate.placeName
+                        elide: Text.ElideRight
+                        Layout.fillWidth: true
+                    }
+                }
+            }
+        }
+
+        contentItem: ColumnLayout {
+            spacing: Kirigami.Units.smallSpacing
+            RowLayout {
+                Layout.fillWidth: true
+                ColumnLayout {
+                    spacing: 0
+                    Layout.fillWidth: true
+                    EndpointDelegate {
+                        label: i18nc("departure train station", "From:")
+                        placeName: root.journeyFrom ? root.journeyFrom.name
+                            : root.hasPosition ? i18nc("@info start of navigation", "Current location")
+                            : i18nc("@info:placeholder", "Search, or tap and hold on the map")
+                        flagColor: "#27ae60"
+                        onClicked: root.searchJourneyEndpoint("from")
+                    }
+                    Kirigami.Separator { Layout.fillWidth: true }
+                    EndpointDelegate {
+                        label: i18nc("arrival train station", "To:")
+                        placeName: root.journeyTo ? root.journeyTo.name : i18nc("@info:placeholder", "Search, or tap and hold on the map")
+                        flagColor: "#da4453"
+                        onClicked: root.searchJourneyEndpoint("to")
+                    }
+                }
+                ColumnLayout {
+                    spacing: 0
+                    QQC2.ToolButton {
+                        icon.name: "window-close-symbolic"
+                        text: i18nc("@action:button", "Close")
+                        display: QQC2.AbstractButton.IconOnly
+                        onClicked: {
+                            root.plannerShown = false;
+                            root.journeyFrom = undefined;
+                            root.journeyTo = undefined;
+                        }
+                    }
+                    QQC2.ToolButton {
+                        icon.name: "reverse"
+                        text: i18nc("departure and arrival stops", "Swap departure and arrival")
+                        display: QQC2.AbstractButton.IconOnly
+                        enabled: root.journeyTo !== undefined
+                        onClicked: {
+                            const from = root.journeyFrom ?? (root.hasPosition ? root.currentLocation() : undefined);
+                            root.journeyFrom = root.journeyTo;
+                            root.journeyTo = from;
+                        }
+                    }
+                }
+            }
+            QQC2.Button {
+                icon.name: "search"
+                text: i18nc("@action", "Search connection")
+                enabled: root.journeyTo !== undefined && (root.journeyFrom !== undefined || root.hasPosition)
+                Layout.fillWidth: true
+                onClicked: root.searchConnection()
+            }
         }
     }
 
@@ -277,7 +545,7 @@ Kirigami.Page {
     QQC2.Label {
         anchors {
             left: parent.left
-            top: parent.top
+            top: plannerPane.visible ? plannerPane.bottom : parent.top
             margins: Kirigami.Units.largeSpacing
         }
         visible: root.overlay !== ""
