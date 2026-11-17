@@ -86,14 +86,25 @@ ColumnLayout {
         return !journey.sections.some((section) => section.mode === JourneySection.PublicTransport);
     }
 
+    function isRide(section: var): bool {
+        return section.mode === JourneySection.PublicTransport || section.mode === JourneySection.RentedVehicle
+            || section.mode === JourneySection.IndividualTransport;
+    }
+
+    /** Whether @p section of @p journey is shown as a badge: rides on public transport or rented vehicles,
+     *  or the walk if that is all there is.
+     */
+    function isShownSection(section: var, journey: var): bool {
+        return root.isRide(section) || !journey.sections.some((s) => root.isRide(s));
+    }
+
     function updateTimeRange(): void {
         let first = Number.MAX_VALUE;
         let last = 0;
         for (let row = 0; row < root.journeys.count; ++row) {
             const journey = root.journeyAt(row);
-            const direct = root.isDirect(journey);
             for (const section of journey.sections) {
-                if (section.mode !== JourneySection.PublicTransport && !direct) {
+                if (!root.isShownSection(section, journey)) {
                     continue;
                 }
                 first = Math.min(first, Math.min(section.scheduledDepartureTime.getTime(), root.departureOf(section).getTime()));
@@ -358,7 +369,7 @@ ColumnLayout {
                                     && sectionItem.section.expectedDepartureTime.getTime() !== sectionItem.section.scheduledDepartureTime.getTime()
                                 readonly property real badgeTop: root.yFor(root.departureOf(sectionItem.section))
 
-                                visible: sectionItem.section.mode === JourneySection.PublicTransport || journeyColumn.isDirect
+                                visible: root.isShownSection(sectionItem.section, journeyColumn.journey)
                                 width: parent.width
                                 spacing: 0
 
@@ -394,10 +405,13 @@ ColumnLayout {
                                     id: badge
 
                                     readonly property var line: sectionItem.section.route.line
+                                    readonly property bool isRental: sectionItem.section.mode === JourneySection.RentedVehicle
+                                    readonly property var rentalNetwork: sectionItem.section.rentalVehicle.network
                                     readonly property bool isDarkTheme: Kirigami.Theme.backgroundColor.hslLightness < 0.4
 
                                     radius: Kirigami.Units.cornerRadius
-                                    color: badge.line.hasColor ? badge.line.color : Kirigami.Theme.textColor
+                                    color: badge.isRental && badge.rentalNetwork.hasBrandColor ? badge.rentalNetwork.brandColor
+                                        : badge.line.hasColor ? badge.line.color : Kirigami.Theme.textColor
                                     Layout.fillWidth: true
                                     Layout.preferredHeight: Math.max(badgeContent.implicitHeight + 2 * Kirigami.Units.smallSpacing,
                                         root.yFor(root.arrivalOf(sectionItem.section)) - sectionItem.badgeTop)
@@ -431,7 +445,9 @@ ColumnLayout {
                                             Layout.preferredHeight: Kirigami.Units.iconSizes.smallMedium
                                         }
                                         QQC2.Label {
-                                            text: sectionItem.section.mode === JourneySection.PublicTransport ? badge.line.name : Localizer.formatDuration(sectionItem.section.duration)
+                                            text: sectionItem.section.mode === JourneySection.PublicTransport ? badge.line.name
+                                                : badge.isRental && badge.rentalNetwork.name !== "" ? badge.rentalNetwork.name
+                                                : Localizer.formatDuration(sectionItem.section.duration)
                                             visible: text.length > 0 && !badge.line.hasLogo
                                             color: badge.foregroundColor
                                             font.weight: Font.DemiBold
