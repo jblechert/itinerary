@@ -6414,3 +6414,18 @@ msgstr "Stimme installieren"
 msgctxt "@action:button"
 msgid "Speech Settings"
 msgstr "Sprachausgabe einstellen"
+
+#: fork
+msgctxt "@info"
+msgid "Tickets, connections and maps in one app, based on KDE Itinerary"
+msgstr "Tickets, Verbindungen und Karten in einer App, basierend auf KDE Itinerary"
+
+#: fork
+msgctxt "@info:credit"
+msgid "KDE Itinerary"
+msgstr "KDE Itinerary"
+
+#: fork
+msgctxt "@info:credit"
+msgid "The digital travel assistant by the KDE Community, which Trinity is based on."
+msgstr "Der digitale Reiseassistent der KDE-Community, auf dem Trinity basiert."
