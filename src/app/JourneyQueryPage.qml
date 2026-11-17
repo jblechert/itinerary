@@ -243,6 +243,7 @@ Kirigami.ScrollablePage {
 
         FormCard.FormDelegateSeparator {
             above: selectButton
+            visible: selectButton.visible
         }
 
         FormCard.FormButtonDelegate {
@@ -250,6 +251,8 @@ Kirigami.ScrollablePage {
 
             text: detailsLayout.selectText
             icon.name: "checkmark"
+            // only public transport ends up in the itinerary, so there's nothing to add without
+            visible: detailsLayout.firstTransportSection !== null
             enabled: detailsLayout.journey.disruptionEffect !== Disruption.NoService
             onClicked: detailsLayout.selected()
         }
