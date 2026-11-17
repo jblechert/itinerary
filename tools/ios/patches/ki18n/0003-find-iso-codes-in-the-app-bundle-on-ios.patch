@@ -1,0 +1,19 @@
+diff --git a/src/localedata/isocodescache.cpp b/src/localedata/isocodescache.cpp
+index 6cd3569..d8d1420 100644
+--- a/src/localedata/isocodescache.cpp
++++ b/src/localedata/isocodescache.cpp
+@@ -34,6 +34,14 @@ static QString isoCodesPath(QStringView file)
+         return path;
+     }
+ 
++#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
++    // the app's data locations include the resources of the app bundle
++    path = QStandardPaths::locate(QStandardPaths::AppLocalDataLocation, QLatin1String("iso-codes/json/") + file, QStandardPaths::LocateFile);
++    if (!path.isEmpty()) {
++        return path;
++    }
++#endif
++
+     // search manually in the compile-time determined prefix
+     // needed for example for non-installed Windows binaries to work, such as unit tests
+     for (const char *installLocation : {"/share", "/bin/data"}) {
