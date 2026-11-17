@@ -71,9 +71,14 @@ configuring with `-G Xcode` instead of Ninja should work too, as Qt recommends f
 
 ### Open issues
 
-- Only tested in the simulator so far, and only as far as the screenshots of the smoke test show.
-- Qt translations (`.qm`, e.g. Kirigami's) are bundled but not loaded: ECM's translation loader is a separate object
-  file in the static libraries, which the linker drops as nothing references it. Gettext catalogs (KI18n) work.
+- Only tested in the simulator so far: the welcome page and the main page start, with icons, the Breeze style,
+  German translations and the country data. Nothing was clicked through yet, the smoke test can't interact with the
+  app (that would need an XCUITest runner).
+- Qt translations (`.qm`, e.g. Kirigami's) are bundled, but most likely not loaded: ECM's translation loader is a
+  separate object file in the static libraries that nothing references, so the linker drops it. Gettext catalogs
+  (KI18n, most of the app's and the libraries' texts) work.
+- KUser is available on iOS now (KCoreAddons patch), so the preselection of the user's ticket by name that was
+  disabled on iOS could come back.
 - Resources of static libraries that are not referenced from code (e.g. Qt resources in KOSMIndoorMap's
   helper libraries) may need explicit `Q_INIT_RESOURCE` calls.
 - App icons (asset catalog), privacy manifest and the remaining App Store metadata are still missing, see
@@ -85,10 +90,11 @@ configuring with `-G Xcode` instead of Ninja should work too, as Qt recommends f
 
 ## Testing in the simulator
 
-`tools/ios/simulator-smoke-test.sh <app> <output dir>` boots the newest iPhone simulator, installs the app and starts
-it twice: freshly installed (welcome page), and with the welcome page marked as shown in its settings and German as
+`tools/ios/simulator-smoke-test.sh <app> <output dir>` boots a regular iPhone simulator of the newest iOS runtime
+(about 6 minutes on the CI runner for a new simulator), installs the app and starts it twice: freshly installed (welcome page), and with the welcome page marked as shown in its settings and German as
 language (`LANGUAGE=de`, main page). It fails if the app doesn't run anymore after 30 seconds, and stores screenshots,
-the console output of the app (Qt logs to stderr with `QT_FORCE_STDERR_LOGGING=1`), its system log and crash reports.
+the console output of the app (Qt logs to stderr with `QT_FORCE_STDERR_LOGGING=1`), its system log, crash reports and
+a sample of its stacks (simulated apps are host processes, so `sample` works on them, e.g. to see where they hang).
 The location permission is granted beforehand and a location is set: the app asks for the permission right away, and
 without a location starting the app took about 20 seconds longer.
 
