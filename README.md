@@ -45,6 +45,9 @@ tickets you set once where they are valid: a country, or within a radius of wher
 - A map tab, with marked hiking, cycling and mountain bike routes from [Waymarked Trails](https://waymarkedtrails.org)
   on top if you like. Tap a route to see its length, ascent and elevation profile, and follow it: if you're not on it,
   you're guided to its closest point first. Navigation keeps going with the screen off.
+- Journeys from the map: tap and hold to pick where to start or where to go, or search a station or address. Starting
+  from your current location is the default, and picked places are named by their address. "Search connection" then
+  finds connections between them, walking all the way included where that's all it takes.
 - Ascent and descent of walks and bike rides, where the routing service provides them (KPublicTransport extension,
   to be proposed to KDE).
 - The journey search remembers the kind of ticket you travel with, e.g. local transport only for the
