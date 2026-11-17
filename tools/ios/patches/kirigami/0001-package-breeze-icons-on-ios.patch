@@ -1,0 +1,78 @@
+diff --git a/KF6KirigamiMacros.cmake b/KF6KirigamiMacros.cmake
+index 5acd18a..d91c341 100644
+--- a/KF6KirigamiMacros.cmake
++++ b/KF6KirigamiMacros.cmake
+@@ -5,18 +5,31 @@
+ 
+ include(ExternalProject)
+ 
++# kirigami_package_breeze_icons(ICONS <icon names...> [TARGET <target>])
++#
++# Bundles the given Breeze icons with the application on platforms without an icon theme.
++# On Android they are installed next to the Kirigami QML module, on iOS everything is linked
++# statically, so they are compiled into <target> as Qt resources (TARGET is required there).
+ function(kirigami_package_breeze_icons)
++    set(_oneValueArgs TARGET)
+     set(_multiValueArgs ICONS)
+-    cmake_parse_arguments(ARG "" "" "${_multiValueArgs}" ${ARGN} )
++    cmake_parse_arguments(ARG "" "${_oneValueArgs}" "${_multiValueArgs}" ${ARGN} )
+ 
+     if(NOT ARG_ICONS)
+         message(FATAL_ERROR "No ICONS argument given to kirigami_package_breeze_icons")
+     endif()
+ 
+-    if(NOT ANDROID)
++    if(NOT ANDROID AND NOT IOS)
+         return() # not needed on other platforms
+     endif()
+ 
++    if(IOS AND NOT ARG_TARGET)
++        message(FATAL_ERROR "kirigami_package_breeze_icons needs a TARGET on iOS, the icons are compiled into it")
++    endif()
++    # where the icons are collected for the resources on iOS
++    set(_resource_dir "${CMAKE_CURRENT_BINARY_DIR}/kirigami-breeze-icons")
++    set(_resource_files)
++
+     #include icons used by Kirigami components themselves
+     set(ARG_ICONS ${ARG_ICONS}
+         application-exit
+@@ -76,6 +89,17 @@ function(kirigami_package_breeze_icons)
+             list(GET path 0 path)
+ 
+             get_filename_component(realpath "${path}" REALPATH)
++            if (IOS)
++                # resources are copies, so symlinks don't need special handling
++                if (EXISTS ${realpath})
++                    file(MAKE_DIRECTORY "${_resource_dir}/icons/${_size}")
++                    file(COPY_FILE ${realpath} "${_resource_dir}/icons/${_size}/${icon}.svg" ONLY_IF_DIFFERENT)
++                    list(APPEND _resource_files "${_resource_dir}/icons/${_size}/${icon}.svg")
++                    set(_resource_files ${_resource_files} PARENT_SCOPE)
++                endif()
++                continue()
++            endif()
++
+             if (EXISTS ${realpath})
+                 install(FILES ${realpath} DESTINATION ${KDE_INSTALL_QMLDIR}/org/kde/kirigami/breeze-internal/icons/${_size})
+             endif()
+@@ -122,6 +146,20 @@ function(kirigami_package_breeze_icons)
+     endforeach()
+ 
+     #generate an index.theme that qiconloader can understand
+-    file(WRITE ${CMAKE_BINARY_DIR}/index.theme "[Icon Theme]\nName=Breeze\nDirectories=icons/12,icons/16,icons/22,icons/32,icons/48,icons\nFollowsColorScheme=true\n[icons/12]\nSize=12\nType=Fixed\n[icons/16]\nSize=16\nType=Fixed\n[icons/22]\nSize=22\nType=Fixed\n[icons/32]\nSize=32\nType=Fixed\n[icons/48]\nSize=48\nType=Fixed\n[icons]\nSize=32\nType=Scalable\n")
++    set(_index_theme "[Icon Theme]\nName=Breeze\nDirectories=icons/12,icons/16,icons/22,icons/32,icons/48,icons\nFollowsColorScheme=true\n[icons/12]\nSize=12\nType=Fixed\n[icons/16]\nSize=16\nType=Fixed\n[icons/22]\nSize=22\nType=Fixed\n[icons/32]\nSize=32\nType=Fixed\n[icons/48]\nSize=48\nType=Fixed\n[icons]\nSize=32\nType=Scalable\n")
++
++    if (IOS)
++        # Kirigami looks for the icon theme next to its QML files, which are in the resources in static builds,
++        # see StyleSelector::resolveFilePath()
++        file(WRITE "${_resource_dir}/index.theme" "${_index_theme}")
++        qt_add_resources(${ARG_TARGET} "kirigami_breeze_icons"
++            PREFIX "/qt/qml/org/kde/kirigami/breeze-internal"
++            BASE "${_resource_dir}"
++            FILES "${_resource_dir}/index.theme" ${_resource_files}
++        )
++        return()
++    endif()
++
++    file(WRITE ${CMAKE_BINARY_DIR}/index.theme "${_index_theme}")
+     install(FILES ${CMAKE_BINARY_DIR}/index.theme DESTINATION ${KDE_INSTALL_QMLDIR}/org/kde/kirigami/breeze-internal/)
+ endfunction()
