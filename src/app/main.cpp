@@ -102,6 +102,11 @@
 #include <QStandardPaths>
 #include <QWindow>
 
+#ifdef Q_OS_IOS
+#include <QLocale>
+#include <QTranslator>
+#endif
+
 #if HAVE_MAPLIBRE
 #include <QMapLibre/Utils>
 #include <QVulkanInstance>
@@ -109,6 +114,49 @@
 #endif
 
 using namespace Qt::Literals::StringLiterals;
+
+#ifdef Q_OS_IOS
+// The Qt translations of the libraries (e.g. Kirigami's) are loaded by ECM's loaders, which the linker drops in
+// a static build as nothing references them. Load the catalogs bundled with the app the same way instead.
+static void loadBundledQtTranslations()
+{
+    const QDir localeDir(QCoreApplication::applicationDirPath() + "/locale"_L1);
+    const auto load = [&localeDir](const QString &lang) {
+        const QDir dir(localeDir.filePath(lang + "/LC_MESSAGES"_L1));
+        const auto files = dir.entryList({u"*_qt.qm"_s}, QDir::Files);
+        for (const auto &file : files) {
+            auto translator = new QTranslator(QCoreApplication::instance());
+            if (translator->load(dir.filePath(file))) {
+                QCoreApplication::installTranslator(translator);
+            } else {
+                delete translator;
+            }
+        }
+        return !files.isEmpty();
+    };
+
+    // the English catalogs contain the plural forms, the ones loaded later take precedence
+    load(u"en"_s);
+    // LANGUAGE takes precedence, as for KI18n
+    auto langs = qEnvironmentVariable("LANGUAGE").split(u':', Qt::SkipEmptyParts);
+    if (langs.isEmpty()) {
+        langs = QLocale::system().uiLanguages(QLocale::TagSeparator::Underscore);
+    }
+    for (const auto &lang : std::as_const(langs)) {
+        const auto generic = lang.section(u'_', 0, 0);
+        if (generic == "en"_L1) {
+            // e.g. British English, where translated
+            if (lang != generic) {
+                load(lang);
+            }
+            break;
+        }
+        if (load(lang) || (lang != generic && load(generic))) {
+            break;
+        }
+    }
+}
+#endif
 
 static void registerKItineraryTypes()
 {
@@ -201,6 +249,9 @@ int main(int argc, char **argv)
     QGuiApplication app(argc, argv);
     QQuickStyle::setStyle(QStringLiteral("org.kde.breeze"));
     KColorSchemeManager::instance(); // enables automatic dark mode handling
+#ifdef Q_OS_IOS
+    loadBundledQtTranslations();
+#endif
 #else
     QIcon::setFallbackThemeName(QStringLiteral("breeze"));
     QApplication app(argc, argv); // for native file dialogs

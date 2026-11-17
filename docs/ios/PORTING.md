@@ -76,11 +76,15 @@ configuring with `-G Xcode` instead of Ninja should work too, as Qt recommends f
 - Only tested in the simulator so far: the welcome page and the main page start, with icons, the Breeze style,
   German translations and the country data. Nothing was clicked through yet, the smoke test can't interact with the
   app (that would need an XCUITest runner).
-- Qt translations (`.qm`, e.g. Kirigami's) are bundled, but most likely not loaded: ECM's translation loader is a
-  separate object file in the static libraries that nothing references, so the linker drops it. Gettext catalogs
-  (KI18n, most of the app's and the libraries' texts) work.
-- KUser is available on iOS now (KCoreAddons patch), so the preselection of the user's ticket by name that was
-  disabled on iOS could come back.
+- Qt translations (`.qm`, e.g. Kirigami's) are not loaded by the libraries: ECM's translation loader is a separate
+  object file in the static libraries that nothing references, so the linker drops it (none of the catalog names
+  is in the binary). The app loads the bundled catalogs itself on iOS (`loadBundledQtTranslations()` in
+  `main.cpp`). Gettext catalogs (KI18n, most of the app's and the libraries' texts) work.
+- KUser is available on iOS now (KCoreAddons patch), but the preselection of the user's ticket by name stays
+  disabled on iOS: the user name of an iOS app is the sandbox's ("Mobile User"), never the traveler's.
+- The window extends below the status bar and the home indicator (`Qt.ExpandedClientAreaHint` in `Main.qml`), Kirigami
+  adds the safe area margins to the header and the navigation bar. Not checked yet: pages without a header, e.g.
+  the barcode scanner.
 - Resources of static libraries that are not referenced from code (e.g. Qt resources in KOSMIndoorMap's
   helper libraries) may need explicit `Q_INIT_RESOURCE` calls.
 - App icons (asset catalog), privacy manifest and the remaining App Store metadata are still missing, see
