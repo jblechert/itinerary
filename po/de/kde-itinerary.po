@@ -6324,3 +6324,23 @@ msgstr "↑ %1 m ↓ %2 m"
 msgctxt "@info total ascent of a journey, in meters"
 msgid "↑ %1 m"
 msgstr "↑ %1 m"
+
+#: fork
+msgctxt "@action:button search a public transport connection between two places"
+msgid "Plan Journey"
+msgstr "Verbindung planen"
+
+#: fork
+msgctxt "@action:inmenu search public transport connections starting here"
+msgid "Journey From Here"
+msgstr "Verbindung von hier"
+
+#: fork
+msgctxt "@action:inmenu search public transport connections to here"
+msgid "Journey To Here"
+msgstr "Verbindung hierher"
+
+#: fork
+msgctxt "@info:placeholder"
+msgid "Search, or tap and hold on the map"
+msgstr "Suchen oder lange auf die Karte tippen"
