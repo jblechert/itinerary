@@ -1,0 +1,14 @@
+diff --git a/src/cli/CMakeLists.txt b/src/cli/CMakeLists.txt
+index 589faf6..55e6f9e 100644
+--- a/src/cli/CMakeLists.txt
++++ b/src/cli/CMakeLists.txt
+@@ -2,7 +2,8 @@
+ # SPDX-FileCopyrightText: 2019 Volker Krause <vkrause@kde.org>
+ # SPDX-License-Identifier: BSD-3-Clause
+ 
+-if (ANDROID)
++# mobile platforms have no use for a command line tool, and iOS can't run separate processes
++if (ANDROID OR IOS)
+     return()
+ endif()
+ 
