@@ -50,6 +50,8 @@ tickets you set once where they are valid: a country, or within a radius of wher
   finds connections between them, walking all the way included where that's all it takes.
 - Ascent and descent of walks and bike rides, where the routing service provides them (KPublicTransport extension,
   to be proposed to KDE).
+- Rental bikes in the journey search, if you like: to and from stations or all the way, shown in the timeline with
+  the bike sharing system's name and color, and a button to rent the bike at the right station in its app.
 - The journey search remembers the kind of ticket you travel with, e.g. local transport only for the
   Deutschlandticket, so long distance trains don't show up when you can't use them.
 
