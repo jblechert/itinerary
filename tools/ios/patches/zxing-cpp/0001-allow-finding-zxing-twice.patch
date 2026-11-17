@@ -1,0 +1,13 @@
+diff --git a/core/ZXingConfig.cmake.in b/core/ZXingConfig.cmake.in
+--- a/core/ZXingConfig.cmake.in
++++ b/core/ZXingConfig.cmake.in
+@@ -3,7 +3,8 @@
+ 
+ # this does not work: add_library(ZXing::Core ALIAS ZXing::ZXing)
+ # this is a workaround available since 3.11 :
+-if(NOT(CMAKE_VERSION VERSION_LESS 3.11))
++# static builds find ZXing once per library using it (e.g. Prison and KItinerary), so it can already exist
++if(NOT(CMAKE_VERSION VERSION_LESS 3.11) AND NOT TARGET ZXing::Core)
+     add_library(ZXing::Core INTERFACE IMPORTED)
+     target_link_libraries(ZXing::Core INTERFACE ZXing::ZXing)
+ endif()
