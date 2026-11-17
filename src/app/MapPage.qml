@@ -43,6 +43,9 @@ Kirigami.Page {
     /** The journey planner is shown. */
     property bool plannerShown: false
     readonly property bool hasPosition: positionSource.valid && positionSource.position.latitudeValid && positionSource.position.longitudeValid
+    /** The journey starts where we are, so navigating there on foot, by bike or by car is possible. */
+    readonly property bool journeyStartsHere: root.hasPosition && (!root.journeyFrom
+        || QtPositioning.coordinate(root.journeyFrom.latitude, root.journeyFrom.longitude).distanceTo(positionSource.position.coordinate) < 100)
 
     function currentLocation(): var {
         const coord = positionSource.position.coordinate;
@@ -183,11 +186,16 @@ Kirigami.Page {
         }
     }
 
-    function startNavigation(mode: int): void {
+    /** Navigate from the current position to @p destination, on foot, by bike or by car. */
+    function startNavigation(destination: var, mode: int): void {
         root.QQC2.ApplicationWindow.window.pageStack.layers.push(Qt.createComponent("org.kde.itinerary", "WalkingNavigationPage"), {
-            destination: helper.locationAt(root.pickedCoordinate.latitude, root.pickedCoordinate.longitude, i18nc("@info a place picked on the map", "Selected place")),
+            destination: destination,
             travelMode: mode,
         });
+    }
+
+    function navigateToPickedPlace(mode: int): void {
+        root.startNavigation(helper.locationAt(root.pickedCoordinate.latitude, root.pickedCoordinate.longitude, i18nc("@info a place picked on the map", "Selected place")), mode);
     }
 
     // only used for its helper functions
@@ -372,17 +380,17 @@ Kirigami.Page {
         QQC2.MenuItem {
             icon.name: "mark-location-symbolic"
             text: i18nc("@action:inmenu", "Walk Here")
-            onTriggered: root.startNavigation(KPublicTransport.IndividualTransport.Walk)
+            onTriggered: root.navigateToPickedPlace(KPublicTransport.IndividualTransport.Walk)
         }
         QQC2.MenuItem {
             icon.name: "mark-location-symbolic"
             text: i18nc("@action:inmenu", "Cycle Here")
-            onTriggered: root.startNavigation(KPublicTransport.IndividualTransport.Bike)
+            onTriggered: root.navigateToPickedPlace(KPublicTransport.IndividualTransport.Bike)
         }
         QQC2.MenuItem {
             icon.name: "mark-location-symbolic"
             text: i18nc("@action:inmenu", "Drive Here")
-            onTriggered: root.startNavigation(KPublicTransport.IndividualTransport.Car)
+            onTriggered: root.navigateToPickedPlace(KPublicTransport.IndividualTransport.Car)
         }
         QQC2.MenuSeparator {}
         QQC2.MenuItem {
@@ -491,12 +499,51 @@ Kirigami.Page {
                     }
                 }
             }
-            QQC2.Button {
-                icon.name: "search"
-                text: i18nc("@action", "Search connection")
-                enabled: root.journeyTo !== undefined && (root.journeyFrom !== undefined || root.hasPosition)
+            // how to get there: public transport connections, or navigation on foot, by bike or by car
+            RowLayout {
+                spacing: Kirigami.Units.smallSpacing
                 Layout.fillWidth: true
-                onClicked: root.searchConnection()
+
+                component ModeButton: QQC2.Button {
+                    display: QQC2.AbstractButton.TextUnderIcon
+                    icon.width: Kirigami.Units.iconSizes.smallMedium
+                    icon.height: Kirigami.Units.iconSizes.smallMedium
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 1 // all equally wide
+                }
+
+                ModeButton {
+                    icon.source: KPublicTransport.LineMode.iconName(KPublicTransport.Line.LocalTrain)
+                    text: i18nc("@action:button search public transport connections, short", "Transit")
+                    enabled: root.journeyTo !== undefined && (root.journeyFrom !== undefined || root.hasPosition)
+                    onClicked: root.searchConnection()
+                }
+                ModeButton {
+                    icon.source: KPublicTransport.IndividualTransportMode.modeIconName(KPublicTransport.IndividualTransport.Walk)
+                    text: i18nc("@action:button navigate on foot", "Walk")
+                    enabled: root.journeyTo !== undefined && root.journeyStartsHere
+                    onClicked: root.startNavigation(root.journeyTo, KPublicTransport.IndividualTransport.Walk)
+                }
+                ModeButton {
+                    icon.source: KPublicTransport.IndividualTransportMode.modeIconName(KPublicTransport.IndividualTransport.Bike)
+                    text: i18nc("@action:button navigate by bike", "Bike")
+                    enabled: root.journeyTo !== undefined && root.journeyStartsHere
+                    onClicked: root.startNavigation(root.journeyTo, KPublicTransport.IndividualTransport.Bike)
+                }
+                ModeButton {
+                    icon.source: KPublicTransport.IndividualTransportMode.modeIconName(KPublicTransport.IndividualTransport.Car)
+                    text: i18nc("@action:button navigate by car", "Car")
+                    enabled: root.journeyTo !== undefined && root.journeyStartsHere
+                    onClicked: root.startNavigation(root.journeyTo, KPublicTransport.IndividualTransport.Car)
+                }
+            }
+            QQC2.Label {
+                text: i18nc("@info", "Navigation on foot, by bike or by car starts at your location.")
+                visible: root.journeyTo !== undefined && !root.journeyStartsHere
+                wrapMode: Text.Wrap
+                font: Kirigami.Theme.smallFont
+                opacity: 0.7
+                Layout.fillWidth: true
             }
         }
     }
