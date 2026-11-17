@@ -44,7 +44,6 @@ if ! "$QT_IOS/bin/qt-cmake" -S "$SRC" -B "$BUILD" -G Ninja \
         -DCMAKE_OSX_ARCHITECTURES=arm64 \
         -DBUILD_SHARED_LIBS=OFF \
         -DBUILD_TESTING=OFF \
-        -DKF_IGNORE_PLATFORM_CHECK=ON \
         -DKF6_HOST_TOOLING="$HOST_PREFIX/lib/cmake" \
         -DBREEZEICONS_DIR="$WORK/breeze-icons" \
         -DITINERARY_IOS_BUNDLE_IDENTIFIER="${ITINERARY_IOS_BUNDLE_IDENTIFIER:-org.example.itinerary-fork}" \
