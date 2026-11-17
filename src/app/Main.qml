@@ -17,7 +17,7 @@ import org.kde.itinerary
 
 Kirigami.ApplicationWindow {
     id: root
-    title: i18n("KDE Itinerary")
+    title: "Trinity"
 
     width: Kirigami.Settings.isMobile ? 480 : 800
     height: Kirigami.Settings.isMobile ? 720 : 650
@@ -58,7 +58,7 @@ Kirigami.ApplicationWindow {
     }
 
     globalDrawer: Kirigami.GlobalDrawer {
-        title: i18n("KDE Itinerary")
+        title: "Trinity"
         titleIcon: "map-symbolic"
         isMenu: !Kirigami.Settings.isMobile
 

@@ -77,7 +77,7 @@ android {
     defaultConfig {
         minSdkVersion qtMinSdkVersion
         targetSdkVersion qtTargetSdkVersion
-        applicationId "org.kde.itinerary"
+        applicationId "at.blechert.trinity"
         namespace "org.kde.itinerary"
         versionName ecmVersionName
         versionCode ecmVersionCode

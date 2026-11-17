@@ -261,18 +261,18 @@ int main(int argc, char **argv)
         QQuickStyle::setStyle(QStringLiteral("org.kde.desktop"));
     }
 #endif
-    QGuiApplication::setApplicationDisplayName(i18n("KDE Itinerary"));
+    QGuiApplication::setApplicationDisplayName(u"Trinity"_s);
     QGuiApplication::setWindowIcon(QIcon::fromTheme(QStringLiteral("org.kde.itinerary")));
 
     auto aboutData = KAboutData::applicationData();
-    aboutData.setBugAddress("submit@bugs.kde.org");
-    aboutData.setProductName("KDE Itinerary/general"); // Bugzilla product/component name
+    aboutData.setBugAddress("https://github.com/jblechert/trinity/issues");
     aboutData.setLicense(KAboutLicense::LGPL_V2, KAboutLicense::OrLaterVersions);
-    aboutData.setHomepage(QStringLiteral("https://apps.kde.org/itinerary"));
-    aboutData.setShortDescription(i18n("Digital Travel Assistant"));
+    aboutData.setHomepage(QStringLiteral("https://github.com/jblechert/trinity"));
+    aboutData.setShortDescription(i18nc("@info", "Tickets, connections and maps in one app, based on KDE Itinerary"));
     aboutData.setCopyrightStatement(i18n("Copyright © The KDE Community"));
     aboutData.setDesktopFileName(QStringLiteral("org.kde.itinerary"));
 
+    aboutData.addComponent(i18nc("@info:credit", "KDE Itinerary"), i18nc("@info:credit", "The digital travel assistant by the KDE Community, which Trinity is based on."), {}, u"https://apps.kde.org/itinerary"_s, KAboutLicense::LGPL_V2);
     aboutData.addComponent(i18nc("@info:credit", "Wikidata"), i18nc("@info:credit", "Provides various metadata like train station names, driving side, and power plug types."), {}, u"https://www.wikidata.org/"_s, KAboutLicense::CC0_V1);
     aboutData.addComponent(i18nc("@info:credit", "OpenStreetMap"), i18nc("@info:credit", "Provides both indoor and outdoor maps. ©OpenStreetMap contributors"), {}, u"https://www.openstreetmap.org/"_s, KAboutLicense::ODbL_V1);
     aboutData.addComponent(i18nc("@info:credit", "OpenSSL"), i18nc("@info:credit", "Secure network interaction with TLS. © 1998-2018 The OpenSSL Project"), {}, u"https://www.openssl.org/"_s, KAboutLicense::Apache_V2);

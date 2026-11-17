@@ -519,8 +519,8 @@ elseif (IOS)
         FILES sc-apps-org.kde.itinerary.svg
     )
 
-    set(ITINERARY_IOS_BUNDLE_IDENTIFIER "org.kde.itinerary" CACHE STRING "Bundle identifier of the iOS app")
-    set(ITINERARY_IOS_DISPLAY_NAME "KDE Itinerary" CACHE STRING "Name of the iOS app shown on the home screen")
+    set(ITINERARY_IOS_BUNDLE_IDENTIFIER "at.blechert.trinity" CACHE STRING "Bundle identifier of the iOS app")
+    set(ITINERARY_IOS_DISPLAY_NAME "Trinity" CACHE STRING "Name of the iOS app shown on the home screen")
     set_target_properties(itinerary-app PROPERTIES
         OUTPUT_NAME "itinerary"
         MACOSX_BUNDLE TRUE

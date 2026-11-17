@@ -30,7 +30,7 @@ GpxExport::GpxExport(QIODevice *out)
     : m_writer(out)
 {
     m_writer.writeStartMetadata();
-    m_writer.writeLink(QStringLiteral("https://apps.kde.org/itinerary"), i18n("KDE Itinerary"));
+    m_writer.writeLink(QStringLiteral("https://github.com/jblechert/trinity"), QStringLiteral("Trinity"));
     m_writer.writeEndMetadata();
 }
 
