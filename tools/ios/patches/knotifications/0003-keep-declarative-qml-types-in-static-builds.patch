@@ -1,0 +1,28 @@
+diff --git a/src/qml/knotificationqmlplugin.cpp b/src/qml/knotificationqmlplugin.cpp
+index 542a2dd..8b0e084 100644
+--- a/src/qml/knotificationqmlplugin.cpp
++++ b/src/qml/knotificationqmlplugin.cpp
+@@ -72,12 +72,23 @@ void NotificationWrapper::clearActions(QQmlListProperty<KNotificationAction> *li
+ }
+ 
+ 
++// reference the declarative type registration, otherwise it is dropped when linking statically
++extern void qml_register_types_org_kde_notification();
++Q_GHS_KEEP_REFERENCE(qml_register_types_org_kde_notification)
++
+ class KNotificationsQmlPlugin : public QQmlExtensionPlugin
+ {
+     Q_OBJECT
+     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
+ 
+ public:
++    explicit KNotificationsQmlPlugin(QObject *parent = nullptr)
++        : QQmlExtensionPlugin(parent)
++    {
++        volatile auto registration = &qml_register_types_org_kde_notification;
++        Q_UNUSED(registration)
++    }
++
+     void registerTypes(const char *uri) override;
+ };
+ 

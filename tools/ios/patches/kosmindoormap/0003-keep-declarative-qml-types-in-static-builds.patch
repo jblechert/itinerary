@@ -1,0 +1,37 @@
+diff --git a/src/map-quick/kosmindoormapquickplugin.cpp b/src/map-quick/kosmindoormapquickplugin.cpp
+index a65368d..77150a1 100644
+--- a/src/map-quick/kosmindoormapquickplugin.cpp
++++ b/src/map-quick/kosmindoormapquickplugin.cpp
+@@ -16,6 +16,17 @@
+ 
+ using namespace KOSMIndoorMap;
+ 
++// reference the declarative type registration, otherwise it is dropped when linking statically
++extern void qml_register_types_org_kde_kosmindoormap();
++Q_GHS_KEEP_REFERENCE(qml_register_types_org_kde_kosmindoormap)
++
++KOSMIndoorMapQuickPlugin::KOSMIndoorMapQuickPlugin(QObject *parent)
++    : QQmlExtensionPlugin(parent)
++{
++    volatile auto registration = &qml_register_types_org_kde_kosmindoormap;
++    Q_UNUSED(registration)
++}
++
+ void KOSMIndoorMapQuickPlugin::registerTypes(const char *uri)
+ {
+     Q_UNUSED(uri);
+diff --git a/src/map-quick/kosmindoormapquickplugin.h b/src/map-quick/kosmindoormapquickplugin.h
+index b975842..547de86 100644
+--- a/src/map-quick/kosmindoormapquickplugin.h
++++ b/src/map-quick/kosmindoormapquickplugin.h
+@@ -14,7 +14,10 @@ class KOSMIndoorMapQuickPlugin : public QQmlExtensionPlugin
+ {
+     Q_OBJECT
+     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface")
++
+ public:
++    explicit KOSMIndoorMapQuickPlugin(QObject *parent = nullptr);
++
+     void registerTypes(const char *uri) override;
+ };
+ 

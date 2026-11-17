@@ -1,0 +1,28 @@
+diff --git a/src/qml/kopeninghoursqmlplugin.cpp b/src/qml/kopeninghoursqmlplugin.cpp
+index c065523..eeef7e0 100644
+--- a/src/qml/kopeninghoursqmlplugin.cpp
++++ b/src/qml/kopeninghoursqmlplugin.cpp
+@@ -12,11 +12,23 @@
+ #include <QQmlEngine>
+ #include <QQmlExtensionPlugin>
+ 
++// reference the declarative type registration, otherwise it is dropped when linking statically
++extern void qml_register_types_org_kde_kopeninghours();
++Q_GHS_KEEP_REFERENCE(qml_register_types_org_kde_kopeninghours)
++
+ class KOpeningHoursQmlPlugin : public QQmlExtensionPlugin
+ {
+     Q_OBJECT
+     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface")
++
+ public:
++    explicit KOpeningHoursQmlPlugin(QObject *parent = nullptr)
++        : QQmlExtensionPlugin(parent)
++    {
++        volatile auto registration = &qml_register_types_org_kde_kopeninghours;
++        Q_UNUSED(registration)
++    }
++
+     void registerTypes(const char* uri) override;
+ };
+ 
