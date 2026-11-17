@@ -6344,3 +6344,18 @@ msgstr "Verbindung hierher"
 msgctxt "@info:placeholder"
 msgid "Search, or tap and hold on the map"
 msgstr "Suchen oder lange auf die Karte tippen"
+
+#: fork
+msgctxt "@option:check consider bike sharing in the journey search"
+msgid "Rental bikes"
+msgstr "Leihräder"
+
+#: fork
+msgctxt "@info"
+msgid "To and from stations, or all the way, where bike sharing is known"
+msgstr "Zu und von Haltestellen oder die ganze Strecke, wo Bikesharing bekannt ist"
+
+#: fork
+msgctxt "@action:button rent a bike from a bike sharing service"
+msgid "Rent at %1"
+msgstr "Bei %1 leihen"
