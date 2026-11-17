@@ -2,7 +2,8 @@
 # SPDX-FileCopyrightText: 2026 Janis Blechert <janis@blechert.at>
 # SPDX-License-Identifier: BSD-3-Clause
 #
-# Build the dependencies of Itinerary for iOS (arm64 devices) as static libraries.
+# Build the dependencies of Itinerary for iOS as static libraries, for arm64 devices or, with
+# IOS_PLATFORM=simulator, for the simulator (see platform.sh). Use separate prefixes for both.
 # Needs macOS with Xcode, Qt for iOS and the matching desktop Qt for the host tools,
 # plus ninja, gettext, gperf, bison and flex.
 #
@@ -16,6 +17,8 @@ set -euo pipefail
 QT_IOS="$1"
 PREFIX="$2"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=platform.sh
+. "$HERE/platform.sh"
 WORK="${IOS_WORK_DIR:-$PWD/ios-work}"
 QT_HOST_PATH="${QT_HOST_PATH:-$(dirname "$QT_IOS")/macos}"
 # build tools that run during the build (e.g. kconfig_compiler) are built for macOS, see host-deps.txt
@@ -108,7 +111,7 @@ while read -r name url ref args; do
     if [ "$name" = openssl ]; then
         if ! {
             cd "$src" \
-            && ./Configure ios64-xcrun no-shared no-tests no-apps no-docs no-module \
+            && ./Configure "$IOS_OPENSSL_TARGET" "$IOS_VERSION_MIN_FLAG=$IOS_DEPLOYMENT_TARGET" no-shared no-tests no-apps no-docs no-module \
                 --prefix="$PREFIX" --openssldir="$PREFIX/ssl" $args \
             && make -j"$(sysctl -n hw.ncpu)" build_libs \
             && make install_dev \
@@ -132,7 +135,8 @@ while read -r name url ref args; do
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
             -DQT_MAJOR_VERSION=6 \
-            -DCMAKE_OSX_ARCHITECTURES=arm64 \
+            -DCMAKE_OSX_SYSROOT="$IOS_SYSROOT" \
+            -DCMAKE_OSX_ARCHITECTURES="$IOS_ARCH" \
             -DBUILD_SHARED_LIBS=OFF \
             -DBUILD_TESTING=OFF \
             -DBUILD_PYTHON_BINDINGS=OFF \

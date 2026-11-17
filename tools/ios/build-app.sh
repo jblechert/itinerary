@@ -2,7 +2,8 @@
 # SPDX-FileCopyrightText: 2026 Janis Blechert <janis@blechert.at>
 # SPDX-License-Identifier: BSD-3-Clause
 #
-# Build the Itinerary app for iOS (arm64 devices), against the dependencies built by build-deps.sh.
+# Build the Itinerary app for iOS (arm64 devices, or the simulator with IOS_PLATFORM=simulator, see platform.sh),
+# against the dependencies built by build-deps.sh for the same platform.
 # The result is an unsigned app bundle, signing happens in Xcode by the publishing account.
 #
 # Usage: tools/ios/build-app.sh <Qt for iOS dir> <dependency prefix> [build dir]
@@ -15,6 +16,8 @@ QT_IOS="$1"
 PREFIX="$2"
 BUILD="${3:-$PWD/ios-build}"
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# shellcheck source=platform.sh
+. "$SRC/tools/ios/platform.sh"
 WORK="${IOS_WORK_DIR:-$PWD/ios-work}"
 QT_HOST_PATH="${QT_HOST_PATH:-$(dirname "$QT_IOS")/macos}"
 HOST_PREFIX="$PREFIX/host"
@@ -41,7 +44,8 @@ if ! "$QT_IOS/bin/qt-cmake" -S "$SRC" -B "$BUILD" -G Ninja \
         -DCMAKE_INSTALL_PREFIX="$PREFIX" \
         -DCMAKE_BUILD_TYPE=Release \
         -DQT_MAJOR_VERSION=6 \
-        -DCMAKE_OSX_ARCHITECTURES=arm64 \
+        -DCMAKE_OSX_SYSROOT="$IOS_SYSROOT" \
+        -DCMAKE_OSX_ARCHITECTURES="$IOS_ARCH" \
         -DBUILD_SHARED_LIBS=OFF \
         -DBUILD_TESTING=OFF \
         -DKF6_HOST_TOOLING="$HOST_PREFIX/lib/cmake" \
@@ -73,7 +77,7 @@ fi
 if [ -f "$app/LaunchScreen.storyboard" ]; then
     deployment_target="$(sed -n 's/^CMAKE_OSX_DEPLOYMENT_TARGET:[A-Z]*=//p' "$BUILD/CMakeCache.txt")"
     xcrun ibtool --compile "$app/LaunchScreen.storyboardc" "$app/LaunchScreen.storyboard" \
-        --minimum-deployment-target "${deployment_target:-17.0}" --target-device iphone --target-device ipad
+        --minimum-deployment-target "${deployment_target:-$IOS_DEPLOYMENT_TARGET}" --target-device iphone --target-device ipad
     rm "$app/LaunchScreen.storyboard"
 fi
 echo "Built $app"
