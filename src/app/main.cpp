@@ -65,11 +65,11 @@
 #include <KPkPass/BoardingPass>
 #include <KPkPass/Field>
 
-#ifndef Q_OS_ANDROID
+#if defined(Q_OS_ANDROID) || defined(Q_OS_IOS)
+#include <KColorSchemeManager>
+#else
 #include <KDBusService>
 #include <KWindowSystem>
-#else
-#include <KColorSchemeManager>
 #endif
 
 #include <KLocalizedQmlContext>
@@ -87,7 +87,7 @@
 #ifdef Q_OS_ANDROID
 #include "kandroidextras/activity.h"
 #include "kandroidextras/intent.h"
-#else
+#elif !defined(Q_OS_IOS)
 #include <QApplication>
 #endif
 
@@ -196,7 +196,7 @@ int main(int argc, char **argv)
     QCoreApplication::setOrganizationName(QStringLiteral("KDE"));
     QCoreApplication::setOrganizationDomain(QStringLiteral("kde.org"));
     QCoreApplication::setApplicationVersion(QStringLiteral(ITINERARY_VERSION_STRING));
-#ifdef Q_OS_ANDROID
+#if defined(Q_OS_ANDROID) || defined(Q_OS_IOS)
     QGuiApplication app(argc, argv);
     QQuickStyle::setStyle(QStringLiteral("org.kde.breeze"));
     KColorSchemeManager::instance(); // enables automatic dark mode handling
@@ -225,7 +225,9 @@ int main(int argc, char **argv)
     aboutData.addComponent(i18nc("@info:credit", "OpenStreetMap"), i18nc("@info:credit", "Provides both indoor and outdoor maps. ©OpenStreetMap contributors"), {}, u"https://www.openstreetmap.org/"_s, KAboutLicense::ODbL_V1);
     aboutData.addComponent(i18nc("@info:credit", "OpenSSL"), i18nc("@info:credit", "Secure network interaction with TLS. © 1998-2018 The OpenSSL Project"), {}, u"https://www.openssl.org/"_s, KAboutLicense::Apache_V2);
     aboutData.addComponent(i18nc("@info:credit", "ZXing"), i18nc("@info:credit", "QR-Code scanning. © 2016 ZXing Authors, © 2016 Nu-book Inc."), {}, u"https://github.com/nu-book/zxing-cpp"_s, KAboutLicense::Apache_V2);
+#ifndef Q_OS_IOS // built without Poppler on iOS
     aboutData.addComponent(i18nc("@info:credit", "Poppler"), i18nc("@info:credit", "PDF parsing"), {}, u"https://poppler.freedesktop.org/"_s, KAboutLicense::GPL_V2);
+#endif
 
 #if HAVE_MAPLIBRE
     aboutData.addComponent(i18nc("@info:credit", "MapLibre Native Qt"), i18nc("@info:credit", "Copyright © MapLibre contributors."), {}, u"https://github.com/maplibre/maplibre-native-qt"_s, KAboutLicense::LGPL_V3);
@@ -234,6 +236,8 @@ int main(int argc, char **argv)
 
 #ifdef Q_OS_ANDROID
     aboutData.addComponent(i18nc("@info:credit", "FreeType"), i18nc("@info:credit", "Copyright (C) 2006-2020 by David Turner, Robert Wilhelm, and Werner Lemberg."), {}, u"https://www.freetype.org/"_s, KAboutLicense::FTL);
+#endif
+#if defined(Q_OS_ANDROID) || defined(Q_OS_IOS)
     aboutData.addComponent(i18nc("@info:credit", "libintl lite"), i18nc("@info:credit", "Internalisation"), {}, u"https://github.com/j-jorge/libintl-lite"_s, KAboutLicense::BSL_V1);
 #endif
 
@@ -265,7 +269,7 @@ int main(int argc, char **argv)
     KCrash::initialize();
 #endif
 
-#if !defined(Q_OS_ANDROID) && !defined(Q_OS_HAIKU)
+#if !defined(Q_OS_ANDROID) && !defined(Q_OS_IOS) && !defined(Q_OS_HAIKU)
     KDBusService service(KDBusService::Unique);
 #endif
 
@@ -364,7 +368,7 @@ int main(int argc, char **argv)
     appController.setTripGroupManager(&tripGroupMgr);
     appController.setPassManager(&passMgr);
     appController.setContextTripGroupId(tripGroupModel.currentTripGroupId());
-#if !defined(Q_OS_ANDROID) && !defined(Q_OS_HAIKU)
+#if !defined(Q_OS_ANDROID) && !defined(Q_OS_IOS) && !defined(Q_OS_HAIKU)
     QObject::connect(&service, &KDBusService::activateRequested, [&](const QStringList &args, const QString &workingDir) {
         qCDebug(Log) << "remote activation" << args << workingDir;
         if (!args.isEmpty()) {

@@ -3,28 +3,68 @@
     SPDX-FileCopyrightText: 2026 Janis Blechert <janis@blechert.at>
     SPDX-License-Identifier: CC0-1.0
 
-    Draft of the iOS specific Info.plist entries, see PORTING.md. Not used by the build yet.
-    ${...} placeholders are to be filled in by CMake/Xcode.
+    Info.plist of the iOS app, based on Qt's default template.
+    @...@ placeholders are filled in by Qt, ${...} placeholders by CMake.
 -->
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>CFBundleIdentifier</key>
-    <string>${BUNDLE_IDENTIFIER}</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleName</key>
+    <string>${MACOSX_BUNDLE_BUNDLE_NAME}</string>
     <key>CFBundleDisplayName</key>
-    <string>${APP_DISPLAY_NAME}</string>
-    <key>CFBundleShortVersionString</key>
-    <string>${VERSION}</string>
+    <string>${ITINERARY_IOS_DISPLAY_NAME}</string>
+    <key>CFBundleIdentifier</key>
+    <string>${MACOSX_BUNDLE_GUI_IDENTIFIER}</string>
+    <key>CFBundleExecutable</key>
+    <string>${MACOSX_BUNDLE_EXECUTABLE_NAME}</string>
     <key>CFBundleVersion</key>
-    <string>${BUILD_NUMBER}</string>
+    <string>${MACOSX_BUNDLE_BUNDLE_VERSION}</string>
+    <key>CFBundleShortVersionString</key>
+    <string>${MACOSX_BUNDLE_SHORT_VERSION_STRING}</string>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleAllowMixedLocalizations</key>
+    <true/>
+    <key>CFBundleSupportedPlatforms</key>
+    <array>
+        <string>iPhoneOS</string>
+    </array>
+    <key>MinimumOSVersion</key>
+    <string>${CMAKE_OSX_DEPLOYMENT_TARGET}</string>
+    <key>LSRequiresIPhoneOS</key>
+    <true/>
+    <!-- iPhone and iPad -->
+    <key>UIDeviceFamily</key>
+    <array>
+        <integer>1</integer>
+        <integer>2</integer>
+    </array>
+
+    <key>UILaunchStoryboardName</key>
+    <string>@qt_ios_launch_screen_plist_entry@</string>
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
+    <key>UISupportedInterfaceOrientations~ipad</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationPortraitUpsideDown</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
 
     <!-- permissions, only requested when the feature is used -->
     <key>NSLocationWhenInUseUsageDescription</key>
     <string>Your location is used to find connections from where you are, and for walking directions to the departure stop.</string>
     <key>NSCameraUsageDescription</key>
     <string>The camera is used to scan ticket barcodes.</string>
-    <key>NSCalendarsFullAccessUsageDescription</key>
-    <string>Calendar events can be imported as trips.</string>
 
     <!-- map applications for walking directions, needed for canOpenURL() -->
     <key>LSApplicationQueriesSchemes</key>
@@ -58,7 +98,6 @@
             <string>Alternate</string>
             <key>LSItemContentTypes</key>
             <array>
-                <string>com.adobe.pdf</string>
                 <string>public.calendar-event</string>
                 <string>public.json</string>
             </array>
@@ -66,14 +105,5 @@
     </array>
     <key>LSSupportsOpeningDocumentsInPlace</key>
     <false/>
-
-    <key>UISupportedInterfaceOrientations</key>
-    <array>
-        <string>UIInterfaceOrientationPortrait</string>
-        <string>UIInterfaceOrientationLandscapeLeft</string>
-        <string>UIInterfaceOrientationLandscapeRight</string>
-    </array>
-    <key>UILaunchStoryboardName</key>
-    <string>LaunchScreen</string>
 </dict>
 </plist>
