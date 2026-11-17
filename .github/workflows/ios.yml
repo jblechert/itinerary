@@ -84,8 +84,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ios-build-logs
+          # the generated QML plugin imports and Info.plist are in hidden .qt directories
+          include-hidden-files: true
           path: |
             ios-prefix/logs
             ios-build/CMakeCache.txt
-            ios-build/src/app/.qt/**/*.cpp
+            ios-build/src/app/*_plugin_imports*.cpp
+            ios-build/src/app/.qt/qml_imports/**
             ios-build/src/app/.qt/info_plist/**
