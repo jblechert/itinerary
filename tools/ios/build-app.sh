@@ -69,4 +69,12 @@ if [ -z "$app" ]; then
     echo "!! no app bundle found"
     exit 1
 fi
+
+# with the Ninja generator the launch screen is copied as is, but iOS needs it compiled
+if [ -f "$app/LaunchScreen.storyboard" ]; then
+    deployment_target="$(sed -n 's/^CMAKE_OSX_DEPLOYMENT_TARGET:[A-Z]*=//p' "$BUILD/CMakeCache.txt")"
+    xcrun ibtool --compile "$app/LaunchScreen.storyboardc" "$app/LaunchScreen.storyboard" \
+        --minimum-deployment-target "${deployment_target:-17.0}" --target-device iphone --target-device ipad
+    rm "$app/LaunchScreen.storyboard"
+fi
 echo "Built $app"
