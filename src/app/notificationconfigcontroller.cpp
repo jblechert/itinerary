@@ -18,13 +18,15 @@
 #include <QCoreApplication>
 #include <QDebug>
 #include <QDesktopServices>
+#if QT_CONFIG(process)
 #include <QProcess>
+#endif
 #include <QStandardPaths>
 #include <QUrl>
 
 using namespace Qt::Literals;
 
-#ifndef Q_OS_ANDROID
+#if !defined(Q_OS_ANDROID) && !defined(Q_OS_IOS)
 struct {
     bool initialized : 1 = false;
     bool hasSystemSettingsUri : 1 = false;
@@ -46,18 +48,20 @@ static void detectCapabilities()
 
     s_capabilities.hasSystemSettingsUri = !QStandardPaths::findExecutable(u"systemsettings"_s).isEmpty();
 
+#if QT_CONFIG(process)
     if (!s_capabilities.hasSystemSettingsUri) {
         QProcess proc;
         proc.start(u"kcmshell6"_s, {u"--list"_s});
         proc.waitForFinished();
         s_capabilities.hasKcm = proc.readAllStandardOutput().contains("\nkcm_notifications "_L1);
     }
+#endif
 }
 #endif
 
 bool NotificationConfigController::canConfigureNotification()
 {
-#ifdef Q_OS_ANDROID
+#if defined(Q_OS_ANDROID) || defined(Q_OS_IOS)
     return true;
 #else
     detectCapabilities();
@@ -83,6 +87,9 @@ void NotificationConfigController::configureNotifications()
     intent.setAction(Settings::ACTION_APP_NOTIFICATION_SETTINGS);
     intent.putExtra<java::lang::String>(Settings::EXTRA_APP_PACKAGE, Context::getPackageName());
     Activity::startActivity(intent, 0);
+#elif defined(Q_OS_IOS)
+    // UIApplicationOpenSettingsURLString, opens the app's page in the system settings including its notification settings
+    QDesktopServices::openUrl(QUrl(u"app-settings:"_s));
 #else
     detectCapabilities();
     if (s_capabilities.hasSystemSettingsUri) {
@@ -94,12 +101,14 @@ void NotificationConfigController::configureNotifications()
         return;
     }
 
+#if QT_CONFIG(process)
     if (s_capabilities.hasKcm) {
         QProcess proc;
         proc.setProgram(u"kcmshell6"_s);
         proc.setArguments({u"--args"_s, "--notifyrc %1"_L1.arg(QCoreApplication::applicationName()), u"notifications"_s});
         proc.startDetached();
     }
+#endif
 #endif
 }
 
