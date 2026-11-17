@@ -57,6 +57,59 @@ fetch() {
     done
 }
 
+# The translations of KDE packages are not in their git repositories, only in the release tarballs.
+# Prints the tarball URL of a package, or nothing for packages not released on download.kde.org.
+release_tarball() {
+    local name="$1" url="$2" version="${3#v}"
+    case "$url" in
+        https://invent.kde.org/frameworks/*)
+            echo "https://download.kde.org/stable/frameworks/${version%.*}/$name-$version.tar.xz" ;;
+        https://invent.kde.org/plasma/*)
+            echo "https://download.kde.org/stable/plasma/$version/$name-$version.tar.xz" ;;
+        https://invent.kde.org/*)
+            # KDE Gear versions are year.month.patch, everything else is released on its own
+            if [[ "$version" =~ ^[0-9]{2}\.[0-9]{2}\.[0-9]+$ ]]; then
+                echo "https://download.kde.org/stable/release-service/$version/src/$name-$version.tar.xz"
+            else
+                echo "https://download.kde.org/stable/$name/$name-$version.tar.xz"
+            fi ;;
+    esac
+}
+
+# Installs the compiled translations of a package to $PREFIX/share/locale: gettext catalogs (po/) as .mo
+# and Qt translations (poqm/) as .qm. Missing translations are not an error, they only show up as English text.
+install_translations() {
+    local name="$1" url="$2" ref="$3"
+    local marker="$PREFIX/.translations-$name-$ref"
+    [ -f "$marker" ] && return
+    local tarball
+    tarball="$(release_tarball "$name" "$url" "$ref")"
+    [ -n "$tarball" ] || return 0
+    echo "== translations of $name $ref"
+    local dir="$WORK/translations/$name"
+    rm -rf "$dir"
+    mkdir -p "$dir"
+    if ! curl -fsSL --retry 3 "$tarball" | tar -xJf - -C "$dir" --strip-components 1; then
+        echo "   no translations for $name: downloading $tarball failed"
+        return 0
+    fi
+    local lconvert="$QT_HOST_PATH/bin/lconvert" po lang dest count=0
+    for po in "$dir"/po/*/*.po "$dir"/poqm/*/*.po; do
+        [ -f "$po" ] || continue
+        lang="$(basename "$(dirname "$po")")"
+        dest="$PREFIX/share/locale/$lang/LC_MESSAGES"
+        mkdir -p "$dest"
+        case "$po" in
+            "$dir"/po/*) msgfmt -o "$dest/$(basename "$po" .po).mo" "$po" ;;
+            *) "$lconvert" -i "$po" -o "$dest/$(basename "$po" .po).qm" ;;
+        esac || { echo "   compiling $po failed"; continue; }
+        count=$((count + 1))
+    done
+    echo "   installed $count translation catalogs"
+    rm -rf "$dir"
+    touch "$marker"
+}
+
 # host tools, built natively for macOS with the desktop Qt
 while read -r name url ref args; do
     marker="$HOST_PREFIX/.built-$name-$ref$(patches_hash "$name")$(args_hash "$args")"
@@ -93,6 +146,7 @@ while read -r name url ref args; do
 done < <(grep -vE '^\s*(#|$)' "$HERE/host-deps.txt")
 
 while read -r name url ref args; do
+    install_translations "$name" "$url" "$ref"
     marker="$PREFIX/.built-$name-$ref$(patches_hash "$name")$(args_hash "$args")"
     if [ -f "$marker" ]; then
         echo "== $name $ref: already built"
