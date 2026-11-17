@@ -1,8 +1,9 @@
 # Porting this fork to iOS
 
 Status: the dependencies and the app build in CI (`.github/workflows/ios.yml`) as an unsigned app bundle for
-arm64 devices, uploaded as the `itinerary-ios-unsigned` workflow artifact. It has not been run on a device or in
-the simulator yet, see "Open issues".
+arm64 devices, uploaded as the `itinerary-ios-unsigned` workflow artifact, and for the simulator
+(`itinerary-ios-simulator`). The CI starts the simulator build in the iOS Simulator and uploads screenshots and logs
+(`ios-simulator-smoke-test`), see "Testing in the simulator". It has not been run on a device yet.
 
 This document collects what an iPhone version of this fork needs, so the work can be picked up on a Mac.
 KDE Itinerary itself has no iOS version, and KDE's build infrastructure (Craft CI) has no iOS target.
@@ -17,6 +18,22 @@ Qt for iOS and the matching desktop Qt (for host tools):
 
 `build-deps.sh` applies the patches in `tools/ios/patches/<package>/` (fixes for iOS and static builds, all meant
 to go upstream) and only rebuilds a package when its version, patches or arguments change. The CI caches the prefix.
+A changed patch of a library doesn't rebuild the packages depending on it; that is only a problem for patches of
+generated code, e.g. ECM's translation loader.
+
+Both scripts build for arm64 devices by default, and for the simulator with `IOS_PLATFORM=simulator` (see
+`tools/ios/platform.sh`), which needs its own prefix and build directory. The simulator architecture is x86_64, as the
+simulator slices of the Qt for iOS binary packages are x86_64 only (the arm64 slices are for devices); x86_64 apps
+run in the simulator on Apple Silicon Macs too. The CI builds both as a matrix on the Intel runner, with separate
+dependency caches (`ios-deps-*` and `ios-simulator-deps-*`); building all dependencies from scratch takes about
+1.5 hours.
+
+Translations are not in the git repositories of the KDE dependencies, so `build-deps.sh` also downloads their
+release tarballs from download.kde.org and installs the compiled catalogs (`.mo` from `po/`, `.qm` from `poqm/`)
+into the prefix. `build-app.sh` copies those and the app's own catalogs into `itinerary.app/locale/` (only for the
+languages the app is translated to), where KI18n and ECM's Qt translation loader find them on iOS through the app's
+data locations (patches for KI18n and ECM). The country data of iso-codes (`iso_3166-1.json`, `iso_3166-2.json`)
+used by KI18n's locale data is bundled in `itinerary.app/iso-codes/json/` the same way.
 
 `build-app.sh` sets the bundle identifier (`org.example.itinerary-fork`, a placeholder) and the name on the home
 screen (`Itinerary (unofficial)`); both can be overridden with `ITINERARY_IOS_BUNDLE_IDENTIFIER` and
@@ -35,6 +52,13 @@ configuring with `-G Xcode` instead of Ninja should work too, as Qt recommends f
   static QML plugins), and the Breeze icons are compiled into the app as resources
   (`kirigami_package_breeze_icons(TARGET ...)`, added by a Kirigami patch). The QML debugging plugins and Qt
   Multimedia's FFmpeg backend are left out, the camera uses the AVFoundation backend.
+- Static linking pitfalls found at runtime: QML plugins with a custom plugin class must reference the declarative type
+  registration of their module (`qml_register_types_<uri>`), otherwise the C++ types (`QML_ELEMENT`) are dropped by
+  the linker ("... is not a type"); patched in KGuiAddons, KCoreAddons, KContacts, KCalendarCore, KNotifications,
+  KOpeningHours, KPublicTransport and KOSMIndoorMap. Global helper types of different QML plugins can clash
+  (`PlatformForeign` in KPublicTransport and KOSMIndoorMap). Kirigami's platform theme plugin of the Breeze style
+  (`org.kde.breeze`) has to be linked by the app, and KIconThemes needed to learn where a static Kirigami keeps its
+  icon theme.
 - Disabled, as the libraries aren't built for iOS: Matrix location sharing (libQuotient, olm), the health
   certificate manager (KHealthCertificate), MapLibre maps (maplibre-native-qt), Solid. KCrash is built but not
   used (there is no crash handler on iOS), the calendar import plugin is Android only.
@@ -47,9 +71,9 @@ configuring with `-G Xcode` instead of Ninja should work too, as Qt recommends f
 
 ### Open issues
 
-- Not tested at runtime. The simulator needs the dependencies built for the simulator architecture too
-  (`CMAKE_OSX_SYSROOT=iphonesimulator`, arm64/x86_64), which `build-deps.sh` doesn't do yet.
-- Translations: KI18n looks for them in the data directories, they are not in the app bundle yet.
+- Only tested in the simulator so far, and only as far as the screenshots of the smoke test show.
+- Qt translations (`.qm`, e.g. Kirigami's) are bundled but not loaded: ECM's translation loader is a separate object
+  file in the static libraries, which the linker drops as nothing references it. Gettext catalogs (KI18n) work.
 - Resources of static libraries that are not referenced from code (e.g. Qt resources in KOSMIndoorMap's
   helper libraries) may need explicit `Q_INIT_RESOURCE` calls.
 - App icons (asset catalog), privacy manifest and the remaining App Store metadata are still missing, see
@@ -58,6 +82,19 @@ configuring with `-G Xcode` instead of Ninja should work too, as Qt recommends f
 - Opening documents and walking directions in other apps use the generic desktop code paths, see the table below.
   Opening an attached document with `QDesktopServices` now ends up in the import, as file URLs are handled by it.
 - LGPL relinking requirement with a static app, see "Licensing".
+
+## Testing in the simulator
+
+`tools/ios/simulator-smoke-test.sh <app> <output dir>` boots the newest iPhone simulator, installs the app and starts
+it twice: freshly installed (welcome page), and with the welcome page marked as shown in its settings and German as
+language (`LANGUAGE=de`, main page). It fails if the app doesn't run anymore after 30 seconds, and stores screenshots,
+the console output of the app (Qt logs to stderr with `QT_FORCE_STDERR_LOGGING=1`), its system log and crash reports.
+The location permission is granted beforehand and a location is set: the app asks for the permission right away, and
+without a location starting the app took about 20 seconds longer.
+
+Locally, `xcrun simctl launch --console-pty booted org.example.itinerary-fork` shows the app's output.
+The settings of the app (QSettings) are in the user defaults of the app on iOS, they can be changed with
+`xcrun simctl spawn booted defaults write <app data container>/Library/Preferences/org.kde.itinerary <key> <value>`.
 
 ## Prerequisites
 

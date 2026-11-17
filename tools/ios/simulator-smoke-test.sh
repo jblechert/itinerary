@@ -53,11 +53,11 @@ install() {
     xcrun simctl privacy "$udid" grant location "$bundle_id"
 }
 
-# whether the app has a running process
-is_running() {
+# the process ID of the running app, fails if it isn't running
+app_pid() {
     local services
     services="$(xcrun simctl spawn "$udid" launchctl list)"
-    awk -v label="UIKitApplication:$bundle_id" 'index($3, label) == 1 && $1 != "-" { found = 1 } END { exit !found }' <<< "$services"
+    awk -v label="UIKitApplication:$bundle_id" 'index($3, label) == 1 && $1 != "-" { print $1; found = 1 } END { exit !found }' <<< "$services"
 }
 
 failed=0
@@ -73,9 +73,13 @@ run() {
         xcrun simctl launch --console-pty --terminate-running-process "$udid" "$bundle_id" > "$OUT/console-$name.log" 2>&1 &
     local launch_pid=$!
     sleep "$WAIT"
-    local running=1
-    is_running || running=0
+    local running=1 pid
+    pid="$(app_pid)" || running=0
     xcrun simctl io "$udid" screenshot "$OUT/screenshot-$name.png" > /dev/null 2>&1 || true
+    # simulated apps are processes of the host, so their stacks can be sampled, e.g. to see where they hang
+    if [ "$running" = 1 ]; then
+        sample "$pid" 3 -file "$OUT/sample-$name.txt" > /dev/null 2>&1 || true
+    fi
     xcrun simctl terminate "$udid" "$bundle_id" 2> /dev/null || true
     kill "$launch_pid" 2> /dev/null || true
     wait "$launch_pid" 2> /dev/null || true
