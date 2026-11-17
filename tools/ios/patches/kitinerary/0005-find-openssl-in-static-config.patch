@@ -1,0 +1,12 @@
+diff --git a/KPimItineraryConfig.cmake.in b/KPimItineraryConfig.cmake.in
+index d02ed76..0ec2e0e 100644
+--- a/KPimItineraryConfig.cmake.in
++++ b/KPimItineraryConfig.cmake.in
+@@ -24,6 +24,7 @@ if (NOT @BUILD_SHARED_LIBS@)
+         find_dependency(Poppler)
+     endif()
+     find_dependency(ZXing)
++    find_dependency(OpenSSL COMPONENTS Crypto)
+     if (@HAVE_LIBXML2@)
+         find_dependency(LibXml2)
+     endif()
