@@ -27,7 +27,7 @@ HOST_PREFIX="$PREFIX/host"
 mkdir -p "$PREFIX/logs" "$WORK"
 
 # only find iOS libraries with pkg-config, not the ones installed on the host (e.g. by Homebrew)
-export PKG_CONFIG_LIBDIR="$PREFIX/lib/pkgconfig"
+export PKG_CONFIG_LIBDIR="$PREFIX/lib/pkgconfig:$PREFIX/share/pkgconfig"
 unset PKG_CONFIG_PATH
 
 # clone the package and apply our patches; usage: fetch <name> <url> <ref> <source dir>
@@ -160,6 +160,22 @@ while read -r name url ref args; do
     args="${args//\$PREFIX/$PREFIX}"
     rm -rf "$build"
     fetch "$name" "$url" "$ref" "$src"
+
+    # iso-codes is architecture independent data, built with autotools
+    if [ "$name" = iso-codes ]; then
+        if ! {
+            cd "$src" \
+            && ./configure --prefix="$PREFIX" $args \
+            && make -j"$(sysctl -n hw.ncpu)" install \
+            && cd - > /dev/null
+        } > "$log" 2>&1; then
+            echo "!! $name failed, last lines of $log:"
+            tail -n 60 "$log"
+            exit 1
+        fi
+        touch "$marker"
+        continue
+    fi
 
     # OpenSSL has its own build system
     if [ "$name" = openssl ]; then

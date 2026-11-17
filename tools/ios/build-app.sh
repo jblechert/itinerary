@@ -27,7 +27,7 @@ BREEZE_ICONS_REF="v6.31.0"
 mkdir -p "$PREFIX/logs" "$WORK"
 
 # only find iOS libraries with pkg-config, not the ones installed on the host (e.g. by Homebrew)
-export PKG_CONFIG_LIBDIR="$PREFIX/lib/pkgconfig"
+export PKG_CONFIG_LIBDIR="$PREFIX/lib/pkgconfig:$PREFIX/share/pkgconfig"
 unset PKG_CONFIG_PATH
 
 if [ ! -d "$WORK/breeze-icons" ]; then
@@ -91,4 +91,10 @@ for lang_dir in "$BUILD/locale"/*; do
         cp -R "$PREFIX/share/locale/$lang/." "$app/locale/$lang/"
     fi
 done
+# of the iso-codes catalogs, KI18n only uses those of countries and their subdivisions
+find "$app/locale" -name 'iso_*.mo' ! -name 'iso_3166-1.mo' ! -name 'iso_3166-2.mo' -delete
+# the country data of KI18n's locale data, found in the bundle like on Android in the APK assets
+mkdir -p "$app/iso-codes/json"
+cp "$PREFIX/share/iso-codes/json/iso_3166-1.json" "$PREFIX/share/iso-codes/json/iso_3166-2.json" "$app/iso-codes/json/"
+
 echo "Built $app"

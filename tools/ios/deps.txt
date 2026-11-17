@@ -11,6 +11,8 @@
 # there is no technical problem with PDF import on iOS, and it stays enabled on all other platforms.
 
 extra-cmake-modules  https://invent.kde.org/frameworks/extra-cmake-modules.git  v6.31.0
+# country and country subdivision data for KI18n's locale data, bundled with the app
+iso-codes            https://salsa.debian.org/iso-codes-team/iso-codes.git      v4.18.0
 libintl-lite         https://github.com/jblechert/libintl-lite.git               plural-forms
 kcoreaddons          https://invent.kde.org/frameworks/kcoreaddons.git          v6.31.0  -DKCOREADDONS_USE_QML=ON
 ki18n                https://invent.kde.org/frameworks/ki18n.git                v6.31.0
