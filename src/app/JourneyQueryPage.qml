@@ -178,14 +178,27 @@ Kirigami.ScrollablePage {
             if (detailsLayout.journey.disruptionEffect === Disruption.NoService) {
                 return [];
             }
-            const journeyUrl = String(detailsLayout.journey.bookingUrl);
-            if (journeyUrl !== "") {
-                return [{ text: i18nc("@action:button purchase a ticket", "Buy Ticket"), url: journeyUrl, isDirect: true }];
-            }
             let links = [];
             let seen = new Set();
+            // bike sharing, at the station to rent from if known
             for (const section of detailsLayout.journey.sections) {
-                if (section.mode !== JourneySection.PublicTransport) {
+                if (section.mode !== JourneySection.RentedVehicle) {
+                    continue;
+                }
+                const rental = section.rentalVehicle;
+                const rentalUrl = [String(section.bookingUrl), String(rental.network.url)].find((url) => url !== "");
+                if (rentalUrl && !seen.has(rentalUrl)) {
+                    seen.add(rentalUrl);
+                    links.push({ text: i18nc("@action:button rent a bike from a bike sharing service", "Rent at %1", rental.network.name), url: rentalUrl, isDirect: true, iconName: section.iconName });
+                }
+            }
+            // the link for the entire journey is the rental one if that's all to book
+            const journeyUrl = String(detailsLayout.journey.bookingUrl);
+            if (journeyUrl !== "" && !seen.has(journeyUrl)) {
+                links.unshift({ text: i18nc("@action:button purchase a ticket", "Buy Ticket"), url: journeyUrl, isDirect: true });
+            }
+            for (const section of detailsLayout.journey.sections) {
+                if (section.mode !== JourneySection.PublicTransport || journeyUrl !== "") {
                     continue;
                 }
                 const line = section.route.line;
@@ -221,7 +234,7 @@ Kirigami.ScrollablePage {
                     description: ticketLink.modelData.isDirect
                         ? new URL(ticketLink.modelData.url).hostname
                         : i18nc("@info %1 is a host name", "Website of the transport company, %1", new URL(ticketLink.modelData.url).hostname)
-                    icon.name: "view-financial-account-cash-symbolic"
+                    icon.name: ticketLink.modelData.iconName ?? "view-financial-account-cash-symbolic"
                     onClicked: Qt.openUrlExternally(ticketLink.modelData.url)
                     Layout.fillWidth: true
                 }
