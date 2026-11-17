@@ -15232,6 +15232,36 @@ index f6dbb1e6..8450aac0 100644
              query.addQueryItem(u"gh"_s, journeyObj.value("ctxRecon"_L1).toString());
              url.setQuery(query);
  
+diff --git a/src/lib/backends/ivvassbackend.cpp b/src/lib/backends/ivvassbackend.cpp
+index 0a6af806..8946118e 100644
+--- a/src/lib/backends/ivvassbackend.cpp
++++ b/src/lib/backends/ivvassbackend.cpp
+@@ -148,6 +148,10 @@ static QString locationParameter(const Location &loc)
+ 
+ bool IvvAssBackend::queryJourney(const JourneyRequest &req, JourneyReply *reply, QNetworkAccessManager *nam) const
+ {
++    if ((req.modes() & JourneySection::PublicTransport) == 0) {
++        return false;
++    }
++
+     QUrlQuery query;
+     query.addQueryItem(QStringLiteral("eID"), QStringLiteral("tx_vrsinfo_ass2_router"));
+     query.addQueryItem(QStringLiteral("f"), locationParameter(req.from()));
+diff --git a/src/lib/backends/ltglinkbackend.cpp b/src/lib/backends/ltglinkbackend.cpp
+index b39a3f64..08ac5792 100644
+--- a/src/lib/backends/ltglinkbackend.cpp
++++ b/src/lib/backends/ltglinkbackend.cpp
+@@ -49,6 +49,10 @@ bool LTGLinkBackend::needsLocationQuery(const Location &loc, QueryType type) con
+ 
+ bool LTGLinkBackend::queryJourney(const JourneyRequest &req, JourneyReply *reply, QNetworkAccessManager *nam) const
+ {
++    if ((req.modes() & JourneySection::PublicTransport) == 0) {
++        return false;
++    }
++
+     if (m_stations.empty()) {
+         if (!m_stationDataTask) {
+             auto mutThis = const_cast<LTGLinkBackend *>(this);
 diff --git a/src/lib/backends/motis2parser.cpp b/src/lib/backends/motis2parser.cpp
 index 976d5b13..a94928df 100644
 --- a/src/lib/backends/motis2parser.cpp
@@ -15323,6 +15353,21 @@ index 976d5b13..a94928df 100644
              if (!pathSections.empty()) {
                  Path path;
                  path.setSections(std::move(pathSections));
+diff --git a/src/lib/backends/openjourneyplannerbackend.cpp b/src/lib/backends/openjourneyplannerbackend.cpp
+index 90f77318..606cb577 100644
+--- a/src/lib/backends/openjourneyplannerbackend.cpp
++++ b/src/lib/backends/openjourneyplannerbackend.cpp
+@@ -107,6 +107,10 @@ bool OpenJourneyPlannerBackend::queryStopover(const StopoverRequest &request, St
+ 
+ bool OpenJourneyPlannerBackend::queryJourney(const JourneyRequest &request, JourneyReply *reply, QNetworkAccessManager *nam) const
+ {
++    if ((request.modes() & JourneySection::PublicTransport) == 0) {
++        return false;
++    }
++
+     QByteArray postData;
+     switch (requestContext(request).type) {
+         case RequestContext::Normal:
 diff --git a/src/lib/backends/opentripplannerparser.cpp b/src/lib/backends/opentripplannerparser.cpp
 index a8e89dc1..4a3b404e 100644
 --- a/src/lib/backends/opentripplannerparser.cpp
@@ -15519,6 +15564,21 @@ index 8ea8cad7..f90624e1 100644
              }
          }
          prevDateTime
+diff --git a/src/lib/backends/srbijavozbackend.cpp b/src/lib/backends/srbijavozbackend.cpp
+index 2cbe879f..497736a2 100644
+--- a/src/lib/backends/srbijavozbackend.cpp
++++ b/src/lib/backends/srbijavozbackend.cpp
+@@ -132,6 +132,10 @@ Location::Types SrbijavozBackend::supportedLocationTypes() const
+ 
+ bool SrbijavozBackend::queryJourney(const JourneyRequest &request, JourneyReply *reply, QNetworkAccessManager *nam) const
+ {
++    if ((request.modes() & JourneySection::PublicTransport) == 0) {
++        return false;
++    }
++
+     // Ignore requests for which we don't have the needed identifier
+     if (request.from().identifier(identifierName()).isEmpty() || request.to().identifier(identifierName()).isEmpty()) {
+         return false;
 diff --git a/src/lib/datatypes/elevationutil.cpp b/src/lib/datatypes/elevationutil.cpp
 new file mode 100644
 index 00000000..49cf9764
