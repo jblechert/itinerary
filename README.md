@@ -1,8 +1,8 @@
-# Itinerary (Android fork)
+# Trinity
 
-This is a personal fork of [KDE Itinerary](https://apps.kde.org/itinerary), a digital travel assistant
-that supports you while traveling without compromising your privacy. The fork focuses on Android and on
-getting to your ticket quickly.
+Trinity replaces three apps when traveling: the one with your tickets, the one to find connections, and the map.
+It is a personal fork of [KDE Itinerary](https://apps.kde.org/itinerary), a digital travel assistant that supports
+you while traveling without compromising your privacy, and focuses on Android and on getting to your ticket quickly.
 
 It is not affiliated with or endorsed by KDE. For the original application, its official releases for all
 platforms and its documentation, see the [upstream repository](https://invent.kde.org/pim/itinerary).
@@ -64,16 +64,16 @@ Rubber, made in Germany. Thank you!
 
 ## Download
 
-**[Download the latest APK](https://github.com/jblechert/itinerary/releases/latest/download/itinerary-arm64-v8a.apk)**
+**[Download the latest APK](https://github.com/jblechert/trinity/releases/latest/download/itinerary-arm64-v8a.apk)**
 (Android 9 or later, 64-bit ARM), or pick a specific build from the
-[releases page](https://github.com/jblechert/itinerary/releases).
+[releases page](https://github.com/jblechert/trinity/releases).
 
 Things to know before installing:
 
 - These are development builds, provided as-is and without any warranty. Whether you run them is up to you.
-- They use the same application ID as the official KDE Itinerary but a different signing key, so they
-  cannot be installed alongside or on top of it. Uninstalling the official version deletes its data,
-  export it first.
+- Trinity has its own application ID, so it can be installed alongside the official KDE Itinerary. To take
+  your data along, export it in KDE Itinerary and import the file in Trinity. Builds up to 8 still used
+  KDE Itinerary's application ID and replace the official app.
 - There is no automatic update, you get a new version by downloading and installing it again.
 
 ## Building
