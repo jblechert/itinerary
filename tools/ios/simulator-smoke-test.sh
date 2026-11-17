@@ -35,6 +35,8 @@ echo "== using $name ($runtime, $udid)"
 
 xcrun simctl boot "$udid" || true
 xcrun simctl bootstatus "$udid" -b > /dev/null
+# without a location, starting the app with the location permission granted takes about 20 seconds longer
+xcrun simctl location "$udid" set 52.5251,13.3694 || true
 
 # the simulator doesn't require signatures for x86_64 apps, but an ad-hoc one doesn't hurt
 codesign --force --sign - --timestamp=none "$APP"
@@ -94,7 +96,8 @@ run welcome
 install
 container="$(xcrun simctl get_app_container "$udid" "$bundle_id" data)"
 mkdir -p "$container/Library/Preferences"
-defaults write "$container/Library/Preferences/org.kde.itinerary" Settings.WelcomePageShown -bool true
+# written in the simulator, so its preferences daemon knows about it
+xcrun simctl spawn "$udid" defaults write "$container/Library/Preferences/org.kde.itinerary" Settings.WelcomePageShown -bool true
 # KI18n follows LANGUAGE, to check that the bundled translations are found
 run main-de SIMCTL_CHILD_LANGUAGE=de
 
