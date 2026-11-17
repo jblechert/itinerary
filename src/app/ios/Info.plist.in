@@ -4,7 +4,7 @@
     SPDX-License-Identifier: CC0-1.0
 
     Info.plist of the iOS app, based on Qt's default template.
-    @...@ placeholders are filled in by Qt, ${...} placeholders by CMake.
+    The placeholders are filled in by Qt and CMake.
 -->
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
