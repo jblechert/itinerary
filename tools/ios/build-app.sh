@@ -23,6 +23,10 @@ BREEZE_ICONS_REF="v6.31.0"
 
 mkdir -p "$PREFIX/logs" "$WORK"
 
+# only find iOS libraries with pkg-config, not the ones installed on the host (e.g. by Homebrew)
+export PKG_CONFIG_LIBDIR="$PREFIX/lib/pkgconfig"
+unset PKG_CONFIG_PATH
+
 if [ ! -d "$WORK/breeze-icons" ]; then
     git clone --quiet --depth 1 --branch "$BREEZE_ICONS_REF" https://invent.kde.org/frameworks/breeze-icons.git "$WORK/breeze-icons.tmp"
     mv "$WORK/breeze-icons.tmp" "$WORK/breeze-icons"
