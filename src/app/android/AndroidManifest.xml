@@ -171,4 +171,10 @@
                  android:foregroundServiceType="location"
                  android:exported="false"/>
     </application>
+    <queries>
+        <!-- text to speech engines, for voice guidance -->
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE"/>
+        </intent>
+    </queries>
 </manifest>

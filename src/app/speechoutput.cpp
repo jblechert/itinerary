@@ -55,3 +55,25 @@ void SpeechOutput::speak(const QString &text)
     });
 #endif
 }
+
+bool SpeechOutput::isAvailable()
+{
+#ifdef Q_OS_ANDROID
+    return QJniObject::callStaticMethod<jboolean>("org/kde/itinerary/SpeechOutput",
+                                                 "isAvailable",
+                                                 "(Landroid/content/Context;)Z",
+                                                 QNativeInterface::QAndroidApplication::context().object());
+#else
+    return false;
+#endif
+}
+
+void SpeechOutput::openSettings()
+{
+#ifdef Q_OS_ANDROID
+    QJniObject::callStaticMethod<void>("org/kde/itinerary/SpeechOutput",
+                                       "openSettings",
+                                       "(Landroid/content/Context;)V",
+                                       QNativeInterface::QAndroidApplication::context().object());
+#endif
+}

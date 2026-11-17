@@ -472,6 +472,16 @@ void WalkingNavigationController::stopNotification()
     m_notificationShown = false;
 }
 
+bool WalkingNavigationController::speechAvailable()
+{
+    return SpeechOutput::isAvailable();
+}
+
+void WalkingNavigationController::openSpeechSettings()
+{
+    SpeechOutput::openSettings();
+}
+
 KPublicTransport::JourneyRequest WalkingNavigationController::routeRequest(double latitude, double longitude, const KPublicTransport::Location &destination) const
 {
     auto from = locationAt(latitude, longitude, i18nc("@info start of navigation", "Current location"));

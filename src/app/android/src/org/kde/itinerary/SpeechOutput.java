@@ -5,7 +5,10 @@
 
 package org.kde.itinerary;
 
+import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.Intent;
+import android.provider.Settings;
 import android.speech.tts.TextToSpeech;
 
 import java.util.ArrayList;
@@ -14,13 +17,33 @@ import java.util.Locale;
 /** Spoken output, e.g. for navigation instructions. Must be used from the Android main thread. */
 public class SpeechOutput implements TextToSpeech.OnInitListener
 {
+    private final Context m_context;
     private TextToSpeech m_tts;
     private boolean m_ready = false;
+    private boolean m_failed = false;
     private final ArrayList<String> m_pendingTexts = new ArrayList<>();
 
     public SpeechOutput(Context context)
     {
+        m_context = context;
         m_tts = new TextToSpeech(context, this);
+    }
+
+    /** Returns whether a text to speech engine is installed, without one nothing can be spoken. */
+    public static boolean isAvailable(Context context)
+    {
+        final Intent intent = new Intent(TextToSpeech.Engine.INTENT_ACTION_TTS_SERVICE);
+        return !context.getPackageManager().queryIntentServices(intent, 0).isEmpty();
+    }
+
+    /** Opens the system settings for text to speech, e.g. to choose an engine and a voice. */
+    public static void openSettings(Context context)
+    {
+        try {
+            context.startActivity(new Intent("com.android.settings.TTS_SETTINGS").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        } catch (ActivityNotFoundException e) {
+            context.startActivity(new Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        }
     }
 
     @Override
@@ -28,6 +51,8 @@ public class SpeechOutput implements TextToSpeech.OnInitListener
     {
         m_ready = status == TextToSpeech.SUCCESS;
         if (!m_ready) {
+            // e.g. no engine installed, try again when there is something to say, maybe one got installed meanwhile
+            m_failed = true;
             return;
         }
         m_tts.setLanguage(Locale.getDefault());
@@ -44,6 +69,11 @@ public class SpeechOutput implements TextToSpeech.OnInitListener
     {
         if (!m_ready) {
             m_pendingTexts.add(text);
+            if (m_failed && isAvailable(m_context)) {
+                m_failed = false;
+                m_tts.shutdown();
+                m_tts = new TextToSpeech(m_context, this);
+            }
             return;
         }
         m_tts.speak(text, TextToSpeech.QUEUE_ADD, null, "org.kde.itinerary.speech");

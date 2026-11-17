@@ -89,6 +89,11 @@ public:
     Q_INVOKABLE [[nodiscard]] static KPublicTransport::Path routePath(const KPublicTransport::Journey &journey);
     /** A location at the given coordinate, e.g. for a destination picked on a map. */
     Q_INVOKABLE [[nodiscard]] static KPublicTransport::Location locationAt(double latitude, double longitude, const QString &name);
+
+    /** Returns whether voice guidance is possible, i.e. a text to speech engine is installed. */
+    Q_INVOKABLE [[nodiscard]] static bool speechAvailable();
+    /** Opens the system settings for text to speech, e.g. to install a voice. */
+    Q_INVOKABLE static void openSpeechSettings();
     /** The point of the trail closest to the given position, to find a route to. */
     Q_INVOKABLE [[nodiscard]] KPublicTransport::Location rejoinLocation(double latitude, double longitude);
     /** @p approach followed by the trail from the point returned by the last call of rejoinLocation(). */

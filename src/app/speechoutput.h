@@ -25,8 +25,13 @@ public:
     SpeechOutput(const SpeechOutput &) = delete;
     SpeechOutput &operator=(const SpeechOutput &) = delete;
 
-    /** Speak @p text, interrupting what is currently being spoken. */
+    /** Speak @p text, after what is currently being spoken. */
     void speak(const QString &text);
+
+    /** Returns whether there is a text to speech engine to speak with. */
+    [[nodiscard]] static bool isAvailable();
+    /** Opens the platform's settings for text to speech, e.g. to choose an engine or a voice. */
+    static void openSettings();
 
 private:
 #ifdef Q_OS_ANDROID

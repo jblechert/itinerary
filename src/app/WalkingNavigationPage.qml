@@ -50,6 +50,16 @@ Kirigami.Page {
 
     /** No walking route could be found. */
     property bool noRoute: false
+    /** A text to speech engine is installed, checked again when returning to the app, e.g. after installing one. */
+    property bool speechAvailable: controller.speechAvailable()
+    Connections {
+        target: Qt.application
+        function onStateChanged(): void {
+            if (Qt.application.state === Qt.ApplicationActive) {
+                root.speechAvailable = controller.speechAvailable();
+            }
+        }
+    }
     /** Keep the map centered on the current position, until the user moves the map. */
     property bool followPosition: true
 
@@ -256,6 +266,17 @@ Kirigami.Page {
                 Layout.fillWidth: true
                 Layout.topMargin: Kirigami.Units.smallSpacing
             }
+            Kirigami.InlineMessage {
+                type: Kirigami.MessageType.Warning
+                text: i18nc("@info", "No text-to-speech engine is installed, so instructions can't be spoken. Install one, e.g. from F-Droid, and choose it in the speech settings.")
+                visible: controller.speechEnabled && !root.speechAvailable
+                actions: Kirigami.Action {
+                    icon.name: "configure"
+                    text: i18nc("@action:button", "Speech Settings")
+                    onTriggered: controller.openSpeechSettings()
+                }
+                Layout.fillWidth: true
+            }
             RowLayout {
                 Layout.fillWidth: true
                 QQC2.Label {
@@ -265,6 +286,8 @@ Kirigami.Page {
                     Layout.fillWidth: true
                 }
                 QQC2.ToolButton {
+                    // speech output is only implemented on Android so far
+                    visible: Qt.platform.os === "android"
                     icon.name: controller.speechEnabled ? "audio-volume-high" : "audio-volume-muted"
                     text: i18nc("@action:button", "Voice guidance")
                     display: QQC2.AbstractButton.IconOnly
