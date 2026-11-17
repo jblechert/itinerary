@@ -12,6 +12,7 @@ on:
     branches: [android-fork, ios-app, ios-sim]
     paths:
       - 'tools/ios/**'
+      - 'tools/android/patches/**'
       - '.github/workflows/ios.yml'
       - 'src/**'
       - 'CMakeLists.txt'

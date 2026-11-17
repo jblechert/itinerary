@@ -16,8 +16,10 @@ Qt for iOS and the matching desktop Qt (for host tools):
     tools/ios/build-deps.sh <Qt for iOS dir> <prefix>     # dependencies, see tools/ios/deps.txt
     tools/ios/build-app.sh <Qt for iOS dir> <prefix>      # the app, ios-build/bin/itinerary.app
 
-`build-deps.sh` applies the patches in `tools/ios/patches/<package>/` (fixes for iOS and static builds, all meant
-to go upstream) and only rebuilds a package when its version, patches or arguments change. The CI caches the prefix.
+`build-deps.sh` applies the fork's own changes to a library from `tools/android/patches/<package>/` (the same
+KPublicTransport extensions as on Android), then the patches in `tools/ios/patches/<package>/` (fixes for iOS and
+static builds, all meant to go upstream). It only rebuilds a package when its version, patches or arguments change.
+The CI caches the prefix.
 A changed patch of a library doesn't rebuild the packages depending on it; that is only a problem for patches of
 generated code, e.g. ECM's translation loader.
 

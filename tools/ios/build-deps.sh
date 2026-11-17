@@ -11,7 +11,9 @@
 #
 # Packages that were already built with the same ref are skipped, so this can resume after
 # a failure when the prefix is kept, e.g. by the CI cache.
-# Patches in tools/ios/patches/<package>/*.patch are applied before building that package.
+# Patches in tools/ios/patches/<package>/*.patch are applied before building that package, after the
+# fork's own changes to that library in tools/android/patches/<package>/*.patch, which the Android
+# build uses as well.
 set -euo pipefail
 
 QT_IOS="$1"
@@ -32,10 +34,19 @@ unset PKG_CONFIG_PATH
 
 # clone the package and apply our patches; usage: fetch <name> <url> <ref> <source dir>
 # a hash of the patches applied to a dependency, so changed patches cause a rebuild
+patch_files() {
+    for patch in "$HERE/../android/patches/$1"/*.patch "$HERE/patches/$1"/*.patch; do
+        [ -f "$patch" ] && echo "$patch"
+    done
+    return 0
+}
+
 patches_hash() {
-    local dir="$HERE/patches/$1"
-    if [ -d "$dir" ]; then
-        printf -- "-%s" "$(cat "$dir"/*.patch | shasum | cut -c1-12)"
+    local files
+    files="$(patch_files "$1")"
+    if [ -n "$files" ]; then
+        # shellcheck disable=SC2086 # one file per line
+        printf -- "-%s" "$(cat $files | shasum | cut -c1-12)"
     fi
 }
 
@@ -49,9 +60,8 @@ args_hash() {
 fetch() {
     rm -rf "$4"
     git clone --quiet --depth 1 --branch "$3" "$2" "$4"
-    # fixes needed for iOS that aren't in the used release yet
-    for patch in "$HERE/patches/$1"/*.patch; do
-        [ -f "$patch" ] || continue
+    # the fork's changes, then fixes needed for iOS that aren't in the used release yet
+    for patch in $(patch_files "$1"); do
         echo "   applying $(basename "$patch")"
         git -C "$4" apply "$patch"
     done
