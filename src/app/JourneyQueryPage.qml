@@ -310,6 +310,14 @@ Kirigami.ScrollablePage {
     }
 
     Component {
+        id: daySectionDelegate
+        TimelineSectionDelegate {
+            required property string section
+            day: section
+        }
+    }
+
+    Component {
         id: timelineComponent
 
         JourneyTimelineView {
@@ -445,10 +453,8 @@ Kirigami.ScrollablePage {
 
         section {
             property: root.showTimeline ? "" : (root.isArrival ? "scheduledArrivalDate" : "scheduledDepartureDate")
-            delegate: TimelineSectionDelegate {
-                required property string section
-                day: section
-            }
+            // the timeline shows the date itself, an empty section header would remain otherwise
+            delegate: root.showTimeline ? null : daySectionDelegate
         }
 
         spacing: Kirigami.Units.largeSpacing
