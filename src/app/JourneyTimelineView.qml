@@ -79,12 +79,21 @@ ColumnLayout {
         return item.hasExpectedArrivalTime ? item.expectedArrivalTime : item.scheduledArrivalTime;
     }
 
+    /** Whether @p journey is entirely on foot, by bike or by car, without public transport.
+     *  For short distances that's all there is, so it's shown like a public transport section.
+     */
+    function isDirect(journey: var): bool {
+        return !journey.sections.some((section) => section.mode === JourneySection.PublicTransport);
+    }
+
     function updateTimeRange(): void {
         let first = Number.MAX_VALUE;
         let last = 0;
         for (let row = 0; row < root.journeys.count; ++row) {
-            for (const section of root.journeyAt(row).sections) {
-                if (section.mode !== JourneySection.PublicTransport) {
+            const journey = root.journeyAt(row);
+            const direct = root.isDirect(journey);
+            for (const section of journey.sections) {
+                if (section.mode !== JourneySection.PublicTransport && !direct) {
                     continue;
                 }
                 first = Math.min(first, Math.min(section.scheduledDepartureTime.getTime(), root.departureOf(section).getTime()));
@@ -242,7 +251,8 @@ ColumnLayout {
         Layout.fillWidth: true
         // room for the label of the first hour line
         Layout.topMargin: Kirigami.Units.gridUnit * 1.5
-        implicitHeight: (root.endTime - root.startTime) / 60000 * root.minuteHeight
+        // and below the last one, in case a short ride or walk is shown larger than its duration
+        implicitHeight: (root.endTime - root.startTime) / 60000 * root.minuteHeight + Kirigami.Units.gridUnit * 2
         visible: root.endTime > root.startTime
 
         // hour lines
@@ -311,7 +321,9 @@ ColumnLayout {
                     required property var journey
 
                     readonly property bool isCanceled: journeyColumn.journey.disruptionEffect === Disruption.NoService
-                    readonly property bool hasDeparted: root.journeyY(journeyColumn.index) < root.yFor(root.now)
+                    readonly property bool isDirect: root.isDirect(journeyColumn.journey)
+                    // walking or cycling all the way can start any time
+                    readonly property bool hasDeparted: !journeyColumn.isDirect && root.journeyY(journeyColumn.index) < root.yFor(root.now)
 
                     x: journeyColumn.index * root.columnWidth
                     width: root.columnWidth
@@ -346,7 +358,7 @@ ColumnLayout {
                                     && sectionItem.section.expectedDepartureTime.getTime() !== sectionItem.section.scheduledDepartureTime.getTime()
                                 readonly property real badgeTop: root.yFor(root.departureOf(sectionItem.section))
 
-                                visible: sectionItem.section.mode === JourneySection.PublicTransport
+                                visible: sectionItem.section.mode === JourneySection.PublicTransport || journeyColumn.isDirect
                                 width: parent.width
                                 spacing: 0
 
@@ -419,7 +431,7 @@ ColumnLayout {
                                             Layout.preferredHeight: Kirigami.Units.iconSizes.smallMedium
                                         }
                                         QQC2.Label {
-                                            text: badge.line.name
+                                            text: sectionItem.section.mode === JourneySection.PublicTransport ? badge.line.name : Localizer.formatDuration(sectionItem.section.duration)
                                             visible: text.length > 0 && !badge.line.hasLogo
                                             color: badge.foregroundColor
                                             font.weight: Font.DemiBold
