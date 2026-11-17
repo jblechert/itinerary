@@ -141,7 +141,6 @@ Kirigami.Page {
         StopPickerPage {
             property string endpoint
             publicTransportManager: LiveDataManager.publicTransportManager
-            initialCountry: Settings.homeCountryIsoCode
             showUseCurrentLocationButton: endpoint === "from"
             historySortRoleName: Settings.read("StopPicker/historySortMode", "lastUsed")
             onHistorySortRoleChanged: (sortRoleName) => Settings.write("StopPicker/historySortMode", sortRoleName)

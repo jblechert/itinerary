@@ -32,7 +32,6 @@ Kirigami.NavigationTabBar {
                     pageStack.clear();
                     pageStack.push(Qt.resolvedUrl("JourneyRequestPage.qml"), {
                         publicTransportManager: LiveDataManager.publicTransportManager,
-                        initialCountry: Settings.homeCountryIsoCode
                     });
                 }
             }

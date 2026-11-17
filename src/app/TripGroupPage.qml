@@ -128,17 +128,11 @@ Kirigami.ScrollablePage {
 
         // determine where we are at that time
         const place = TripGroupModel.locationAtTime(dt);
-        var country = Settings.homeCountryIsoCode;
-        var departureLocation;
-        if (place) {
-            country = place.address.addressCountry;
-            departureLocation = PublicTransport.locationFromPlace(place);
-        }
+        const departureLocation = place ? PublicTransport.locationFromPlace(place) : undefined;
 
         pageStack.clear()
         pageStack.push(Qt.resolvedUrl("JourneyRequestPage.qml"), {
             publicTransportManager: LiveDataManager.publicTransportManager,
-            initialCountry: country,
             initialDateTime: dt,
             departureStop: departureLocation
         });
