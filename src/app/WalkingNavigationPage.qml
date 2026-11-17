@@ -52,13 +52,26 @@ Kirigami.Page {
     property bool noRoute: false
     /** A text to speech engine is installed, checked again when returning to the app, e.g. after installing one. */
     property bool speechAvailable: controller.speechAvailable()
+    /** The text to speech engine has no voice for our language. */
+    property bool speechVoiceMissing: false
+    function updateSpeechState(): void {
+        root.speechAvailable = controller.speechAvailable();
+        root.speechVoiceMissing = root.speechAvailable && controller.speechVoiceMissing();
+    }
     Connections {
         target: Qt.application
         function onStateChanged(): void {
             if (Qt.application.state === Qt.ApplicationActive) {
-                root.speechAvailable = controller.speechAvailable();
+                root.updateSpeechState();
             }
         }
+    }
+    // the engine starts asynchronously, so whether it has a voice for us is only known a bit later
+    Timer {
+        interval: 2000
+        repeat: true
+        running: controller.speechEnabled && Qt.application.state === Qt.ApplicationActive
+        onTriggered: root.updateSpeechState()
     }
     /** Keep the map centered on the current position, until the user moves the map. */
     property bool followPosition: true
@@ -268,13 +281,38 @@ Kirigami.Page {
             }
             Kirigami.InlineMessage {
                 type: Kirigami.MessageType.Warning
-                text: i18nc("@info", "No text-to-speech engine is installed, so instructions can't be spoken. Install one, e.g. from F-Droid, and choose it in the speech settings.")
+                text: i18nc("@info", "Voice guidance needs a text-to-speech app, and none is installed. SherpaTTS is a good choice: natural voices for many languages, working offline once a voice is downloaded.")
                 visible: controller.speechEnabled && !root.speechAvailable
-                actions: Kirigami.Action {
-                    icon.name: "configure"
-                    text: i18nc("@action:button", "Speech Settings")
-                    onTriggered: controller.openSpeechSettings()
-                }
+                actions: [
+                    Kirigami.Action {
+                        icon.name: "download"
+                        text: i18nc("@action:button install the SherpaTTS app", "Install SherpaTTS")
+                        onTriggered: controller.installSpeechEngine()
+                    },
+                    Kirigami.Action {
+                        icon.name: "configure"
+                        text: i18nc("@action:button", "Speech Settings")
+                        onTriggered: controller.openSpeechSettings()
+                    }
+                ]
+                Layout.fillWidth: true
+            }
+            Kirigami.InlineMessage {
+                type: Kirigami.MessageType.Warning
+                text: i18nc("@info", "The text-to-speech app has no voice for this language yet, so instructions can't be spoken.")
+                visible: controller.speechEnabled && root.speechVoiceMissing
+                actions: [
+                    Kirigami.Action {
+                        icon.name: "download"
+                        text: i18nc("@action:button install a voice for text-to-speech", "Install Voice")
+                        onTriggered: controller.installSpeechVoice()
+                    },
+                    Kirigami.Action {
+                        icon.name: "configure"
+                        text: i18nc("@action:button", "Speech Settings")
+                        onTriggered: controller.openSpeechSettings()
+                    }
+                ]
                 Layout.fillWidth: true
             }
             RowLayout {

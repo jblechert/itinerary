@@ -92,8 +92,14 @@ public:
 
     /** Returns whether voice guidance is possible, i.e. a text to speech engine is installed. */
     Q_INVOKABLE [[nodiscard]] static bool speechAvailable();
-    /** Opens the system settings for text to speech, e.g. to install a voice. */
+    /** Opens the system settings for text to speech, e.g. to choose an engine. */
     Q_INVOKABLE static void openSpeechSettings();
+    /** Opens an app store to install the text to speech engine we recommend. */
+    Q_INVOKABLE static void installSpeechEngine();
+    /** Returns whether the text to speech engine has no voice for the language of the application. */
+    Q_INVOKABLE [[nodiscard]] bool speechVoiceMissing() const;
+    /** Lets the user install a voice for the text to speech engine in use. */
+    Q_INVOKABLE void installSpeechVoice();
     /** The point of the trail closest to the given position, to find a route to. */
     Q_INVOKABLE [[nodiscard]] KPublicTransport::Location rejoinLocation(double latitude, double longitude);
     /** @p approach followed by the trail from the point returned by the last call of rejoinLocation(). */

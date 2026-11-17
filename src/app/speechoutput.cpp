@@ -77,3 +77,37 @@ void SpeechOutput::openSettings()
                                        QNativeInterface::QAndroidApplication::context().object());
 #endif
 }
+
+void SpeechOutput::installEngine(const QString &packageName)
+{
+#ifdef Q_OS_ANDROID
+    QJniObject::callStaticMethod<void>("org/kde/itinerary/SpeechOutput",
+                                       "installEngine",
+                                       "(Landroid/content/Context;Ljava/lang/String;)V",
+                                       QNativeInterface::QAndroidApplication::context().object(),
+                                       QJniObject::fromString(packageName).object<jstring>());
+#else
+    Q_UNUSED(packageName);
+#endif
+}
+
+bool SpeechOutput::isLanguageMissing() const
+{
+#ifdef Q_OS_ANDROID
+    // only reads a volatile field, so this doesn't need to run on the Android main thread
+    return m_speech->isValid() && m_speech->callMethod<jboolean>("isLanguageMissing", "()Z");
+#else
+    return false;
+#endif
+}
+
+void SpeechOutput::installVoice()
+{
+#ifdef Q_OS_ANDROID
+    runOnMainThread([speech = m_speech]() {
+        if (speech->isValid()) {
+            speech->callMethod<void>("installVoice", "()V");
+        }
+    });
+#endif
+}

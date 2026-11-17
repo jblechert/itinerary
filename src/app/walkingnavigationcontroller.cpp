@@ -494,6 +494,22 @@ void WalkingNavigationController::openSpeechSettings()
     SpeechOutput::openSettings();
 }
 
+void WalkingNavigationController::installSpeechEngine()
+{
+    // SherpaTTS: free, natural voices for many languages, working offline once a voice is downloaded
+    SpeechOutput::installEngine(u"org.woheller69.ttsengine"_s);
+}
+
+bool WalkingNavigationController::speechVoiceMissing() const
+{
+    return m_speech.isLanguageMissing();
+}
+
+void WalkingNavigationController::installSpeechVoice()
+{
+    m_speech.installVoice();
+}
+
 KPublicTransport::JourneyRequest WalkingNavigationController::routeRequest(double latitude, double longitude, const KPublicTransport::Location &destination) const
 {
     auto from = locationAt(latitude, longitude, i18nc("@info start of navigation", "Current location"));

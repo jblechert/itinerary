@@ -32,6 +32,12 @@ public:
     [[nodiscard]] static bool isAvailable();
     /** Opens the platform's settings for text to speech, e.g. to choose an engine or a voice. */
     static void openSettings();
+    /** Opens an app store to install the text to speech engine @p packageName. */
+    static void installEngine(const QString &packageName);
+    /** Returns whether the engine has no voice for the language of the application. */
+    [[nodiscard]] bool isLanguageMissing() const;
+    /** Lets the user install a voice for the engine in use. */
+    void installVoice();
 
 private:
 #ifdef Q_OS_ANDROID
