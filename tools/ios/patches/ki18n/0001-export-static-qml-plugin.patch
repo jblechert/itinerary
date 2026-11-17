@@ -20,7 +20,7 @@ index 1714daa..b94157f 100644
  # SPDX-License-Identifier: BSD-3-Clause
  
 -ecm_add_qml_module(ki18nlocaledataqmlplugin URI "org.kde.i18n.localeData" VERSION 1.0)
-+ecm_add_qml_module(ki18nlocaledataqmlplugin URI "org.kde.i18n.localeData" VERSION 1.0 INSTALLED_PLUGIN_TARGET KF6::ki18nlocaledataqmlplugin)
++ecm_add_qml_module(ki18nlocaledataqmlplugin URI "org.kde.i18n.localeData" VERSION 1.0 CLASS_NAME KI18nLocaleDataQmlPlugin INSTALLED_PLUGIN_TARGET KF6::ki18nlocaledataqmlplugin)
  
  target_sources(ki18nlocaledataqmlplugin PRIVATE
      ki18nlocaledataqmlplugin.cpp
