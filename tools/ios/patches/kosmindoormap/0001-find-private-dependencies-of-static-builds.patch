@@ -1,15 +1,25 @@
 diff --git a/KOSMIndoorMapConfig.cmake.in b/KOSMIndoorMapConfig.cmake.in
-index 6c3f0bf..7e298d5 100644
+index 6c3f0bf..e716c12 100644
 --- a/KOSMIndoorMapConfig.cmake.in
 +++ b/KOSMIndoorMapConfig.cmake.in
-@@ -6,4 +6,10 @@
+@@ -6,4 +6,20 @@
  include(CMakeFindDependencyMacro)
  find_dependency(Qt6Gui)
  
 +# private dependencies of the static libraries
 +if (NOT "@BUILD_SHARED_LIBS@")
 +    find_dependency(Qt6Network)
++    if ("@Qt6Gui_VERSION@" VERSION_GREATER_EQUAL "6.10.0")
++        find_dependency(Qt6GuiPrivate)
++    endif()
 +    find_dependency(KOpeningHours)
++    find_dependency(KF6I18n)
++    if (@KPublicTransport_FOUND@)
++        find_dependency(KPublicTransport)
++    endif()
++    if (@recastnavigation_FOUND@)
++        find_dependency(recastnavigation)
++    endif()
 +endif()
 +
  include("${CMAKE_CURRENT_LIST_DIR}/KOSMIndoorMapTargets.cmake")

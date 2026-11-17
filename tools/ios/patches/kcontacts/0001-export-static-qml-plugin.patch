@@ -1,0 +1,19 @@
+diff --git a/src/qml/CMakeLists.txt b/src/qml/CMakeLists.txt
+index e68af0c..ed47b7d 100644
+--- a/src/qml/CMakeLists.txt
++++ b/src/qml/CMakeLists.txt
+@@ -1,7 +1,7 @@
+ # SPDX-FileCopyrightText: 2024 Nicolas Fella <nicolas.fella@gmx.de>
+ # SPDX-License-Identifier: BSD-3-Clause
+ 
+-ecm_add_qml_module(kcontactsqml URI "org.kde.contacts" CLASS_NAME KContactsQmlPlugin DEPENDENCIES QtQuick)
++ecm_add_qml_module(kcontactsqml URI "org.kde.contacts" CLASS_NAME KContactsQmlPlugin DEPENDENCIES QtQuick INSTALLED_PLUGIN_TARGET KF6::kcontactsqml)
+ 
+ target_sources(kcontactsqml PRIVATE
+     kcontactsqmlplugin.cpp
+@@ -10,4 +10,4 @@ target_sources(kcontactsqml PRIVATE
+ 
+ target_link_libraries(kcontactsqml PRIVATE KF6Contacts Qt6::Qml)
+ 
+-ecm_finalize_qml_module(kcontactsqml)
++ecm_finalize_qml_module(kcontactsqml EXPORT KF6ContactsTargets)

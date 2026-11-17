@@ -1,0 +1,19 @@
+diff --git a/src/qml/CMakeLists.txt b/src/qml/CMakeLists.txt
+index 8613d1b..663b6f5 100644
+--- a/src/qml/CMakeLists.txt
++++ b/src/qml/CMakeLists.txt
+@@ -1,7 +1,7 @@
+ # SPDX-FileCopyrightText: 2024 Volker Krause <vkrause@kde.org>
+ # SPDX-License-Identifier: BSD-3-Clause
+ 
+-ecm_add_qml_module(kcalendarcoreqml URI "org.kde.calendarcore" CLASS_NAME KCalendarCoreQmlPlugin DEPENDENCIES QtCore)
++ecm_add_qml_module(kcalendarcoreqml URI "org.kde.calendarcore" CLASS_NAME KCalendarCoreQmlPlugin DEPENDENCIES QtCore INSTALLED_PLUGIN_TARGET KF6::kcalendarcoreqml)
+ 
+ target_sources(
+     kcalendarcoreqml
+@@ -17,4 +17,4 @@ target_link_libraries(
+         Qt6::Qml
+ )
+ 
+-ecm_finalize_qml_module(kcalendarcoreqml)
++ecm_finalize_qml_module(kcalendarcoreqml EXPORT KF6CalendarCoreTargets)

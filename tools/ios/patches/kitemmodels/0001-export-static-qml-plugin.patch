@@ -1,0 +1,12 @@
+diff --git a/src/qml/CMakeLists.txt b/src/qml/CMakeLists.txt
+index 18a4f5c..df9c149 100644
+--- a/src/qml/CMakeLists.txt
++++ b/src/qml/CMakeLists.txt
+@@ -2,6 +2,7 @@ ecm_add_qml_module(itemmodelsplugin
+     URI "org.kde.kitemmodels"
+     VERSION 1.0
+     GENERATE_PLUGIN_SOURCE
++    INSTALLED_PLUGIN_TARGET KF6::itemmodelsplugin
+     DEPENDENCIES
+         QtCore
+ )

@@ -1,0 +1,30 @@
+diff --git a/src/onboard-qml/CMakeLists.txt b/src/onboard-qml/CMakeLists.txt
+index 67c2929..317fd7f 100644
+--- a/src/onboard-qml/CMakeLists.txt
++++ b/src/onboard-qml/CMakeLists.txt
+@@ -14,4 +14,4 @@ target_sources(kpublictransportonboardqmlplugin PRIVATE
+ 
+ target_link_libraries(kpublictransportonboardqmlplugin PRIVATE Qt::Qml KPublicTransportOnboard)
+ 
+-ecm_finalize_qml_module(kpublictransportonboardqmlplugin DESTINATION ${KDE_INSTALL_QMLDIR})
++ecm_finalize_qml_module(kpublictransportonboardqmlplugin DESTINATION ${KDE_INSTALL_QMLDIR} EXPORT KPublicTransportTargets)
+diff --git a/src/qmlplugin/CMakeLists.txt b/src/qmlplugin/CMakeLists.txt
+index 69efac2..a3b24cd 100644
+--- a/src/qmlplugin/CMakeLists.txt
++++ b/src/qmlplugin/CMakeLists.txt
+@@ -9,4 +9,4 @@ target_sources(kpublictransportqmlplugin PRIVATE
+ )
+ target_link_libraries(kpublictransportqmlplugin PRIVATE Qt::Quick KPublicTransport)
+ 
+-ecm_finalize_qml_module(kpublictransportqmlplugin DESTINATION ${KDE_INSTALL_QMLDIR})
++ecm_finalize_qml_module(kpublictransportqmlplugin DESTINATION ${KDE_INSTALL_QMLDIR} EXPORT KPublicTransportTargets)
+diff --git a/src/quick/CMakeLists.txt b/src/quick/CMakeLists.txt
+index de41635..84961ec 100644
+--- a/src/quick/CMakeLists.txt
++++ b/src/quick/CMakeLists.txt
+@@ -62,4 +62,4 @@ target_link_libraries(kpublictransportquickplugin
+         KF6::I18nLocaleData
+ )
+ 
+-ecm_finalize_qml_module(kpublictransportquickplugin DESTINATION ${KDE_INSTALL_QMLDIR})
++ecm_finalize_qml_module(kpublictransportquickplugin DESTINATION ${KDE_INSTALL_QMLDIR} EXPORT KPublicTransportTargets)
