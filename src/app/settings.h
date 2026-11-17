@@ -20,6 +20,8 @@ class Settings : public QObject
     Q_PROPERTY(StartPage startPage READ startPage WRITE setStartPage NOTIFY startPageChanged)
     /** Only search for journeys using local public transport, e.g. for flat rate tickets like the Deutschlandticket. */
     Q_PROPERTY(bool localTransportOnly READ localTransportOnly WRITE setLocalTransportOnly NOTIFY localTransportOnlyChanged)
+    /** Consider rental bikes for getting to and from public transport, or for the entire journey. */
+    Q_PROPERTY(bool rentalBikes READ rentalBikes WRITE setRentalBikes NOTIFY rentalBikesChanged)
     /** Show journey search results on a time axis rather than as a list. */
     Q_PROPERTY(bool journeyResultsAsTimeline READ journeyResultsAsTimeline WRITE setJourneyResultsAsTimeline NOTIFY journeyResultsAsTimelineChanged)
     Q_PROPERTY(bool weatherForecastEnabled READ weatherForecastEnabled WRITE setWeatherForecastEnabled NOTIFY weatherForecastEnabledChanged)
@@ -86,6 +88,9 @@ public:
     [[nodiscard]] bool localTransportOnly() const;
     void setLocalTransportOnly(bool localOnly);
 
+    [[nodiscard]] bool rentalBikes() const;
+    void setRentalBikes(bool rentalBikes);
+
     [[nodiscard]] bool journeyResultsAsTimeline() const;
     void setJourneyResultsAsTimeline(bool asTimeline);
 
@@ -134,6 +139,7 @@ Q_SIGNALS:
     void preloadMapDataChanged(bool preload);
     void startPageChanged(Settings::StartPage startPage);
     void localTransportOnlyChanged(bool localOnly);
+    void rentalBikesChanged(bool rentalBikes);
     void journeyResultsAsTimelineChanged(bool asTimeline);
     void welcomePageShownChanged(bool shown);
     void performCurrencyConversionChanged(bool enabled);
@@ -155,6 +161,7 @@ private:
     bool m_preloadMapData = false;
     StartPage m_startPage = TicketsStartPage;
     bool m_localTransportOnly = false;
+    bool m_rentalBikes = false;
     bool m_journeyResultsAsTimeline = true;
     bool m_welcomePageShown = false;
     bool m_currencyConversion = false;

@@ -42,6 +42,7 @@ void Settings::load()
                                                     static_cast<int>(ItineraryStartPage),
                                                     static_cast<int>(MyDataStartPage)));
     m_localTransportOnly = s.value("LocalTransportOnly"_L1, m_localTransportOnly).toBool();
+    m_rentalBikes = s.value("RentalBikes"_L1, m_rentalBikes).toBool();
     m_journeyResultsAsTimeline = s.value("JourneyResultsAsTimeline"_L1, m_journeyResultsAsTimeline).toBool();
     m_welcomePageShown = s.value("WelcomePageShown"_L1, m_welcomePageShown).toBool();
     m_currencyConversion = s.value("PerformCurrencyConversion"_L1, m_currencyConversion).toBool();
@@ -70,6 +71,7 @@ void Settings::reloadSettings()
     Q_EMIT preloadMapDataChanged(m_preloadMapData);
     Q_EMIT startPageChanged(m_startPage);
     Q_EMIT localTransportOnlyChanged(m_localTransportOnly);
+    Q_EMIT rentalBikesChanged(m_rentalBikes);
     Q_EMIT journeyResultsAsTimelineChanged(m_journeyResultsAsTimeline);
     Q_EMIT welcomePageShownChanged(m_welcomePageShown);
     Q_EMIT performCurrencyConversionChanged(m_currencyConversion);
@@ -242,6 +244,25 @@ void Settings::setLocalTransportOnly(bool localOnly)
     s.setValue("LocalTransportOnly"_L1, localOnly);
 
     Q_EMIT localTransportOnlyChanged(localOnly);
+}
+
+bool Settings::rentalBikes() const
+{
+    return m_rentalBikes;
+}
+
+void Settings::setRentalBikes(bool rentalBikes)
+{
+    if (m_rentalBikes == rentalBikes) {
+        return;
+    }
+
+    m_rentalBikes = rentalBikes;
+    QSettings s;
+    s.beginGroup("Settings"_L1);
+    s.setValue("RentalBikes"_L1, rentalBikes);
+
+    Q_EMIT rentalBikesChanged(rentalBikes);
 }
 
 bool Settings::journeyResultsAsTimeline() const

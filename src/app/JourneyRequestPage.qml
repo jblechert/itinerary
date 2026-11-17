@@ -73,8 +73,15 @@ FormCard.FormCardPage {
         req.maximumResults = 6;
         req.downloadAssets = Settings.wikimediaOnlineContentEnabled;
         req.includePaths = true;
-        // TODO rental vehicle support
         req.modes = JourneySection.PublicTransport | JourneySection.Walking;
+        if (Settings.rentalBikes) {
+            // to and from public transport, or all the way
+            const rentalBike = [{ mode: IndividualTransport.Bike, qualifier: IndividualTransport.Rent }];
+            req.modes |= JourneySection.IndividualTransport;
+            req.individualTransportModes = rentalBike;
+            req.accessModes = rentalBike;
+            req.egressModes = rentalBike;
+        }
 
         req.lineModes = root.effectiveLineModes;
 
@@ -284,6 +291,20 @@ FormCard.FormCardPage {
 
         FormCard.FormDelegateSeparator {
             below: ticketTypeSelector
+            above: rentalBikesSwitch
+        }
+
+        FormCard.FormSwitchDelegate {
+            id: rentalBikesSwitch
+
+            text: i18nc("@option:check consider bike sharing in the journey search", "Rental bikes")
+            description: i18nc("@info", "To and from stations, or all the way, where bike sharing is known")
+            checked: Settings.rentalBikes
+            onToggled: Settings.rentalBikes = rentalBikesSwitch.checked
+        }
+
+        FormCard.FormDelegateSeparator {
+            below: rentalBikesSwitch
             above: filterButton
         }
 
