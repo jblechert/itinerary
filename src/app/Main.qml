@@ -23,6 +23,9 @@ Kirigami.ApplicationWindow {
     height: Kirigami.Settings.isMobile ? 720 : 650
     minimumWidth: 300
     minimumHeight: 400
+    // on iOS the window only covers the safe area by default, with black bars around it;
+    // extend it below the status bar and the home indicator, Kirigami takes care of the safe area margins
+    flags: Qt.platform.os === "ios" ? (Qt.Window | Qt.ExpandedClientAreaHint) : Qt.Window
 
     property bool hasMapLibre: false
 
