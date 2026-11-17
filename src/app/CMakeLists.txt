@@ -551,6 +551,12 @@ if (NOT ANDROID AND NOT IOS)
 endif()
 
 if (IOS)
+    # let the QML import scanner find the QML modules of the dependencies, to link their static plugins
+    foreach(_prefix ${CMAKE_PREFIX_PATH})
+        if (IS_DIRECTORY "${_prefix}/${KDE_INSTALL_QMLDIR}")
+            set_property(TARGET itinerary-app APPEND PROPERTY QT_QML_IMPORT_PATH "${_prefix}/${KDE_INSTALL_QMLDIR}")
+        endif()
+    endforeach()
     # Info.plist, launch screen and importing the static QML plugins
     qt_finalize_target(itinerary-app)
 endif()
