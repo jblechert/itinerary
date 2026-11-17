@@ -1,0 +1,37 @@
+diff --git a/src/controls/NavigationTabButton.qml b/src/controls/NavigationTabButton.qml
+index f04137f..bd5066f 100644
+--- a/src/controls/NavigationTabButton.qml
++++ b/src/controls/NavigationTabButton.qml
+@@ -129,9 +129,31 @@ KT.NavigationTabButton {
+             elide: Text.ElideMiddle
+             color: control.checked ? control.__highlightForegroundColor : control.__foregroundColor
+ 
+-            font.pointSize: !icon.visible && control.display === T.AbstractButton.TextUnderIcon
++            readonly property real basePointSize: !icon.visible && control.display === T.AbstractButton.TextUnderIcon
+                     ? Platform.Theme.defaultFont.pointSize * 1.20 // 1.20 is equivalent to level 2 heading
+                     : Platform.Theme.defaultFont.pointSize
++            // Below the icon, scale the text down so that its longest word fits, as wrapping inside of a word
++            // (e.g. "Verbindu/ng" in German) is hard to read. This is needed for long words with several tabs
++            // on a phone, and with larger fonts, e.g. on iOS.
++            readonly property real fitScale: {
++                if (control.display !== T.AbstractButton.TextUnderIcon || control.availableWidth <= 0) {
++                    return 1.0;
++                }
++                const longestWord = Math.max(0, ...control.Primitives.MnemonicData.plainTextLabel.split(/\s+/).map(word => labelMetrics.advanceWidth(word)));
++                const longestWordWidth = longestWord * basePointSize / Platform.Theme.defaultFont.pointSize;
++                if (longestWordWidth <= control.availableWidth) {
++                    return 1.0;
++                }
++                // font sizes are rounded, text scales a bit differently than its size, so leave some room;
++                // if it doesn't fit even then, it is wrapped inside the word after all
++                return Math.max(0.7, 0.95 * control.availableWidth / longestWordWidth);
++            }
++            font.pointSize: basePointSize * fitScale
++
++            FontMetrics {
++                id: labelMetrics
++                font: Platform.Theme.defaultFont
++            }
+ 
+             Behavior on color { ColorAnimation { duration: Platform.Units.shortDuration } }
+ 

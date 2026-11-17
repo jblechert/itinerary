@@ -18,6 +18,8 @@
 #            booking links (run 'app' afterwards, and again after 'deps'). To create KPT_SRC:
 #              git clone --branch v26.08.3 https://invent.kde.org/libraries/kpublictransport.git
 #              git -C kpublictransport apply ../itinary/tools/android/patches/kpublictransport/*.patch
+#   kirigami rebuild Kirigami at the version Craft uses with our patches from tools/android/patches/kirigami
+#            (run 'app' afterwards, and again after 'deps')
 #
 # Workspace (craft root, downloads, build dirs) lives next to the checkout in ../itinary-craft (override with ITINERARY_CRAFT_DIR); it must stay outside the source tree, as packaging scans the tree for AndroidManifest files.
 set -euo pipefail
@@ -81,6 +83,13 @@ case "$STEP" in
            [ -d /craft/src/ki18n ] || git clone --depth 1 --branch "v$(cm -c -q --get version kde/frameworks/tier1/ki18n | tail -1)" \
                https://invent.kde.org/frameworks/ki18n.git /craft/src/ki18n
            cm -c --no-cache --compile --install --qmerge --options kde/frameworks/tier1/ki18n.srcDir=/craft/src/ki18n kde/frameworks/tier1/ki18n ;;
+  kirigami) v="$(cm -c -q --get version kde/frameworks/tier1/kirigami | tail -1)"
+           rm -rf /craft/src/kirigami
+           git clone --quiet --depth 1 --branch "v$v" https://invent.kde.org/frameworks/kirigami.git /craft/src/kirigami
+           for patch in /src/tools/android/patches/kirigami/*.patch; do
+               git -C /craft/src/kirigami apply "$patch"
+           done
+           cm -c --no-cache --compile --install --qmerge --options kde/frameworks/tier1/kirigami.srcDir=/craft/src/kirigami kde/frameworks/tier1/kirigami ;;
   kpt)     cm -c --no-cache --compile --install --qmerge --options kde/libs/kpublictransport.srcDir=/kpublictransport kde/libs/kpublictransport ;;
   shell)   bash ;;
   *) echo "unknown step: $STEP" >&2; exit 2 ;;
