@@ -13955,10 +13955,10 @@ index 00000000..01ef9563
 +#include "pathtest.moc"
 diff --git a/autotests/ticketshoptest.cpp b/autotests/ticketshoptest.cpp
 new file mode 100644
-index 00000000..1a9198b6
+index 00000000..529642f7
 --- /dev/null
 +++ b/autotests/ticketshoptest.cpp
-@@ -0,0 +1,757 @@
+@@ -0,0 +1,896 @@
 +/*
 +    SPDX-FileCopyrightText: 2026 Janis Blechert <janis@blechert.at>
 +    SPDX-License-Identifier: LGPL-2.0-or-later
@@ -13996,7 +13996,7 @@ index 00000000..1a9198b6
 +    loc.setCountry(QString::fromLatin1(country));
 +    loc.setTimeZone(QTimeZone(tz));
 +    for (const auto &[type, id] : ids) {
-+        loc.setIdentifier(QString::fromLatin1(type), QString::fromLatin1(id));
++        loc.setIdentifier(QString::fromLatin1(type), QString::fromUtf8(id));
 +    }
 +    return loc;
 +}
@@ -14088,7 +14088,29 @@ index 00000000..1a9198b6
 +    const auto aachenEs = makeLocation(u"Aachen Hbf"_s, "DE", berlin, {{"uic", "8015345"}, {"ibnr", "8000001"}});
 +    const auto gentEs = makeLocation(u"Gent-Sint-Pieters"_s, "BE", "Europe/Brussels", {{"uic", "8892007"}, {"ibnr", "8800031"}});
 +
++    const auto vienna = "Europe/Vienna";
++    const auto wienHbf = makeLocation(u"Wien Hbf"_s, "AT", vienna, {{"ibnr", "8103000"}, {"uic", "8101003"}});
++    const auto salzburgHbf = makeLocation(u"Salzburg Hbf"_s, "AT", vienna, {{"ibnr", "8100002"}, {"uic", "8101114"}});
++
 +    return {
++        {"at_oebb", "at_oebb", wienHbf, salzburgHbf, localTime(2026, 11, 20, 8, 0, vienna), u"Österreichische Bundesbahnen"_s, Line::LongDistanceTrain, "de_AT",
++            "https://shop.oebbtickets.at/de/ticket?outwardDateTime=2026-11-20T08:00&stationOrigEva=8103000&stationDestEva=8100002"},
++        // cross-border, ÖBB is preferred over bahn.de for journeys from Austria
++        {"at_oebb-de", "at_oebb",
++            makeLocation(u"Graz Hbf"_s, "AT", vienna, {{"ibnr", "8100173"}}),
++            makeLocation(u"München Hbf"_s, "DE", berlin, {{"ibnr", "8000261"}}),
++            localTime(2026, 11, 20, 17, 45, vienna), u"Österreichische Bundesbahnen"_s, Line::LongDistanceTrain, "en_GB",
++            "https://shop.oebbtickets.at/en/ticket?outwardDateTime=2026-11-20T17:45&stationOrigEva=8100173&stationDestEva=8000261"},
++        // as provided by the ÖBB backend, including its own identifiers for meta stations
++        {"at_oebb-hafas", "at_oebb",
++            makeLocation(u"Wien"_s, "AT", vienna, {{"oebb", "1190100"}}),
++            makeLocation(u"Salzburg Hbf"_s, "AT", vienna, {{"oebb", "8100002"}, {"ibnr", "8100002"}}),
++            localTime(2026, 11, 27, 9, 0, vienna), u"Nahreisezug"_s, Line::LongDistanceTrain, "de_DE",
++            "https://shop.oebbtickets.at/de/ticket?outwardDateTime=2026-11-27T09:00&stationOrigEva=1190100&stationDestEva=8100002"},
++        {"at_oebb-cz", "at_oebb", wienHbf,
++            makeLocation(u"Praha hl.n."_s, "CZ", "Europe/Prague", {{"ibnr", "5400014"}, {"uic", "5457076"}}),
++            localTime(2026, 11, 27, 9, 0, vienna), u"Österreichische Bundesbahnen"_s, Line::LongDistanceTrain, "de_AT",
++            "https://shop.oebbtickets.at/de/ticket?outwardDateTime=2026-11-27T09:00&stationOrigEva=8103000&stationDestEva=5400014"},
 +        {"de_db", "de_db", aachen, gent, localTime(2026, 11, 20, 8, 0, berlin), u"DB Fernverkehr AG"_s, Line::LongDistanceTrain, "", dbUrl},
 +        {"ch_sbb", "ch_sbb", basel, zuerich, localTime(2026, 11, 20, 8, 0, zurich), u"SBB"_s, Line::LongDistanceTrain, "en_GB", sbbUrl},
 +        {"ch_sbb-ibnr", "ch_sbb",
@@ -14116,6 +14138,32 @@ index 00000000..1a9198b6
 +            makeLocation(u"Barcelona Sants"_s, "ES", "Europe/Madrid", {{"uic", "7171801"}}),
 +            localTime(2026, 12, 20, 8, 0, "Europe/Madrid"), u"OUIGO"_s, Line::LongDistanceTrain, "es_ES",
 +            "https://ventas.ouigo.com/es-ES/_deeplink/journey-search?origin=7160000&destination=7171801&outboundDate=2026-12-20&passengers%5B0%5D%5Btype%5D=A&passengers%5B0%5D%5Bdisability_type%5D=NH&contrast=0"},
++        {"es_iryo", "es_iryo",
++            makeLocation(u"Madrid Puerta de Atocha"_s, "ES", "Europe/Madrid", {{"ibnr", "7100049"}, {"uic", "7160000"}}),
++            makeLocation(u"Barcelona Sants"_s, "ES", "Europe/Madrid", {{"ibnr", "7100064"}, {"uic", "7171801"}}),
++            localTime(2026, 11, 27, 9, 12, "Europe/Madrid"), u"iryo"_s, Line::LongDistanceTrain, "es_ES",
++            "https://iryo.eu/es/booking/travels?passengers=%5B%7B%22type%22%3A%22AD%22%2C%22discountCards%22%3A%5B%5D%2C%22id%22%3A%22passenger_1%22%7D%5D&origin=%7B%22uicStationCode%22%3A%2260000%22%2C%22name%22%3A%22Madrid%20Puerta%20de%20Atocha%22%7D&destination=%7B%22uicStationCode%22%3A%2271801%22%2C%22name%22%3A%22Barcelona%20Sants%22%7D&tripDirection=outbound&travels=%5B%7B%22origin%22%3A%2260000%22%2C%22destination%22%3A%2271801%22%2C%22direction%22%3A%22outbound%22%2C%22departure%22%3A%222026-11-27%22%7D%5D&payWithPoints=false&currency=EUR&tripIntention=forLeisure&passengerHSelected=false"},
++        {"es_renfe", "es_renfe",
++            makeLocation(u"Madrid Puerta de Atocha"_s, "ES", "Europe/Madrid", {{"ibnr", "7100049"}, {"uic", "7160000"}}),
++            makeLocation(u"Barcelona Sants"_s, "ES", "Europe/Madrid", {{"ibnr", "7100064"}, {"uic", "7171801"}}),
++            localTime(2026, 11, 27, 8, 0, "Europe/Madrid"), u"RENFE"_s, Line::LongDistanceTrain, "es_ES",
++            "https://venta.renfe.com/vol/buscarTren.do?tipoBusqueda=autocomplete&currenLocation=menuBusqueda&vengoderenfecom=SI&cdgoOrigen=0071%2C60000%2C60000&cdgoDestino=0071%2C71801%2C71801&FechaIdaSel=27%2F11%2F2026&adultos_=1&ninos_=0&ninosMenores=0&Idioma=es&Pais=ES"},
++        // as provided by Transitous, station codes with leading zeros
++        {"es_renfe-transitous", "es_renfe",
++            makeLocation(u"Barcelona-Sants"_s, "ES", "Europe/Madrid", {{"transitous", "es-RENFE-Larga-Distancia-y-AVE_71801"}}),
++            makeLocation(u"València-Joaquín Sorolla"_s, "ES", "Europe/Madrid", {{"transitous", "es-RENFE-Larga-Distancia-y-AVE_03216"}}),
++            localTime(2026, 11, 27, 8, 0, "Europe/Madrid"), u"RENFE OPERADORA"_s, Line::LongDistanceTrain, "en_GB",
++            "https://venta.renfe.com/vol/buscarTren.do?tipoBusqueda=autocomplete&currenLocation=menuBusqueda&vengoderenfecom=SI&cdgoOrigen=0071%2C71801%2C71801&cdgoDestino=0071%2C03216%2C03216&FechaIdaSel=27%2F11%2F2026&adultos_=1&ninos_=0&ninosMenores=0&Idioma=en&Pais=ES"},
++        {"fi_vr", "fi_vr",
++            makeLocation(u"Helsinki"_s, "FI", "Europe/Helsinki", {{"fi_digitransit", "digitraffic:HKI_10"}}),
++            makeLocation(u"Tampere"_s, "FI", "Europe/Helsinki", {{"fi_digitransit", "digitraffic:TPE_2"}}),
++            localTime(2026, 11, 27, 11, 0, "Europe/Helsinki"), u"VR"_s, Line::LongDistanceTrain, "fi_FI",
++            "https://www.vr.fi/kertalippu-menomatkan-hakutulokset?from=HKI&to=TPE&outboundDate=2026-11-27"},
++        {"fi_vr-transitous", "fi_vr",
++            makeLocation(u"Helsinki"_s, "FI", "Europe/Helsinki", {{"transitous", "fi-digitraffic_HKI_10"}}),
++            makeLocation(u"Jämsä"_s, "FI", "Europe/Helsinki", {{"transitous", "fi-digitraffic_JÄS"}}),
++            localTime(2026, 11, 27, 11, 0, "Europe/Helsinki"), u"VR"_s, Line::LongDistanceTrain, "en_GB",
++            "https://www.vr.fi/en/single-ticket-outbound-search-results?from=HKI&to=J%C3%84S&outboundDate=2026-11-27"},
 +        {"it_trenitalia", "it_trenitalia",
 +            makeLocation(u"Roma Termini"_s, "IT", "Europe/Rome"),
 +            makeLocation(u"Milano Centrale"_s, "IT", "Europe/Rome"),
@@ -14141,6 +14189,16 @@ index 00000000..1a9198b6
 +            makeLocation(u"Kraków Główny"_s, "PL", "Europe/Warsaw", {{"ibnr", "5100028"}}),
 +            localTime(2026, 11, 20, 8, 0, "Europe/Warsaw"), u"PKP Intercity"_s, Line::LongDistanceTrain, "",
 +            "https://ebilet.intercity.pl/wyszukiwanie?dwyj=2026-11-20&swyj=5100065&sprzy=5100028&time=08:00&przy=0&polbez=0&ticket100=1010"},
++        {"pt_cp", "pt_cp",
++            makeLocation(u"Lisboa Oriente"_s, "PT", "Europe/Lisbon", {{"transitous", "pt-Comboios-de-Portugal(CP)_94_31039"}}),
++            makeLocation(u"Porto Campanha"_s, "PT", "Europe/Lisbon", {{"transitous", "pt-Comboios-de-Portugal(CP)_94_2006"}}),
++            localTime(2026, 11, 27, 8, 9, "Europe/Lisbon"), u"CP - Comboios de Portugal"_s, Line::Train, "pt_PT",
++            "https://www.cp.pt/pt/resultado-pesquisa?passageiros=1&selectedClass=2&startDate=2026-11-27&departureStation=94-31039&arrivalStation=94-2006"},
++        {"pt_cp-en", "pt_cp",
++            makeLocation(u"Lisboa Oriente"_s, "PT", "Europe/Lisbon", {{"transitous", "pt-Comboios-de-Portugal(CP)_94_31039"}}),
++            makeLocation(u"Porto Campanha"_s, "PT", "Europe/Lisbon", {{"transitous", "pt-Comboios-de-Portugal(CP)_94_2006"}}),
++            localTime(2026, 11, 27, 8, 9, "Europe/Lisbon"), u"CP"_s, Line::LongDistanceTrain, "en_GB",
++            "https://www.cp.pt/en/resultado-pesquisa?passageiros=1&selectedClass=2&startDate=2026-11-27&departureStation=94-31039&arrivalStation=94-2006"},
 +        {"cz_cd", "cz_cd",
 +            makeLocation(u"Praha hl.n."_s, "CZ", "Europe/Prague"),
 +            makeLocation(u"Brno hl.n."_s, "CZ", "Europe/Prague"),
@@ -14339,6 +14397,22 @@ index 00000000..1a9198b6
 +        QCOMPARE(urlString(cfr.bookingUrl(bucuresti, brasov, QDateTime({2026, 11, 20}, {8, 0}), {})),
 +                 "https://bilete.cfrcalatori.ro/ro-RO/Rute-trenuri/Bucuresti-Nord/Brasov?DepartureDate=20.11.2026&MinutesInDay=480"_L1);
 +
++        // parts of station identifiers
++        const QJsonObject captureRules{{"stationIdentifiers"_L1, QJsonArray{
++            QJsonObject{{"type"_L1, "uic"_L1}, {"pattern"_L1, "^80([0-9]{5})$"_L1}, {"uicCountries"_L1, QJsonArray{80}}},
++            QJsonObject{{"type"_L1, "feed"_L1}, {"pattern"_L1, "^de-feed_([A-Z]+)(?:_[0-9]+)?$"_L1}, {"aliases"_L1, QJsonObject{{"de-feed_X"_L1, "de-feed_Y"_L1}}}},
++        }}};
++        shop = makeShop(u"https://example.org/{from.id|capture}/{to.id|capture|lower}?full={from.id}"_s, captureRules);
++        QVERIFY(shop.isValid());
++        from = makeLocation(u"A"_s, "DE", "Europe/Berlin", {{"uic", "8000105"}, {"feed", "de-feed_FF_1"}});
++        to = makeLocation(u"B"_s, "DE", "Europe/Berlin", {{"feed", "de-feed_KK_2"}});
++        QCOMPARE(urlString(shop.bookingUrl(from, to, dep, dep)), "https://example.org/00105/kk?full=8000105"_L1);
++        // the first matching rule is used, aliases are applied before matching
++        from = makeLocation(u"A"_s, "DE", "Europe/Berlin", {{"uic", "801234"}, {"feed", "de-feed_X"}});
++        QCOMPARE(urlString(shop.bookingUrl(from, to, dep, dep)), "https://example.org/Y/kk?full=de-feed_Y"_L1);
++        from = makeLocation(u"A"_s, "DE", "Europe/Berlin", {{"uic", "8112345"}});
++        QVERIFY(shop.bookingUrl(from, to, dep, dep).isEmpty());
++
 +        // unresolvable placeholders
 +        shop = makeShop(u"https://example.org/{from.id}"_s, {{"stationIdentifiers"_L1, QJsonArray{QJsonObject{{"type"_L1, "uic"_L1}}}}});
 +        QVERIFY(shop.isValid());
@@ -14371,6 +14445,13 @@ index 00000000..1a9198b6
 +            << QJsonObject{{"match"_L1, QJsonObject{{"countries"_L1, QJsonArray{"DE"_L1}}, {"operators"_L1, QJsonObject{{"names"_L1, QJsonArray{"("_L1}}}}}}};
 +        QTest::newRow("bad id pattern") << u"https://example.org/{from.id}"_s
 +            << QJsonObject{{"stationIdentifiers"_L1, QJsonArray{QJsonObject{{"type"_L1, "uic"_L1}, {"pattern"_L1, "[0-9"_L1}}}}};
++        QTest::newRow("capture without group") << u"https://example.org/{from.id|capture}"_s
++            << QJsonObject{{"stationIdentifiers"_L1, QJsonArray{QJsonObject{{"type"_L1, "uic"_L1}, {"pattern"_L1, "^[0-9]+$"_L1}}}}};
++        QTest::newRow("capture without pattern") << u"https://example.org/{from.id|capture}"_s
++            << QJsonObject{{"stationIdentifiers"_L1, QJsonArray{QJsonObject{{"type"_L1, "uic"_L1}, {"pattern"_L1, "^([0-9]+)$"_L1}}, QJsonObject{{"type"_L1, "ibnr"_L1}}}}};
++        QTest::newRow("capture for name") << u"https://example.org/{from.name|capture}"_s << QJsonObject();
++        QTest::newRow("capture not first") << u"https://example.org/{from.id|lower|capture}"_s
++            << QJsonObject{{"stationIdentifiers"_L1, QJsonArray{QJsonObject{{"type"_L1, "uic"_L1}, {"pattern"_L1, "^([0-9]+)$"_L1}}}}};
 +        QTest::newRow("bad UIC country") << u"https://example.org/{from.id}"_s
 +            << QJsonObject{{"stationIdentifiers"_L1, QJsonArray{QJsonObject{{"type"_L1, "uic"_L1}, {"uicCountries"_L1, QJsonArray{800}}}}}};
 +        QTest::newRow("unknown line mode") << u"https://example.org/{from.name}"_s
@@ -14423,10 +14504,19 @@ index 00000000..1a9198b6
 +        const auto salzburg = makeLocation(u"Salzburg Hbf"_s, "AT", "Europe/Vienna", {{"ibnr", "8100002"}, {"uic", "8101114"}});
 +        const auto muenchen = makeLocation(u"München Ost"_s, "DE", "Europe/Berlin", {{"ibnr", "8000262"}, {"uic", "8020234"}});
 +        QVERIFY(!TicketShops::bookingUrl(makeSection(salzburg, muenchen, dep, u"DB Fernverkehr AG"_s, Line::LongDistanceTrain, dbUrl)).isEmpty());
++        // cross-border journeys are booked in the shop of the departure country
++        QVERIFY(urlString(TicketShops::bookingUrl(makeSection(salzburg, muenchen, dep, u"DB Fernverkehr AG"_s, Line::LongDistanceTrain, dbUrl))).startsWith("https://shop.oebbtickets.at/"_L1));
++        QVERIFY(urlString(TicketShops::bookingUrl(makeSection(muenchen, salzburg, dep, u"DB Fernverkehr AG"_s, Line::LongDistanceTrain, dbUrl))).startsWith("https://www.bahn.de/"_L1));
++        QVERIFY(urlString(TicketShops::bookingUrl(makeSection(muenchen, salzburg, dep, u"Österreichische Bundesbahnen"_s, Line::LongDistanceTrain, dbUrl))).startsWith("https://www.bahn.de/"_L1));
 +        QVERIFY(TicketShops::bookingUrl(makeSection(salzburg, muenchen, dep, u"WESTbahn"_s, Line::LongDistanceTrain, dbUrl)).isEmpty());
 +        QVERIFY(TicketShops::bookingUrl(makeSection(salzburg, muenchen, dep, QString(), Line::LongDistanceTrain, QUrl(u"https://westbahn.at"_s))).isEmpty());
 +        QVERIFY(TicketShops::bookingUrl(makeSection(salzburg, muenchen, dep, u"RegioJet"_s, Line::LongDistanceTrain, dbUrl)).isEmpty());
 +        QVERIFY(TicketShops::bookingUrl(makeSection(salzburg, muenchen, dep, u"Leo Express"_s, Line::LongDistanceTrain, dbUrl)).isEmpty());
++        const auto linz = makeLocation(u"Linz/Donau Hbf"_s, "AT", "Europe/Vienna", {{"ibnr", "8100013"}});
++        QVERIFY(urlString(TicketShops::bookingUrl(makeSection(linz, salzburg, dep, u"Österreichische Bundesbahnen"_s, Line::LongDistanceTrain, dbUrl))).startsWith("https://shop.oebbtickets.at/"_L1));
++        QVERIFY(TicketShops::bookingUrl(makeSection(linz, salzburg, dep, u"WESTbahn"_s, Line::LongDistanceTrain, dbUrl)).isEmpty());
++        // ÖBB needs IBNR codes, UIC codes of Austrian stations differ
++        QVERIFY(TicketShops::bookingUrl(makeSection(makeLocation(u"Wien Hbf"_s, "AT", "Europe/Vienna", {{"uic", "8101003"}}), salzburg, dep, u"ÖBB"_s)).isEmpty());
 +
 +        // DB pseudo stations for Eurostar terminals
 +        QLocale::setDefault(QLocale(u"en_GB"_s));
@@ -14447,6 +14537,55 @@ index 00000000..1a9198b6
 +        const auto praha = makeLocation(u"Praha hl.n."_s, "CZ", "Europe/Prague", {{"ibnr", "5400014"}, {"uic", "5457076"}});
 +        const auto krakow = makeLocation(u"Krakow Glowny"_s, "PL", "Europe/Warsaw", {{"uic", "5108041"}});
 +        QVERIFY(TicketShops::bookingUrl(makeSection(praha, krakow, dep, u"Leo Express"_s, Line::LongDistanceTrain, dbUrl)).isEmpty());
++    }
++
++    void testSpain()
++    {
++        const auto dep = localTime(2026, 11, 20, 9, 25, "Europe/Madrid");
++        const auto madrid = makeLocation(u"Madrid Puerta de Atocha"_s, "ES", "Europe/Madrid", {{"ibnr", "7100049"}, {"uic", "7160000"}});
++        const auto sevilla = makeLocation(u"Sevilla Santa Justa"_s, "ES", "Europe/Madrid", {{"ibnr", "7100180"}, {"uic", "7151003"}});
++        const auto barcelona = makeLocation(u"Barcelona Sants"_s, "ES", "Europe/Madrid", {{"ibnr", "7100064"}, {"uic", "7171801"}});
++        QVERIFY(urlString(TicketShops::bookingUrl(makeSection(madrid, sevilla, dep, u"RENFE"_s))).contains("cdgoOrigen=0071%2C60000%2C60000&cdgoDestino=0071%2C51003%2C51003&"_L1));
++
++        // other operators have their own shops, or no generated links
++        QVERIFY(urlString(TicketShops::bookingUrl(makeSection(madrid, barcelona, dep, u"OUIGO España"_s))).startsWith("https://ventas.ouigo.com/"_L1));
++        QVERIFY(urlString(TicketShops::bookingUrl(makeSection(madrid, barcelona, dep, u"iryo"_s))).startsWith("https://iryo.eu/"_L1));
++        QVERIFY(TicketShops::bookingUrl(makeSection(madrid, barcelona, dep, QString())).isEmpty());
++        QVERIFY(TicketShops::bookingUrl(makeSection(madrid, barcelona, dep, u"Italo"_s)).isEmpty());
++
++        // no station codes
++        QVERIFY(TicketShops::bookingUrl(makeSection(makeLocation(u"Madrid Puerta de Atocha"_s, "ES", "Europe/Madrid", {{"ibnr", "7100049"}}), sevilla, dep, u"RENFE"_s)).isEmpty());
++        // identifiers of other Transitous feeds
++        QVERIFY(TicketShops::bookingUrl(makeSection(makeLocation(u"Madrid Puerta de Atocha"_s, "ES", "Europe/Madrid", {{"transitous", "es-Ouigo_007160000"}}), sevilla, dep, u"RENFE"_s)).isEmpty());
++    }
++
++    void testVr()
++    {
++        const auto dep = localTime(2026, 11, 20, 11, 10, "Europe/Helsinki");
++        const auto helsinki = makeLocation(u"Helsinki"_s, "FI", "Europe/Helsinki", {{"fi_digitransit", "digitraffic:HKI_6"}});
++        const auto toijala = makeLocation(u"Toijala"_s, "FI", "Europe/Helsinki", {{"fi_digitransit", "digitraffic:TL_1"}});
++        const auto expected = "https://www.vr.fi/kertalippu-menomatkan-hakutulokset?from=HKI&to=TL&outboundDate=2026-11-20"_L1;
++        QLocale::setDefault(QLocale(u"fi_FI"_s));
++        QCOMPARE(urlString(TicketShops::bookingUrl(makeSection(helsinki, toijala, dep, u"VR"_s, Line::RapidTransit))), expected);
++        QCOMPARE(urlString(TicketShops::bookingUrl(makeSection(helsinki, toijala, dep, QString(), Line::LocalTrain))), expected);
++        // no Digitraffic station
++        const auto stop = makeLocation(u"Rautatientori"_s, "FI", "Europe/Helsinki", {{"fi_digitransit", "HSL:1020453"}});
++        QVERIFY(TicketShops::bookingUrl(makeSection(stop, toijala, dep, u"VR"_s)).isEmpty());
++        // DB only provides its own identifiers for Finnish stations
++        QVERIFY(TicketShops::bookingUrl(makeSection(makeLocation(u"Helsinki"_s, "FI", "Europe/Helsinki", {{"db", "1000094"}}), toijala, dep, u"VR"_s)).isEmpty());
++    }
++
++    void testCp()
++    {
++        const auto dep = localTime(2026, 11, 20, 9, 9, "Europe/Lisbon");
++        const auto lisboa = makeLocation(u"Lisboa Oriente"_s, "PT", "Europe/Lisbon", {{"transitous", "pt-Comboios-de-Portugal(CP)_94_31039"}});
++        const auto porto = makeLocation(u"Porto Campanha"_s, "PT", "Europe/Lisbon", {{"transitous", "pt-Comboios-de-Portugal(CP)_94_2006"}});
++        QVERIFY(!TicketShops::bookingUrl(makeSection(lisboa, porto, dep, QString())).isEmpty());
++        QVERIFY(TicketShops::bookingUrl(makeSection(lisboa, porto, dep, u"Fertagus"_s)).isEmpty());
++        // DB only provides its own identifiers for Portuguese stations
++        const auto lisboaDb = makeLocation(u"Lisboa Oriente"_s, "PT", "Europe/Lisbon", {{"db", "9400674"}});
++        const auto portoDb = makeLocation(u"Porto(Campanha)"_s, "PT", "Europe/Lisbon", {{"db", "9400008"}});
++        QVERIFY(TicketShops::bookingUrl(makeSection(lisboaDb, portoDb, dep, u"CP"_s)).isEmpty());
 +    }
 +
 +    void testAliases()
@@ -16914,10 +17053,10 @@ index 47e169ae..d705bbf3 100644
      // do this first, before res gets moved from below
 diff --git a/src/lib/knowledgedb/ticketshop.cpp b/src/lib/knowledgedb/ticketshop.cpp
 new file mode 100644
-index 00000000..5d807cd2
+index 00000000..b7d984ec
 --- /dev/null
 +++ b/src/lib/knowledgedb/ticketshop.cpp
-@@ -0,0 +1,898 @@
+@@ -0,0 +1,929 @@
 +/*
 +    SPDX-FileCopyrightText: 2026 Janis Blechert <janis@blechert.at>
 +    SPDX-License-Identifier: LGPL-2.0-or-later
@@ -16970,6 +17109,7 @@ index 00000000..5d807cd2
 +};
 +
 +enum class Filter : uint8_t {
++    Capture,
 +    Json,
 +    Slug,
 +    Lower,
@@ -17026,12 +17166,17 @@ index 00000000..5d807cd2
 +{
 +public:
 +    [[nodiscard]] TicketShop::Match matchLine(const JourneySection &section) const;
-+    [[nodiscard]] QString stationIdentifier(const Location &loc) const;
++    /** Station identifier of @p loc for this shop.
++     *  @param capture return the first capturing group of the matching rule's pattern rather
++     *  than the entire identifier.
++     */
++    [[nodiscard]] QString stationIdentifier(const Location &loc, bool capture) const;
 +    [[nodiscard]] QString language(const Location &from) const;
 +
 +    QString id;
 +    QStringList countries;
 +    QStringList requireCountries;
++    QStringList departureCountries;
 +    std::vector<Line::Mode> lineModes;
 +    std::optional<OperatorRule> operators;
 +    OperatorRule excludeOperators;
@@ -17093,7 +17238,7 @@ index 00000000..5d807cd2
 +    return operators->matchUnknown ? TicketShop::GenericMatch : TicketShop::NoMatch;
 +}
 +
-+QString TicketShopPrivate::stationIdentifier(const Location &loc) const
++QString TicketShopPrivate::stationIdentifier(const Location &loc, bool capture) const
 +{
 +    for (const auto &rule : stationIdentifiers) {
 +        auto id = loc.identifier(rule.type);
@@ -17103,16 +17248,21 @@ index 00000000..5d807cd2
 +        if (const auto it = rule.aliases.constFind(id); it != rule.aliases.constEnd()) {
 +            id = it.value();
 +        }
-+        if (!rule.pattern.pattern().isEmpty() && !rule.pattern.match(id).hasMatch()) {
-+            continue;
-+        }
-+        if (!rule.uicCountries.empty()) {
-+            if (!UicStationCode::isValid(id, rule.uicCountries)) {
++        QRegularExpressionMatch match;
++        if (!rule.pattern.pattern().isEmpty()) {
++            match = rule.pattern.match(id);
++            if (!match.hasMatch()) {
 +                continue;
 +            }
-+            return id.right(7);
 +        }
-+        return id;
++        if (!rule.uicCountries.empty() && !UicStationCode::isValid(id, rule.uicCountries)) {
++            continue;
++        }
++        if (capture) {
++            // validated at load time that the pattern has a capturing group
++            return match.captured(1);
++        }
++        return rule.uicCountries.empty() ? id : id.right(7);
 +    }
 +    return {};
 +}
@@ -17202,10 +17352,13 @@ index 00000000..5d807cd2
 +    if (!d) {
 +        return false;
 +    }
++    const auto fromCountry = countryOf(from);
++    if (!d->departureCountries.isEmpty() && !d->departureCountries.contains(fromCountry)) {
++        return false;
++    }
 +    if (d->requireCountries.isEmpty()) {
 +        return true;
 +    }
-+    const auto fromCountry = countryOf(from);
 +    const auto toCountry = countryOf(to);
 +    return (!fromCountry.isEmpty() && d->requireCountries.contains(fromCountry)) || (!toCountry.isEmpty() && d->requireCountries.contains(toCountry));
 +}
@@ -17253,6 +17406,8 @@ index 00000000..5d807cd2
 +    bool plus = false;
 +    for (const auto filter : filters) {
 +        switch (filter) {
++            case Filter::Capture: // already applied when determining the value
++                break;
 +            case Filter::Json:
 +                value = jsonEscape(value);
 +                break;
@@ -17295,7 +17450,7 @@ index 00000000..5d807cd2
 +                break;
 +            case TokenType::FromId:
 +            case TokenType::ToId:
-+                value = d->stationIdentifier(token.type == TokenType::FromId ? from : to);
++                value = d->stationIdentifier(token.type == TokenType::FromId ? from : to, !token.filters.empty() && token.filters.front() == Filter::Capture);
 +                break;
 +            case TokenType::FromCountry:
 +            case TokenType::ToCountry:
@@ -17380,6 +17535,7 @@ index 00000000..5d807cd2
 +        const char *name;
 +        Filter filter;
 +    } filter_names[] = {
++        {"capture", Filter::Capture},
 +        {"json", Filter::Json},
 +        {"slug", Filter::Slug},
 +        {"lower", Filter::Lower},
@@ -17419,6 +17575,11 @@ index 00000000..5d807cd2
 +        }
 +        if (!isStationToken(token.type)) {
 +            qCWarning(Log) << "filters are only supported for station placeholders" << placeholder;
++            return {};
++        }
++        if ((*filter).filter == Filter::Capture
++            && ((token.type != TokenType::FromId && token.type != TokenType::ToId) || !token.filters.empty())) {
++            qCWarning(Log) << "capture filter is only supported as first filter of station identifier placeholders" << placeholder;
 +            return {};
 +        }
 +        token.filters.push_back((*filter).filter);
@@ -17520,6 +17681,9 @@ index 00000000..5d807cd2
 +        return false;
 +    }
 +    if (!parseCountries(obj.value("requireCountries"_L1), d->requireCountries)) {
++        return false;
++    }
++    if (!parseCountries(obj.value("departureCountries"_L1), d->departureCountries)) {
 +        return false;
 +    }
 +
@@ -17625,10 +17789,12 @@ index 00000000..5d807cd2
 +    QString url;
 +    bool needsLanguage = false;
 +    bool needsStationId = false;
++    bool needsCapture = false;
 +    for (const auto &token : d->tokens) {
 +        url += token.type == TokenType::Literal ? token.text : u"x"_s;
 +        needsLanguage |= token.type == TokenType::Language;
 +        needsStationId |= token.type == TokenType::FromId || token.type == TokenType::ToId;
++        needsCapture |= std::ranges::find(token.filters, Filter::Capture) != token.filters.end();
 +    }
 +
 +    if (needsLanguage && d->languages.empty()) {
@@ -17641,6 +17807,10 @@ index 00000000..5d807cd2
 +    }
 +    if (needsStationId && d->stationIdentifiers.empty()) {
 +        qCWarning(Log) << "URL template uses station identifiers but there are no station identifier rules";
++        return false;
++    }
++    if (needsCapture && std::ranges::any_of(d->stationIdentifiers, [](const auto &rule) { return rule.pattern.captureCount() < 1; })) {
++        qCWarning(Log) << "URL template uses the capture filter but not all station identifier rules have a pattern with a capturing group";
 +        return false;
 +    }
 +
@@ -18029,10 +18199,10 @@ index 9faab91d..56a047c5 100644
      Path path() const;
 diff --git a/src/lib/networks/booking/README.md b/src/lib/networks/booking/README.md
 new file mode 100644
-index 00000000..458fac68
+index 00000000..fab001a4
 --- /dev/null
 +++ b/src/lib/networks/booking/README.md
-@@ -0,0 +1,103 @@
+@@ -0,0 +1,111 @@
 +<!--
 +SPDX-FileCopyrightText: 2026 Janis Blechert <janis@blechert.at>
 +SPDX-License-Identifier: CC0-1.0
@@ -18068,6 +18238,9 @@ index 00000000..458fac68
 +    `Location::country`, or if that is unknown from its UIC or IBNR station code.
 +  - `requireCountries` (optional): at least one end of the section (or of the entire
 +    journey) has to be in one of those countries.
++  - `departureCountries` (optional): the section (or the entire journey) has to start in one
++    of those countries. Useful to prefer the shop of the departure country for cross-border
++    journeys that several shops sell.
 +  - `lineModes` (optional): `KPublicTransport::Line::Mode` key names, defaults to
 +    `["LongDistanceTrain", "Train", "LocalTrain"]`.
 +  - `operators` (optional): `{ "names": [...], "hosts": [...], "matchUnknown": false }`.
@@ -18117,6 +18290,11 @@ index 00000000..458fac68
 +Station placeholders support the following filters, applied in order before
 +the value is percent-encoded:
 +
++- `capture`: only for `{from.id}` and `{to.id}`, and only as the first filter: use the
++  first capturing group of the `pattern` of the station identifier rule that provided the
++  identifier, rather than the entire identifier. This allows to use parts of identifiers,
++  e.g. a national station code without the UIC country code. All station identifier rules
++  of the shop need a `pattern` with a capturing group then.
 +- `json`: escape for use inside a JSON string.
 +- `slug`: remove diacritics and replace whitespace with `-`.
 +- `lower`: convert to lower case.
@@ -18135,7 +18313,7 @@ index 00000000..458fac68
 +- Add at least one row to `testGolden` in `autotests/ticketshoptest.cpp` with a real
 +  example URL. `testTable` fails for shops without such a row.
 +- Shops that need operator-specific station codes (that is, codes KPublicTransport does
-+  not have as location identifiers) cannot be supported yet.
++  not have as location identifiers, nor as part of one) cannot be supported yet.
 diff --git a/src/lib/networks/booking/booking.qrc b/src/lib/networks/booking/booking.qrc
 new file mode 100644
 index 00000000..20cf693f
@@ -18153,12 +18331,74 @@ index 00000000..20cf693f
 +</RCC>
 diff --git a/src/lib/networks/booking/ticket-shops.json b/src/lib/networks/booking/ticket-shops.json
 new file mode 100644
-index 00000000..0dd59e49
+index 00000000..f67efbfc
 --- /dev/null
 +++ b/src/lib/networks/booking/ticket-shops.json
-@@ -0,0 +1,550 @@
+@@ -0,0 +1,774 @@
 +{
 +    "shops": [
++        {
++            "id": "at_oebb",
++            "name": "ÖBB",
++            "verified": "2026-11-17",
++            "notes": "Station identifiers are IBNR codes, not UIC codes (e.g. Wien Hbf is 8103000, not 8101003).",
++            "match": {
++                "countries": [
++                    "AT",
++                    "CH",
++                    "CZ",
++                    "DE"
++                ],
++                "requireCountries": [
++                    "AT"
++                ],
++                "departureCountries": [
++                    "AT"
++                ],
++                "lineModes": [
++                    "LongDistanceTrain",
++                    "Train",
++                    "LocalTrain",
++                    "RapidTransit"
++                ],
++                "excludeOperators": {
++                    "names": [
++                        "Flix",
++                        "European Sleeper",
++                        "WESTbahn",
++                        "RegioJet",
++                        "Leo ?Express"
++                    ],
++                    "hosts": [
++                        "flixtrain.com",
++                        "flixbus.com",
++                        "europeansleeper.eu",
++                        "westbahn.at",
++                        "regiojet.cz",
++                        "regiojet.com",
++                        "leoexpress.com"
++                    ]
++                }
++            },
++            "stationIdentifiers": [
++                {
++                    "type": "ibnr"
++                },
++                {
++                    "type": "oebb",
++                    "pattern": "^[0-9]{7}$"
++                }
++            ],
++            "languages": [
++                {
++                    "code": "de"
++                },
++                {
++                    "code": "en"
++                }
++            ],
++            "url": "https://shop.oebbtickets.at/{lang}/ticket?outwardDateTime={departure:yyyy-MM-dd'T'HH:mm}&stationOrigEva={from.id}&stationDestEva={to.id}"
++        },
 +        {
 +            "id": "ch_sbb",
 +            "name": "SBB",
@@ -18366,6 +18606,41 @@ index 00000000..0dd59e49
 +            "url": "https://elron.pilet.ee/{lang}/otsing/{from.name}/{to.name}/{departure:yyyy-MM-dd}"
 +        },
 +        {
++            "id": "es_iryo",
++            "name": "iryo",
++            "verified": "2026-11-17",
++            "notes": "Station codes are the Spanish UIC station codes without country code. The station names are only displayed in the search summary. The shop shows all trains of the selected day.",
++            "match": {
++                "countries": [
++                    "ES"
++                ],
++                "lineModes": [
++                    "LongDistanceTrain",
++                    "Train"
++                ],
++                "operators": {
++                    "names": [
++                        "iryo",
++                        "Intermodalidad de Levante"
++                    ],
++                    "hosts": [
++                        "iryo.eu"
++                    ],
++                    "matchUnknown": false
++                }
++            },
++            "stationIdentifiers": [
++                {
++                    "type": "uic",
++                    "pattern": "^71([0-9]{5})$",
++                    "uicCountries": [
++                        71
++                    ]
++                }
++            ],
++            "url": "https://iryo.eu/es/booking/travels?passengers=%5B%7B%22type%22%3A%22AD%22%2C%22discountCards%22%3A%5B%5D%2C%22id%22%3A%22passenger_1%22%7D%5D&origin=%7B%22uicStationCode%22%3A%22{from.id|capture}%22%2C%22name%22%3A%22{from.name|json}%22%7D&destination=%7B%22uicStationCode%22%3A%22{to.id|capture}%22%2C%22name%22%3A%22{to.name|json}%22%7D&tripDirection=outbound&travels=%5B%7B%22origin%22%3A%22{from.id|capture}%22%2C%22destination%22%3A%22{to.id|capture}%22%2C%22direction%22%3A%22outbound%22%2C%22departure%22%3A%22{departure:yyyy-MM-dd}%22%7D%5D&payWithPoints=false&currency=EUR&tripIntention=forLeisure&passengerHSelected=false"
++        },
++        {
 +            "id": "es_ouigo",
 +            "name": "OUIGO España",
 +            "verified": "2026-11-16",
@@ -18410,6 +18685,49 @@ index 00000000..0dd59e49
 +                }
 +            ],
 +            "url": "https://ventas.ouigo.com/{lang}/_deeplink/journey-search?origin={from.id}&destination={to.id}&outboundDate={departure:yyyy-MM-dd}&passengers%5B0%5D%5Btype%5D=A&passengers%5B0%5D%5Bdisability_type%5D=NH&contrast=0"
++        },
++        {
++            "id": "es_renfe",
++            "name": "Renfe",
++            "verified": "2026-11-17",
++            "notes": "Station codes are the Spanish UIC station codes without country code. The shop shows all trains of the selected day.",
++            "match": {
++                "countries": [
++                    "ES"
++                ],
++                "operators": {
++                    "names": [
++                        "Renfe"
++                    ],
++                    "hosts": [
++                        "renfe.com",
++                        "renfe.es"
++                    ],
++                    "matchUnknown": false
++                }
++            },
++            "stationIdentifiers": [
++                {
++                    "type": "uic",
++                    "pattern": "^71([0-9]{5})$",
++                    "uicCountries": [
++                        71
++                    ]
++                },
++                {
++                    "type": "transitous",
++                    "pattern": "^es-(?i:renfe)[^_]*_([0-9]{5})$"
++                }
++            ],
++            "languages": [
++                {
++                    "code": "es"
++                },
++                {
++                    "code": "en"
++                }
++            ],
++            "url": "https://venta.renfe.com/vol/buscarTren.do?tipoBusqueda=autocomplete&currenLocation=menuBusqueda&vengoderenfecom=SI&cdgoOrigen=0071%2C{from.id|capture}%2C{from.id|capture}&cdgoDestino=0071%2C{to.id|capture}%2C{to.id|capture}&FechaIdaSel={departure:dd'%2F'MM'%2F'yyyy}&adultos_=1&ninos_=0&ninosMenores=0&Idioma={lang}&Pais=ES"
 +        },
 +        {
 +            "id": "eu_eurostar",
@@ -18479,6 +18797,54 @@ index 00000000..0dd59e49
 +                }
 +            ],
 +            "url": "https://www.eurostar.com/search/{lang}?adult=1&origin={from.id}&destination={to.id}&outbound={departure:yyyy-MM-dd}"
++        },
++        {
++            "id": "fi_vr",
++            "name": "VR",
++            "verified": "2026-11-17",
++            "notes": "Station identifiers are Digitraffic station short codes. The shop shows all trains of the selected day.",
++            "match": {
++                "countries": [
++                    "FI"
++                ],
++                "lineModes": [
++                    "LongDistanceTrain",
++                    "Train",
++                    "LocalTrain",
++                    "RapidTransit"
++                ],
++                "operators": {
++                    "names": [
++                        "^VR\\b",
++                        "VR-Yhtym[äa]"
++                    ],
++                    "hosts": [
++                        "vr.fi"
++                    ],
++                    "matchUnknown": true
++                }
++            },
++            "stationIdentifiers": [
++                {
++                    "type": "fi_digitransit",
++                    "pattern": "^digitraffic:([^_]+)(?:_[^_]*)?$"
++                },
++                {
++                    "type": "transitous",
++                    "pattern": "^fi-digitraffic_([^_]+)(?:_[^_]*)?$"
++                }
++            ],
++            "languages": [
++                {
++                    "code": "fi",
++                    "value": "kertalippu-menomatkan-hakutulokset"
++                },
++                {
++                    "code": "en",
++                    "value": "en/single-ticket-outbound-search-results"
++                }
++            ],
++            "url": "https://www.vr.fi/{lang}?from={from.id|capture}&to={to.id|capture}&outboundDate={departure:yyyy-MM-dd}"
 +        },
 +        {
 +            "id": "gr_hellenictrain",
@@ -18611,6 +18977,42 @@ index 00000000..0dd59e49
 +                }
 +            ],
 +            "url": "https://ebilet.intercity.pl/wyszukiwanie?dwyj={departure:yyyy-MM-dd}&swyj={from.id}&sprzy={to.id}&time={departure:HH:mm}&przy=0&polbez=0&ticket100=1010"
++        },
++        {
++            "id": "pt_cp",
++            "name": "CP - Comboios de Portugal",
++            "verified": "2026-11-17",
++            "notes": "Station codes are part of the stop identifiers of Transitous' CP feed. The shop shows all trains of the selected day.",
++            "match": {
++                "countries": [
++                    "PT"
++                ],
++                "operators": {
++                    "names": [
++                        "^CP\\b",
++                        "Comboios de Portugal"
++                    ],
++                    "hosts": [
++                        "cp.pt"
++                    ],
++                    "matchUnknown": true
++                }
++            },
++            "stationIdentifiers": [
++                {
++                    "type": "transitous",
++                    "pattern": "^pt-(?i:comboios)[^_]*_94_([0-9]+)$"
++                }
++            ],
++            "languages": [
++                {
++                    "code": "pt"
++                },
++                {
++                    "code": "en"
++                }
++            ],
++            "url": "https://www.cp.pt/{lang}/resultado-pesquisa?passageiros=1&selectedClass=2&startDate={departure:yyyy-MM-dd}&departureStation=94-{from.id|capture}&arrivalStation=94-{to.id|capture}"
 +        },
 +        {
 +            "id": "ro_cfr",
