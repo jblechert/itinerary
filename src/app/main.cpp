@@ -93,6 +93,7 @@
 
 #include <QCommandLineParser>
 #include <QDebug>
+#include <QDesktopServices>
 #include <QDir>
 #include <QGuiApplication>
 #include <QIcon>
@@ -353,6 +354,10 @@ int main(int argc, char **argv)
     importController.setReservationManager(&resMgr);
     QObject::connect(&intentHandler, &IntentHandler::handleIntent, &importController, &ImportController::importFromIntent);
     ImportControllerInstance::instance = &importController;
+#ifdef Q_OS_IOS
+    // files opened with the app from other apps (e.g. the share sheet) are passed on as file URLs to open
+    QDesktopServices::setUrlHandler(u"file"_s, &importController, "importFromUrl");
+#endif
 
     TraewellingController traewellingController(namFactory);
     TraewellingControllerInstance::instance = &traewellingController;
