@@ -163,6 +163,9 @@ private:
     bool m_notificationShown = false;
     /** The position has been on the current route, so leaving it is worth an announcement. */
     bool m_beenOnRoute = false;
+    /** Distance to a new route when it was found, as it can start some way off, e.g. at the closest street. */
+    double m_approachDistance = 0.0;
+    bool m_measureApproach = false;
     QString m_notificationText;
 };
 

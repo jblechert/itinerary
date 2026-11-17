@@ -64,6 +64,8 @@ void WalkingNavigationController::setPath(const KPublicTransport::Path &path)
     m_announcedNowSection = -1;
     m_currentSection = -1;
     m_beenOnRoute = false;
+    m_approachDistance = 0.0;
+    m_measureApproach = !path.isEmpty();
     rebuildGeometry();
     Q_EMIT pathChanged();
     Q_EMIT progressChanged();
@@ -355,9 +357,19 @@ void WalkingNavigationController::processPosition(double latitude, double longit
         }
     }
 
+    // a route starts at the closest place it can be found from, e.g. the street next to a large square or a building,
+    // so getting there is part of the way: until we have been on the route, only moving further away is leaving it
+    if (m_measureApproach) {
+        m_measureApproach = false;
+        m_approachDistance = bestDistance;
+    }
+    if (m_beenOnRoute) {
+        m_approachDistance = 0.0;
+    }
+
     // off the route? GPS jitter is common, so require a few updates in a row, and consider the accuracy
     const auto limits = thresholds();
-    const auto offRouteThreshold = std::max(limits.offRoute, 1.5 * accuracy);
+    const auto offRouteThreshold = std::max(limits.offRoute, 1.5 * accuracy) + m_approachDistance;
     if (bestDistance > offRouteThreshold) {
         ++m_offRouteCount;
     } else if (bestDistance < limits.backOnRoute) {
