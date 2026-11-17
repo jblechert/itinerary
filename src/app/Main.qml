@@ -259,20 +259,22 @@ Kirigami.ApplicationWindow {
     // as this triggers network operations on creation already
     function mapPlugin(): QtLocation.Plugin {
         if (root.hasMapLibre) {
-            if (!__qtLocationMaplibrePlugin) {
-                __qtLocationMaplibrePlugin = __qtLocationMaplibrePluginComponent.createObject();
+            if (!root.__qtLocationPlugins.maplibre) {
+                root.__qtLocationPlugins.maplibre = __qtLocationMaplibrePluginComponent.createObject(root);
             }
-            return __qtLocationMaplibrePlugin;
+            return root.__qtLocationPlugins.maplibre;
         }
         return root.geocodingPlugin();
     }
     function geocodingPlugin(): QtLocation.Plugin {
-        if (!__qtLocationOSMPlugin) {
-            __qtLocationOSMPlugin = __qtLocationOSMPluginComponent.createObject();
+        if (!root.__qtLocationPlugins.osm) {
+            root.__qtLocationPlugins.osm = __qtLocationOSMPluginComponent.createObject(root);
         }
-        return __qtLocationOSMPlugin;
+        return root.__qtLocationPlugins.osm;
     }
-    property QtLocation.Plugin __qtLocationOSMPlugin: null
+    // created on first use, which happens in bindings: storing them must not notify those
+    // bindings, which would be a binding loop
+    readonly property var __qtLocationPlugins: ({})
     Component {
         id: __qtLocationOSMPluginComponent
         QtLocation.Plugin {
@@ -282,7 +284,6 @@ Kirigami.ApplicationWindow {
             QtLocation.PluginParameter { name: "osm.mapping.providersrepository.address"; value: "https://autoconfig.kde.org/qtlocation/" }
         }
     }
-    property QtLocation.Plugin __qtLocationMaplibrePlugin: null
     Component {
         id: __qtLocationMaplibrePluginComponent
         QtLocation.Plugin {
