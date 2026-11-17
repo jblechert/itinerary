@@ -4,6 +4,7 @@
 # Tools needed while building the iOS dependencies, built natively for macOS (see build-deps.sh).
 # They are found by the iOS builds through KF6_HOST_TOOLING, like KDE's Android builds use their native tooling.
 # Format: name  git-url  ref  [extra CMake arguments...]
-# extra-cmake-modules comes from the iOS prefix, it is architecture independent.
+# extra-cmake-modules is needed here too, as the host tools are built before the iOS packages.
 
+extra-cmake-modules  https://invent.kde.org/frameworks/extra-cmake-modules.git  v6.31.0
 kconfig  https://invent.kde.org/frameworks/kconfig.git  v6.31.0  -DKCONFIG_USE_GUI=OFF -DKCONFIG_USE_QML=OFF
