@@ -3,8 +3,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 # Start the app in the iOS Simulator and check that it is still running after a while.
-# Collects the app's console output, the system log of the app, a screenshot and crash reports.
+# Collects the app's console output, the system log of the app, screenshots and crash reports.
 # Needs an app bundle built with IOS_PLATFORM=simulator.
+#
+# The app is started twice: freshly installed, showing the welcome page, and with the welcome page
+# already dismissed and German as language, showing the main page.
 #
 # Usage: tools/ios/simulator-smoke-test.sh <app bundle> <output dir> [seconds to wait]
 set -euo pipefail
@@ -31,45 +34,75 @@ read -r udid runtime name <<< "$device"
 echo "== using $name ($runtime, $udid)"
 
 xcrun simctl boot "$udid" || true
-xcrun simctl bootstatus "$udid" -b
+xcrun simctl bootstatus "$udid" -b > /dev/null
 
 # the simulator doesn't require signatures for x86_64 apps, but an ad-hoc one doesn't hurt
 codesign --force --sign - --timestamp=none "$APP"
-xcrun simctl install "$udid" "$APP"
 
 # the unified log has messages of the system frameworks (and Qt's, if it doesn't write to stderr)
-xcrun simctl spawn "$udid" log stream --level debug --style compact \
+xcrun simctl spawn "$udid" log stream --level info --style compact \
     --predicate "process == \"$executable\"" > "$OUT/system.log" 2>&1 &
 log_pid=$!
 
-echo "== launching $bundle_id"
-# Qt only logs to stderr when told so if it isn't attached to a terminal, SIMCTL_CHILD_ variables are passed on
-SIMCTL_CHILD_QT_FORCE_STDERR_LOGGING=1 \
-SIMCTL_CHILD_QT_MESSAGE_PATTERN='%{time process} %{type} %{category}: %{message}' \
-    xcrun simctl launch --console-pty --terminate-running-process "$udid" "$bundle_id" > "$OUT/console.log" 2>&1 &
-launch_pid=$!
+install() {
+    xcrun simctl uninstall "$udid" "$bundle_id" 2> /dev/null || true
+    xcrun simctl install "$udid" "$APP"
+    # the app asks for the location when starting, which would cover the screenshots
+    xcrun simctl privacy "$udid" grant location "$bundle_id"
+}
 
-sleep "$WAIT"
+# whether the app has a running process
+is_running() {
+    local services
+    services="$(xcrun simctl spawn "$udid" launchctl list)"
+    awk -v label="UIKitApplication:$bundle_id" 'index($3, label) == 1 && $1 != "-" { found = 1 } END { exit !found }' <<< "$services"
+}
 
-running=1
-if ! kill -0 "$launch_pid" 2> /dev/null; then
-    running=0
-fi
-if ! xcrun simctl spawn "$udid" launchctl list | grep -q "UIKitApplication:$bundle_id"; then
-    running=0
-fi
+failed=0
+# launch the app, wait and take a screenshot; usage: run <name> [environment variables for the app...]
+run() {
+    local name="$1"
+    shift
+    echo "== launching $bundle_id ($name)"
+    # Qt only logs to stderr when told so if it isn't attached to a terminal, SIMCTL_CHILD_ variables are passed on
+    env SIMCTL_CHILD_QT_FORCE_STDERR_LOGGING=1 \
+        SIMCTL_CHILD_QT_MESSAGE_PATTERN='%{time process} %{type} %{category}: %{message}' \
+        "$@" \
+        xcrun simctl launch --console-pty --terminate-running-process "$udid" "$bundle_id" > "$OUT/console-$name.log" 2>&1 &
+    local launch_pid=$!
+    sleep "$WAIT"
+    local running=1
+    is_running || running=0
+    xcrun simctl io "$udid" screenshot "$OUT/screenshot-$name.png" > /dev/null 2>&1 || true
+    xcrun simctl terminate "$udid" "$bundle_id" 2> /dev/null || true
+    kill "$launch_pid" 2> /dev/null || true
+    wait "$launch_pid" 2> /dev/null || true
 
-xcrun simctl io "$udid" screenshot "$OUT/screenshot.png" || true
+    echo "== console output ($name, last 100 lines)"
+    tail -n 100 "$OUT/console-$name.log"
+    if [ "$running" = 0 ]; then
+        echo "!! the app is not running anymore after $WAIT seconds ($name)"
+        failed=1
+    fi
+}
 
-kill "$launch_pid" "$log_pid" 2> /dev/null || true
+install
+run welcome
+
+# freshly installed again, with the welcome page marked as shown in the app's settings (QSettings uses
+# the user defaults on iOS), so the main page is shown
+install
+container="$(xcrun simctl get_app_container "$udid" "$bundle_id" data)"
+mkdir -p "$container/Library/Preferences"
+defaults write "$container/Library/Preferences/org.kde.itinerary" Settings.WelcomePageShown -bool true
+# KI18n follows LANGUAGE, to check that the bundled translations are found
+run main-de SIMCTL_CHILD_LANGUAGE=de
+
+kill "$log_pid" 2> /dev/null || true
 # crash reports of the simulated app end up on the host
 find "$HOME/Library/Logs/DiagnosticReports" -name "$executable*" -newer "$APP/Info.plist" -exec cp {} "$OUT/" \; 2> /dev/null || true
 
-echo "== console output (last 200 lines)"
-tail -n 200 "$OUT/console.log"
-
-if [ "$running" = 0 ]; then
-    echo "!! the app is not running anymore after $WAIT seconds"
+if [ "$failed" = 1 ]; then
     exit 1
 fi
 echo "== the app is still running after $WAIT seconds"
